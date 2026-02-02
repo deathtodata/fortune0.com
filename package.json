@@ -1,0 +1,12 @@
+{
+  "name": "fortune0",
+  "version": "0.1.0",
+  "description": "The Open Incubator",
+  "scripts": {
+    "dev": "npx serve . -p 3000",
+    "dev:live": "npx live-server --port=3000"
+  },
+  "keywords": ["incubator", "startup", "open-source"],
+  "author": "Matt <lolztex@gmail.com>",
+  "license": "MIT"
+}

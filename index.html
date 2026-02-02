@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>fortune0 - The Open Incubator</title>
+  <meta name="description" content="Start open. Build anything. The incubator that makes startup creation as accessible as starting an open source project.">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="fortune0 - The Open Incubator">
+  <meta property="og:description" content="Start open. Build anything.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fortune0.com">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --navy: #1A1A2E;
+      --gold: #D4AF37;
+      --light: #F5F5F5;
+      --white: #FFFFFF;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--navy);
+      color: var(--white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 4rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .logo span {
+      color: var(--gold);
+    }
+
+    .tagline {
+      font-size: 1.5rem;
+      color: var(--gold);
+      margin-bottom: 2rem;
+      font-style: italic;
+    }
+
+    .description {
+      max-width: 600px;
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: #ccc;
+      margin-bottom: 3rem;
+    }
+
+    .cta {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--navy);
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    }
+
+    .email-form {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .email-form input {
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border: 2px solid #333;
+      border-radius: 4px;
+      background: #222;
+      color: white;
+      width: 280px;
+    }
+
+    .email-form input:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    .email-form button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      background: var(--gold);
+      color: var(--navy);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    footer {
+      padding: 2rem;
+      text-align: center;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    footer a {
+      color: var(--gold);
+      text-decoration: none;
+    }
+
+    @media (max-width: 600px) {
+      .logo { font-size: 2.5rem; }
+      .tagline { font-size: 1.2rem; }
+      .email-form input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 class="logo">fortune<span>0</span></h1>
+    <p class="tagline">The Open Incubator</p>
+    <p class="description">
+      We're building the incubator that makes starting a company as accessible as
+      starting an open source project. Open playbooks. Plain-English licensing.
+      No gatekeeping.
+    </p>
+
+    <form class="email-form" action="#" method="POST" id="waitlist-form">
+      <input type="email" name="email" placeholder="your@email.com" required>
+      <button type="submit">Join Waitlist</button>
+    </form>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 fortune0 &middot; <a href="/about">About</a> &middot; <a href="/privacy">Privacy</a></p>
+  </footer>
+
+  <script>
+    // Simple form handler - replace with actual endpoint
+    document.getElementById('waitlist-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const email = this.querySelector('input[name="email"]').value;
+      // TODO: Connect to your backend or use a service like Buttondown, ConvertKit, etc.
+      alert('Thanks! We\'ll be in touch at ' + email);
+      this.reset();
+    });
+  </script>
+</body>
+</html>
