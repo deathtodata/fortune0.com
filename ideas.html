@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ideas — fortune0</title>
+  <meta name="description" content="Ideas that survive. Browse, pledge, and keep the best ideas alive.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold: #D4AF37;
+      --gold-rgb: 212, 175, 55;
+      --black: #000000;
+      --white: #ffffff;
+      --gray: rgba(255, 255, 255, 0.5);
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-border-hover: rgba(255, 255, 255, 0.15);
+      /* Accessible colors - WCAG AA compliant on dark bg */
+      --status-urgent: #FF6B6B;
+      --status-warning: #FFD93D;
+      --status-safe: #6BCB77;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--black);
+      color: var(--white);
+      line-height: 1.6;
+      min-height: 100vh;
+      cursor: crosshair;
+    }
+
+    /* Animated background - same as landing */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.4;
+    }
+
+    .orb-1 {
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(var(--gold-rgb), 0.25), transparent 70%);
+      top: -400px;
+      right: -300px;
+      animation: float1 25s ease-in-out infinite;
+    }
+
+    .orb-2 {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(var(--gold-rgb), 0.15), transparent 70%);
+      bottom: -200px;
+      left: -200px;
+      animation: float2 30s ease-in-out infinite;
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-100px, 100px) scale(1.1); }
+    }
+
+    @keyframes float2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(100px, -50px) scale(1.15); }
+    }
+
+    /* Cursor glow */
+    .cursor-glow {
+      position: fixed;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(var(--gold-rgb), 0.1), transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+      transform: translate(-50%, -50%);
+      filter: blur(30px);
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--white);
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .logo:hover { opacity: 0.8; }
+    .logo span { color: var(--gold); }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--gray);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+
+    .submit-btn {
+      padding: 0.65rem 1.25rem;
+      background: var(--gold);
+      color: var(--black);
+      border: none;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .submit-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(var(--gold-rgb), 0.4);
+    }
+
+    /* Main content */
+    main {
+      position: relative;
+      z-index: 2;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 7rem 2rem 4rem;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .page-title {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, #fff 0%, #fff 40%, var(--gold) 50%, #fff 60%, #fff 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 4s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% center; }
+      100% { background-position: -200% center; }
+    }
+
+    .page-desc {
+      color: var(--gray);
+      font-size: 1.1rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      margin-bottom: 3rem;
+      padding: 1.5rem;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--gold);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Filters */
+    .filters {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 0.6rem 1.25rem;
+      background: transparent;
+      border: 1px solid var(--glass-border);
+      border-radius: 100px;
+      color: var(--gray);
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover {
+      border-color: var(--glass-border-hover);
+      color: var(--white);
+    }
+    .filter-btn.active {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(var(--gold-rgb), 0.1);
+    }
+
+    /* Ideas grid */
+    .ideas-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .idea-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .idea-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .idea-card:hover {
+      border-color: var(--glass-border-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .idea-card:hover::before {
+      opacity: 1;
+    }
+
+    .idea-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .idea-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      flex: 1;
+      line-height: 1.3;
+    }
+
+    .idea-countdown {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+      border: 1px solid currentColor;
+    }
+
+    .idea-countdown.urgent {
+      color: var(--status-urgent);
+      background: rgba(255, 107, 107, 0.1);
+      border-color: rgba(255, 107, 107, 0.3);
+    }
+
+    .idea-countdown.warning {
+      color: var(--status-warning);
+      background: rgba(255, 217, 61, 0.1);
+      border-color: rgba(255, 217, 61, 0.3);
+    }
+
+    .idea-countdown.safe {
+      color: var(--status-safe);
+      background: rgba(107, 203, 119, 0.1);
+      border-color: rgba(107, 203, 119, 0.3);
+    }
+
+    .idea-desc {
+      color: var(--gray);
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .idea-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .idea-tags {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      padding: 0.35rem 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: var(--gray);
+      font-weight: 500;
+    }
+
+    .idea-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .pledge-count {
+      font-size: 0.95rem;
+      color: var(--gray);
+    }
+
+    .pledge-count strong {
+      color: var(--gold);
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .pledge-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1.4rem;
+      background: transparent;
+      border: 1px solid var(--gold);
+      border-radius: 100px;
+      color: var(--gold);
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pledge-btn:hover {
+      background: var(--gold);
+      color: var(--black);
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(var(--gold-rgb), 0.3);
+    }
+
+    .pledge-btn.pledged {
+      background: var(--gold);
+      color: var(--black);
+    }
+
+    /* Progress bar for pledge threshold */
+    .pledge-progress {
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), #F4E4A6);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    .progress-label {
+      font-size: 0.75rem;
+      color: var(--gray);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: #0a0a0a;
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 2.5rem;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 2rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+
+    .modal-close:hover {
+      color: var(--white);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.6rem;
+      color: var(--gray);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 1rem 1.25rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      color: var(--white);
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 20px rgba(var(--gold-rgb), 0.1);
+    }
+
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    textarea.form-input {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .form-submit {
+      width: 100%;
+      padding: 1.1rem;
+      background: var(--gold);
+      border: none;
+      border-radius: 100px;
+      color: var(--black);
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .form-submit:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 30px rgba(var(--gold-rgb), 0.4);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--gray);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header { padding: 1rem 1.5rem; }
+      .nav-links a { display: none; }
+      main { padding: 6rem 1.5rem 3rem; }
+      .stats-bar { gap: 1.5rem; flex-wrap: wrap; }
+      .idea-header { flex-direction: column; gap: 1rem; }
+      .idea-footer { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-layer">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+  <div class="cursor-glow" id="cursor-glow"></div>
+
+  <header>
+    <a href="/" class="logo">fortune<span>0</span></a>
+    <nav class="nav-links">
+      <a href="/">Home</a>
+      <a href="/ideas.html">Ideas</a>
+    </nav>
+    <button class="submit-btn" onclick="openModal()">+ Submit Idea</button>
+  </header>
+
+  <main>
+    <div class="page-header">
+      <h1 class="page-title">Ideas</h1>
+      <p class="page-desc">Ideas live or die by community pledge. Below threshold? Gone forever.</p>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-label">Active Ideas</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-pledges">0</div>
+        <div class="stat-label">Total Pledges</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-dying">0</div>
+        <div class="stat-label">Dying Soon</div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all">All Ideas</button>
+      <button class="filter-btn" data-filter="urgent">🔥 Dying Soon</button>
+      <button class="filter-btn" data-filter="hot">⚡ Most Pledged</button>
+      <button class="filter-btn" data-filter="new">✨ New</button>
+    </div>
+
+    <div class="ideas-list" id="ideas-list"></div>
+  </main>
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Submit an Idea</h2>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <form id="submit-form">
+        <div class="form-group">
+          <label class="form-label">Your Email *</label>
+          <input type="email" class="form-input" name="email" required placeholder="you@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Idea Title *</label>
+          <input type="text" class="form-input" name="title" required placeholder="A bold prediction or thesis">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description *</label>
+          <textarea class="form-input" name="description" required placeholder="What's the idea? Why will it happen? What's the evidence?"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Supporting Link (optional)</label>
+          <input type="url" class="form-input" name="link" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tags</label>
+          <input type="text" class="form-input" name="tags" placeholder="AI, Privacy, Startups">
+        </div>
+        <button type="submit" class="form-submit">Submit Idea</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Cursor glow
+    const cursorGlow = document.getElementById('cursor-glow');
+    let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+    let currentX = mouseX, currentY = mouseY;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    function animateCursor() {
+      currentX += (mouseX - currentX) * 0.1;
+      currentY += (mouseY - currentY) * 0.1;
+      cursorGlow.style.left = currentX + 'px';
+      cursorGlow.style.top = currentY + 'px';
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // Ideas
+    let ideas = [];
+    let pledgedIds = JSON.parse(localStorage.getItem('pledged') || '[]');
+    const PLEDGE_THRESHOLD = 10;
+
+    async function loadIdeas() {
+      try {
+        const res = await fetch('/ideas.json?t=' + Date.now());
+        ideas = await res.json();
+        updateStats();
+        renderIdeas(ideas);
+      } catch (e) {
+        document.getElementById('ideas-list').innerHTML = '<div class="empty-state">No ideas yet. Be the first!</div>';
+      }
+    }
+
+    function updateStats() {
+      const total = ideas.length;
+      const pledges = ideas.reduce((sum, i) => sum + i.pledges, 0);
+      const dying = ideas.filter(i => getTimeRemaining(i.expires).status !== 'safe').length;
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-pledges').textContent = pledges;
+      document.getElementById('stat-dying').textContent = dying;
+    }
+
+    function getTimeRemaining(expiresDate) {
+      const now = new Date();
+      const expires = new Date(expiresDate);
+      const diff = expires - now;
+
+      if (diff <= 0) return { text: 'Expired', status: 'urgent', ms: 0 };
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+      if (days > 3) return { text: `${days}d remaining`, status: 'safe', ms: diff };
+      if (days > 0) return { text: `${days}d ${hours}h left`, status: 'warning', ms: diff };
+      return { text: `${hours}h left`, status: 'urgent', ms: diff };
+    }
+
+    function renderIdeas(list) {
+      const container = document.getElementById('ideas-list');
+
+      if (!list.length) {
+        container.innerHTML = '<div class="empty-state">No ideas found</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(idea => {
+        const time = getTimeRemaining(idea.expires);
+        const isPledged = pledgedIds.includes(idea.id);
+        const progress = Math.min((idea.pledges / PLEDGE_THRESHOLD) * 100, 100);
+        const needsMore = PLEDGE_THRESHOLD - idea.pledges;
+
+        return `
+          <article class="idea-card" data-id="${idea.id}">
+            <div class="idea-header">
+              <h2 class="idea-title"><a href="/idea.html?id=${idea.id}" style="color: inherit; text-decoration: none;">${idea.title}</a></h2>
+              <span class="idea-countdown ${time.status}" aria-label="Time remaining">
+                ⏱ ${time.text}
+              </span>
+            </div>
+            <p class="idea-desc">${idea.description}</p>
+            <div class="idea-footer">
+              <div class="idea-tags" role="list" aria-label="Tags">
+                ${idea.tags.map(t => `<span class="tag" role="listitem">${t}</span>`).join('')}
+              </div>
+              <div class="idea-actions">
+                <span class="pledge-count"><strong>${idea.pledges}</strong> pledges</span>
+                <button
+                  class="pledge-btn ${isPledged ? 'pledged' : ''}"
+                  onclick="togglePledge('${idea.id}')"
+                  aria-pressed="${isPledged}"
+                >
+                  ${isPledged ? '✓ Pledged' : '+ Pledge'}
+                </button>
+              </div>
+            </div>
+            <div class="pledge-progress">
+              <div class="progress-bar" role="progressbar" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-fill" style="width: ${progress}%"></div>
+              </div>
+              <span class="progress-label">
+                ${progress >= 100 ? 'Threshold reached! Idea will survive.' : `${needsMore} more pledge${needsMore !== 1 ? 's' : ''} needed to survive`}
+              </span>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function togglePledge(id) {
+      const idx = pledgedIds.indexOf(id);
+      const idea = ideas.find(i => i.id === id);
+
+      if (idx === -1) {
+        pledgedIds.push(id);
+        if (idea) idea.pledges++;
+      } else {
+        pledgedIds.splice(idx, 1);
+        if (idea) idea.pledges = Math.max(0, idea.pledges - 1);
+      }
+
+      localStorage.setItem('pledged', JSON.stringify(pledgedIds));
+      updateStats();
+      renderIdeas(filterIdeas(currentFilter));
+    }
+
+    // Filters
+    let currentFilter = 'all';
+
+    function filterIdeas(filter) {
+      currentFilter = filter;
+      let filtered = [...ideas];
+
+      switch (filter) {
+        case 'urgent':
+          filtered = filtered.filter(i => {
+            const t = getTimeRemaining(i.expires);
+            return t.status === 'urgent' || t.status === 'warning';
+          });
+          break;
+        case 'hot':
+          filtered.sort((a, b) => b.pledges - a.pledges);
+          break;
+        case 'new':
+          filtered.sort((a, b) => new Date(b.submitted) - new Date(a.submitted));
+          break;
+      }
+
+      return filtered;
+    }
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderIdeas(filterIdeas(btn.dataset.filter));
+      });
+    });
+
+    // Modal
+    function openModal() { document.getElementById('modal').classList.add('active'); }
+    function closeModal() { document.getElementById('modal').classList.remove('active'); }
+
+    document.getElementById('modal').addEventListener('click', (e) => {
+      if (e.target.id === 'modal') closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    document.getElementById('submit-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const form = e.target;
+      alert(`Thanks! "${form.title.value}" submitted for review.`);
+      form.reset();
+      closeModal();
+    });
+
+    // Init
+    loadIdeas();
+  </script>
+</body>
+</html>

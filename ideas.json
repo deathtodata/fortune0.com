@@ -1,0 +1,46 @@
+[
+  {
+    "id": "ai-agents-2026",
+    "title": "AI Agents Replace 40% of Knowledge Work by 2028",
+    "description": "Autonomous AI agents handling research, scheduling, email, and basic analysis will displace significant portions of white-collar work faster than expected. The infrastructure is already here — it's just a matter of adoption curves.",
+    "author": "matt@fortune0.com",
+    "submitted": "2026-02-01",
+    "expires": "2026-02-15",
+    "pledges": 47,
+    "tags": ["AI", "Labor", "Automation"],
+    "links": ["https://ark-invest.com/big-ideas"]
+  },
+  {
+    "id": "local-first-privacy",
+    "title": "Local-First Apps Become Default by 2027",
+    "description": "Privacy concerns and AI capabilities push computing back to the edge. SQLite + local LLMs + encrypted sync becomes the standard architecture. The cloud becomes optional, not required.",
+    "author": "anon",
+    "submitted": "2026-01-28",
+    "expires": "2026-02-09",
+    "pledges": 23,
+    "tags": ["Privacy", "Architecture", "Edge Computing"],
+    "links": []
+  },
+  {
+    "id": "open-source-incubators",
+    "title": "Open Source Eats Incubators",
+    "description": "YC's playbook gets open-sourced. Community-run accelerators with transparent equity terms outcompete traditional VCs for early-stage deals. The 7% standard falls to 2-3%.",
+    "author": "founder@startup.io",
+    "submitted": "2026-01-25",
+    "expires": "2026-02-05",
+    "pledges": 8,
+    "tags": ["Startups", "Open Source", "VC"],
+    "links": []
+  },
+  {
+    "id": "death-of-saas-seats",
+    "title": "Per-Seat SaaS Pricing Dies by 2027",
+    "description": "AI agents don't have seats. Usage-based pricing becomes the only model that makes sense when one person with AI can do the work of ten. Salesforce, Slack, and others will be forced to adapt.",
+    "author": "pricing-nerd",
+    "submitted": "2026-02-02",
+    "expires": "2026-02-16",
+    "pledges": 31,
+    "tags": ["SaaS", "Pricing", "AI"],
+    "links": []
+  }
+]

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Idea — fortune0</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <!-- Dynamic OG tags set by JS -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="fortune0">
+
+  <!-- QR Code library -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold: #D4AF37;
+      --gold-rgb: 212, 175, 55;
+      --black: #000;
+      --white: #fff;
+      --gray: rgba(255,255,255,0.5);
+      --glass: rgba(255,255,255,0.03);
+      --glass-border: rgba(255,255,255,0.08);
+      --status-urgent: #FF6B6B;
+      --status-warning: #FFD93D;
+      --status-safe: #6BCB77;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+      background: var(--black);
+      color: var(--white);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.3;
+    }
+
+    .orb-1 {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(var(--gold-rgb), 0.4), transparent 70%);
+      top: -200px;
+      right: -100px;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-50px, 50px); }
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1.25rem 2rem;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--white);
+      text-decoration: none;
+    }
+    .logo span { color: var(--gold); }
+
+    .back-link {
+      color: var(--gray);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--white); }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 7rem 2rem 4rem;
+    }
+
+    .idea-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      border: 1px solid currentColor;
+    }
+
+    .idea-status.urgent {
+      color: var(--status-urgent);
+      background: rgba(255, 107, 107, 0.1);
+    }
+    .idea-status.warning {
+      color: var(--status-warning);
+      background: rgba(255, 217, 61, 0.1);
+    }
+    .idea-status.safe {
+      color: var(--status-safe);
+      background: rgba(107, 203, 119, 0.1);
+    }
+
+    .idea-title {
+      font-size: clamp(2rem, 6vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+    }
+
+    .idea-meta {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      font-size: 0.9rem;
+      color: var(--gray);
+    }
+
+    .idea-desc {
+      font-size: 1.15rem;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 2rem;
+      line-height: 1.7;
+    }
+
+    .idea-tags {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 3rem;
+    }
+
+    .tag {
+      padding: 0.4rem 0.9rem;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      color: var(--gray);
+    }
+
+    /* Pledge Section */
+    .pledge-section {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .pledge-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .pledge-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .pledge-count {
+      font-size: 0.95rem;
+      color: var(--gray);
+    }
+    .pledge-count strong {
+      color: var(--gold);
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    .progress-container {
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), #F4E4A6);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .progress-label {
+      font-size: 0.85rem;
+      color: var(--gray);
+    }
+
+    .pledge-tiers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .pledge-tier {
+      padding: 1.25rem;
+      background: rgba(255,255,255,0.02);
+      border: 2px solid var(--glass-border);
+      border-radius: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pledge-tier:hover {
+      border-color: var(--gold);
+      background: rgba(var(--gold-rgb), 0.05);
+    }
+
+    .pledge-tier.selected {
+      border-color: var(--gold);
+      background: rgba(var(--gold-rgb), 0.1);
+    }
+
+    .tier-amount {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--gold);
+      margin-bottom: 0.25rem;
+    }
+
+    .tier-label {
+      font-size: 0.8rem;
+      color: var(--gray);
+    }
+
+    .pledge-btn {
+      width: 100%;
+      padding: 1.1rem;
+      background: var(--gold);
+      border: none;
+      border-radius: 100px;
+      color: var(--black);
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pledge-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 30px rgba(var(--gold-rgb), 0.4);
+    }
+
+    .pledge-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .pledge-note {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--gray);
+      margin-top: 1rem;
+    }
+
+    /* Share Section */
+    .share-section {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 2rem;
+    }
+
+    .share-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+
+    .share-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .share-link-container {
+      flex: 1;
+    }
+
+    .share-label {
+      font-size: 0.85rem;
+      color: var(--gray);
+      margin-bottom: 0.5rem;
+    }
+
+    .share-input-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .share-input {
+      flex: 1;
+      padding: 0.9rem 1rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      color: var(--white);
+      font-size: 0.9rem;
+      font-family: monospace;
+    }
+
+    .copy-btn {
+      padding: 0.9rem 1.25rem;
+      background: var(--gold);
+      border: none;
+      border-radius: 12px;
+      color: var(--black);
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .copy-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .qr-container {
+      text-align: center;
+    }
+
+    .qr-code {
+      background: white;
+      padding: 1rem;
+      border-radius: 12px;
+      display: inline-block;
+    }
+
+    .qr-code canvas {
+      display: block;
+    }
+
+    .qr-label {
+      font-size: 0.75rem;
+      color: var(--gray);
+      margin-top: 0.75rem;
+    }
+
+    .share-buttons {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .share-btn {
+      padding: 0.7rem 1.25rem;
+      background: transparent;
+      border: 1px solid var(--glass-border);
+      border-radius: 100px;
+      color: var(--gray);
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .share-btn:hover {
+      border-color: var(--white);
+      color: var(--white);
+    }
+
+    .not-found {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+
+    .not-found h1 {
+      font-size: 4rem;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      main { padding: 6rem 1.5rem 3rem; }
+      .pledge-tiers { grid-template-columns: 1fr; }
+      .share-grid { grid-template-columns: 1fr; }
+      .qr-container { order: -1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-layer">
+    <div class="orb orb-1"></div>
+  </div>
+
+  <header>
+    <a href="/" class="logo">fortune<span>0</span></a>
+    <a href="/ideas.html" class="back-link">← All Ideas</a>
+  </header>
+
+  <main id="main">
+    <!-- Populated by JS -->
+  </main>
+
+  <script>
+    const PLEDGE_THRESHOLD = 10;
+    const PLATFORM_FEE = 0.10; // 10%
+
+    // Get idea ID from URL
+    const params = new URLSearchParams(window.location.search);
+    const ideaId = params.get('id');
+
+    let selectedTier = null;
+
+    async function loadIdea() {
+      if (!ideaId) {
+        showNotFound();
+        return;
+      }
+
+      try {
+        const res = await fetch('/ideas.json');
+        const ideas = await res.json();
+        const idea = ideas.find(i => i.id === ideaId);
+
+        if (!idea) {
+          showNotFound();
+          return;
+        }
+
+        renderIdea(idea);
+      } catch (e) {
+        showNotFound();
+      }
+    }
+
+    function showNotFound() {
+      document.getElementById('main').innerHTML = `
+        <div class="not-found">
+          <h1>404</h1>
+          <p>This idea doesn't exist or has expired.</p>
+          <a href="/ideas.html" style="color: var(--gold);">Browse active ideas →</a>
+        </div>
+      `;
+    }
+
+    function getTimeRemaining(expiresDate) {
+      const now = new Date();
+      const expires = new Date(expiresDate);
+      const diff = expires - now;
+
+      if (diff <= 0) return { text: 'Expired', status: 'urgent', ms: 0 };
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+      if (days > 3) return { text: `${days} days remaining`, status: 'safe', ms: diff };
+      if (days > 0) return { text: `${days}d ${hours}h remaining`, status: 'warning', ms: diff };
+      if (hours > 0) return { text: `${hours}h ${mins}m remaining`, status: 'urgent', ms: diff };
+      return { text: `${mins} minutes remaining`, status: 'urgent', ms: diff };
+    }
+
+    function renderIdea(idea) {
+      const time = getTimeRemaining(idea.expires);
+      const progress = Math.min((idea.pledges / PLEDGE_THRESHOLD) * 100, 100);
+      const needsMore = Math.max(0, PLEDGE_THRESHOLD - idea.pledges);
+      const shareUrl = `${window.location.origin}/idea.html?id=${idea.id}`;
+
+      document.title = `${idea.title} — fortune0`;
+
+      document.getElementById('main').innerHTML = `
+        <span class="idea-status ${time.status}">⏱ ${time.text}</span>
+
+        <h1 class="idea-title">${idea.title}</h1>
+
+        <div class="idea-meta">
+          <span>Submitted ${new Date(idea.submitted).toLocaleDateString()}</span>
+          <span>by ${idea.author || 'Anonymous'}</span>
+        </div>
+
+        <p class="idea-desc">${idea.description}</p>
+
+        <div class="idea-tags">
+          ${idea.tags.map(t => `<span class="tag">${t}</span>`).join('')}
+        </div>
+
+        <div class="pledge-section">
+          <div class="pledge-header">
+            <h2 class="pledge-title">Keep this idea alive</h2>
+            <span class="pledge-count"><strong>${idea.pledges}</strong> pledges</span>
+          </div>
+
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${progress}%"></div>
+            </div>
+            <span class="progress-label">
+              ${progress >= 100
+                ? '✓ Threshold reached — idea will survive!'
+                : `${needsMore} more pledge${needsMore !== 1 ? 's' : ''} needed to survive`}
+            </span>
+          </div>
+
+          <div class="pledge-tiers">
+            <div class="pledge-tier" data-amount="1" onclick="selectTier(this, 1)">
+              <div class="tier-amount">$1</div>
+              <div class="tier-label">Supporter</div>
+            </div>
+            <div class="pledge-tier" data-amount="5" onclick="selectTier(this, 5)">
+              <div class="tier-amount">$5</div>
+              <div class="tier-label">Believer</div>
+            </div>
+            <div class="pledge-tier" data-amount="10" onclick="selectTier(this, 10)">
+              <div class="tier-amount">$10</div>
+              <div class="tier-label">Champion</div>
+            </div>
+          </div>
+
+          <button class="pledge-btn" id="pledge-btn" disabled onclick="handlePledge()">
+            Select an amount to pledge
+          </button>
+
+          <p class="pledge-note">
+            If this idea doesn't reach ${PLEDGE_THRESHOLD} pledges, your pledge is refunded.<br>
+            ${Math.round(PLATFORM_FEE * 100)}% platform fee supports fortune0.
+          </p>
+        </div>
+
+        <div class="share-section">
+          <h2 class="share-title">Share this idea</h2>
+
+          <div class="share-grid">
+            <div class="share-link-container">
+              <p class="share-label">Direct link</p>
+              <div class="share-input-group">
+                <input type="text" class="share-input" value="${shareUrl}" readonly id="share-url">
+                <button class="copy-btn" onclick="copyLink()">Copy</button>
+              </div>
+
+              <div class="share-buttons">
+                <button class="share-btn" onclick="shareTwitter('${idea.title}', '${shareUrl}')">
+                  𝕏 Twitter
+                </button>
+                <button class="share-btn" onclick="shareLinkedIn('${shareUrl}')">
+                  in LinkedIn
+                </button>
+                <button class="share-btn" onclick="shareEmail('${idea.title}', '${shareUrl}')">
+                  ✉ Email
+                </button>
+              </div>
+            </div>
+
+            <div class="qr-container">
+              <div class="qr-code" id="qr-code"></div>
+              <p class="qr-label">Scan to pledge</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Generate QR code
+      QRCode.toCanvas(document.querySelector('#qr-code'), shareUrl, {
+        width: 120,
+        margin: 0,
+        color: { dark: '#000', light: '#fff' }
+      });
+    }
+
+    function selectTier(el, amount) {
+      document.querySelectorAll('.pledge-tier').forEach(t => t.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedTier = amount;
+
+      const btn = document.getElementById('pledge-btn');
+      btn.disabled = false;
+      btn.textContent = `Pledge $${amount}`;
+    }
+
+    // STRIPE PAYMENT LINKS (TEST MODE - switch to live links for production)
+    const STRIPE_LINKS = {
+      1: 'https://buy.stripe.com/test_fZu5kDbfD6Qx7gee7S4wM02',   // $1 pledge
+      5: 'https://buy.stripe.com/test_9B6fZh6Zn5Mt0RQbZK4wM03',   // $5 pledge
+      10: 'https://buy.stripe.com/test_bJe5kD6ZneiZeIG6Fq4wM04'   // $10 pledge
+    };
+
+    function handlePledge() {
+      if (!selectedTier) return;
+
+      const stripeUrl = STRIPE_LINKS[selectedTier];
+      if (stripeUrl && !stripeUrl.includes('YOUR_')) {
+        // Add idea ID to track which idea was pledged
+        const redirectUrl = `${stripeUrl}?client_reference_id=${ideaId}`;
+        window.location.href = redirectUrl;
+      } else {
+        alert(`$${selectedTier} pledge link not configured yet.\n\nCreate it in Stripe Dashboard → Payment Links`);
+      }
+    }
+
+    function copyLink() {
+      const input = document.getElementById('share-url');
+      input.select();
+      document.execCommand('copy');
+
+      const btn = event.target;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    }
+
+    function shareTwitter(title, url) {
+      const text = `Check out this idea on fortune0: "${title}"`;
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+    }
+
+    function shareLinkedIn(url) {
+      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank');
+    }
+
+    function shareEmail(title, url) {
+      const subject = `Check out this idea: ${title}`;
+      const body = `I found this idea on fortune0 and thought you might be interested:\n\n${url}`;
+      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+
+    loadIdea();
+  </script>
+</body>
+</html>
