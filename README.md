@@ -1,97 +1,93 @@
-# fortune0.com
+# fortune0
 
-The Open Incubator - making startup creation as accessible as open source.
+> 230 domains. Open incubator. You build, we launch.
 
-## Local Development
+fortune0 is an open framework for starting companies from scratch. We own the domains. You pitch what they should become. If selected, you build it.
 
-```bash
-# Option 1: Using npx (no install needed)
-npx serve . -p 3000
+## Status Key
 
-# Option 2: Python (if you have it)
-python3 -m http.server 3000
+| Symbol | Meaning |
+|--------|---------|
+| 🟢 | Open - accepting pitches |
+| 🔒 | Claimed - builder selected |
+| 🏗️ | Building - in development |
+| ✅ | Launched - live product |
+| 💀 | Abandoned - reopened |
 
-# Option 3: Live reload
-npx live-server --port=3000
-```
+## How It Works
 
-Then open http://localhost:3000
+1. **Browse** → [fortune0.com/ideas.html](https://fortune0.com/ideas.html)
+2. **Pick a domain** → 230+ available, filtered by category
+3. **Submit pitch** → What would you build?
+4. **Get selected** → We review within 7 days
+5. **Build it** → 30-90 day sprint
+6. **Launch** → Ship under the domain
 
 ## File Structure
 
 ```
 fortune0.com/
-├── index.html      # Landing page
-├── 404.html        # Error page
-├── favicon.svg     # Browser icon
-├── robots.txt      # Search engine config
-├── sitemap.xml     # SEO sitemap
-├── package.json    # npm scripts
-└── README.md       # This file
+├── index.html          # Landing page
+├── ideas.html          # Browse all 230 domains
+├── domains.json        # Domain data (edit this to add/update)
+├── config.json         # Site configuration
+├── newsletter.html     # Newsletter archive
+├── newsletters/        # Individual issues
+├── CONTRIBUTING.md     # How to pitch/apply
+├── PROJECT-TEMPLATE.md # Template for new projects
+└── README.md           # This file
 ```
 
-## Deployment Options
+## For Builders
 
-### Option 1: GitHub Pages (Free, Simple)
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for:
+- How to apply
+- Compensation models (hourly, revenue share, equity)
+- The build process
+- Rules and expectations
 
-1. Push this repo to GitHub
-2. Go to repo Settings → Pages
-3. Select "main" branch, root folder
-4. Add custom domain: `fortune0.com`
-5. In your DNS, add:
-   - A record: `185.199.108.153`
-   - A record: `185.199.109.153`
-   - A record: `185.199.110.153`
-   - A record: `185.199.111.153`
-   - CNAME for www: `<username>.github.io`
+## For New Projects
 
-### Option 2: CloudFlare Pages (Free, Fast)
+Use [PROJECT-TEMPLATE.md](./PROJECT-TEMPLATE.md) to document:
+- Project overview
+- MVP scope
+- Tech stack
+- Progress tracking
 
-1. Connect GitHub repo to CloudFlare Pages
-2. Build command: (leave empty, it's static)
-3. Output directory: `.` (root)
-4. Add custom domain in CloudFlare dashboard
+## Local Development
 
-### Option 3: Vercel (Free tier generous)
-
-1. `npx vercel` from this directory
-2. Follow prompts
-3. Add custom domain in Vercel dashboard
-
-### Option 4: Your Own Server (EC2, etc.)
-
-1. Install nginx
-2. Copy files to `/var/www/fortune0.com/`
-3. Configure nginx virtual host
-4. Point DNS A record to server IP
-
-## DNS Setup (wherever you host)
-
-You'll need access to wherever fortune0.com DNS is managed (GoDaddy, Namecheap, CloudFlare, etc.)
-
-**For GitHub Pages:**
-```
-Type    Name    Value
-A       @       185.199.108.153
-A       @       185.199.109.153
-A       @       185.199.110.153
-A       @       185.199.111.153
-CNAME   www     deathtodata.github.io
+```bash
+python3 -m http.server 3000
+# Then open http://localhost:3000
 ```
 
-**For CloudFlare Pages:**
-- CloudFlare handles this automatically when you add the domain
+## Deployment
 
-**For your own server:**
+Currently on GitHub Pages:
+- Repo: github.com/deathtodata/fortune0.com
+- Live: fortune0.com
+
+## Edit Domains
+
+To add/remove/update domains, edit `domains.json`:
+
+```json
+{
+  "domain": "example.com",
+  "value": 1000,
+  "expires": "2026-08-28",
+  "status": "open"
+}
 ```
-Type    Name    Value
-A       @       <your-server-ip>
-A       www     <your-server-ip>
-```
 
-## Next Steps
+Push changes → site updates automatically.
 
-- [ ] Point DNS to hosting provider
-- [ ] Set up SSL (automatic on GitHub/CloudFlare/Vercel)
-- [ ] Connect waitlist form to email service (Buttondown, ConvertKit, etc.)
-- [ ] Add analytics (Plausible, Fathom, or SimpleAnalytics for privacy)
+## Legal
+
+fortune0 is a DBA of [Your Company Name].
+
+All projects built under fortune0 operate under this umbrella. Specific terms negotiated per project.
+
+---
+
+**Questions?** matt@fortune0.com
