@@ -595,21 +595,21 @@
   <main>
     <div class="page-header">
       <h1 class="page-title">Ideas</h1>
-      <p class="page-desc">Real domains. $5,000 prize for best pitch. You decide what gets built.</p>
+      <p class="page-desc">230 domains looking for builders. Pitch your idea. Get hired. Build it together.</p>
     </div>
 
     <div class="stats-bar">
       <div class="stat">
-        <div class="stat-value" id="stat-total">12</div>
-        <div class="stat-label">Open Domains</div>
+        <div class="stat-value" id="stat-total">230</div>
+        <div class="stat-label">Domains</div>
       </div>
       <div class="stat">
-        <div class="stat-value">$5K</div>
-        <div class="stat-label">Per Winner</div>
+        <div class="stat-value" id="stat-value">$0</div>
+        <div class="stat-label">Portfolio Value</div>
       </div>
       <div class="stat">
-        <div class="stat-value" id="stat-dying">7</div>
-        <div class="stat-label">Days Left</div>
+        <div class="stat-value">Hiring</div>
+        <div class="stat-label">Model</div>
       </div>
     </div>
 
@@ -618,6 +618,12 @@
       <button class="filter-btn" data-filter="highvalue">💰 High Value</button>
       <button class="filter-btn" data-filter="founder">🚀 Founder Tools</button>
       <button class="filter-btn" data-filter="vibe">✨ Vibe & Culture</button>
+      <button class="filter-btn" data-filter="privacy">🔒 Privacy</button>
+      <button class="filter-btn" data-filter="funny">😂 Funny</button>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+      <input type="text" id="search-input" placeholder="Search domains..." style="width: 100%; padding: 0.75rem 1rem; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 10px; color: var(--white); font-size: 1rem;">
     </div>
 
     <div class="ideas-list" id="ideas-list"></div>
@@ -626,7 +632,7 @@
   <div class="modal-overlay" id="modal">
     <div class="modal">
       <div class="modal-header">
-        <h2 class="modal-title">Submit Your Pitch</h2>
+        <h2 class="modal-title">Apply to Build</h2>
         <button class="modal-close" onclick="closeModal()">&times;</button>
       </div>
       <form id="submit-form">
@@ -637,31 +643,21 @@
         <div class="form-group">
           <label class="form-label">Which Domain? *</label>
           <select class="form-input" id="pitch-domain" name="domain" required>
-            <option value="">Select a domain...</option>
-            <option value="toneswitch.com">toneswitch.com ($1,691 value)</option>
-            <option value="vibedevice.com">vibedevice.com ($1,645 value)</option>
-            <option value="civicresume.com">civicresume.com ($2,080 value)</option>
-            <option value="finishthisidea.com">finishthisidea.com</option>
-            <option value="scaredofshipping.com">scaredofshipping.com</option>
-            <option value="wrongtab.com">wrongtab.com ($1,449 value)</option>
-            <option value="proofofvibe.com">proofofvibe.com</option>
-            <option value="saveorsink.com">saveorsink.com ($1,431 value)</option>
-            <option value="canyouratemyidea.com">canyouratemyidea.com</option>
-            <option value="feelslikework.com">feelslikework.com ($1,100 value)</option>
-            <option value="kindstamp.com">kindstamp.com ($1,626 value)</option>
-            <option value="deathtobigtech.com">deathtobigtech.com</option>
-            <option value="other">Other / My own idea</option>
+            <option value="">Loading domains...</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Your Pitch (one paragraph) *</label>
-          <textarea class="form-input" id="pitch-idea" name="idea" required placeholder="What should this domain become? What's the product/service/community?"></textarea>
+          <label class="form-label">What Would You Build? *</label>
+          <textarea class="form-input" id="pitch-idea" name="idea" required placeholder="Describe the product, service, or community you'd create with this domain."></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label">Why You? (optional)</label>
-          <textarea class="form-input" id="pitch-why" name="why" placeholder="Why are you the right person to build this?"></textarea>
+          <label class="form-label">Your Background (optional)</label>
+          <textarea class="form-input" id="pitch-why" name="why" placeholder="Skills, experience, portfolio links..."></textarea>
         </div>
-        <button type="submit" class="form-submit">Submit Pitch →</button>
+        <button type="submit" class="form-submit">Apply to Build →</button>
+        <p style="margin-top: 1rem; font-size: 0.8rem; color: var(--gray); text-align: center;">
+          Compensation: Negotiable (hourly, revenue share, or equity)
+        </p>
       </form>
     </div>
   </div>
@@ -686,83 +682,133 @@
     }
     animateCursor();
 
-    // Ideas
-    let ideas = [];
-    let pledgedIds = JSON.parse(localStorage.getItem('pledged') || '[]');
-    const PLEDGE_THRESHOLD = 10;
+    // Domains
+    let domains = [];
+    let currentFilter = 'all';
+    let searchTerm = '';
 
-    async function loadIdeas() {
+    // Category detection based on keywords
+    const categoryKeywords = {
+      vibe: ['vibe', 'proof', 'feels', 'emotion', 'mood'],
+      founder: ['idea', 'ship', 'startup', 'mvp', 'finish', 'pitch', 'launch', 'build'],
+      privacy: ['death', 'data', 'privacy', 'bigtech', 'delete', 'encrypt'],
+      funny: ['dumb', 'shit', 'fart', 'yikes', 'oof', 'suck', 'trash', 'cringe', 'wrong', 'bad']
+    };
+
+    function detectCategory(domain) {
+      const lower = domain.toLowerCase();
+      for (const [cat, keywords] of Object.entries(categoryKeywords)) {
+        if (keywords.some(kw => lower.includes(kw))) return cat;
+      }
+      return 'other';
+    }
+
+    async function loadDomains() {
       try {
-        const res = await fetch('/ideas.json?t=' + Date.now());
-        ideas = await res.json();
-        document.getElementById('stat-total').textContent = ideas.length;
-        renderIdeas(ideas);
+        const res = await fetch('/domains.json?t=' + Date.now());
+        domains = await res.json();
+
+        // Add category to each domain
+        domains = domains.map(d => ({
+          ...d,
+          category: detectCategory(d.domain)
+        }));
+
+        // Update stats
+        document.getElementById('stat-total').textContent = domains.length;
+        const totalValue = domains.reduce((sum, d) => sum + (d.value || 0), 0);
+        document.getElementById('stat-value').textContent = '$' + totalValue.toLocaleString();
+
+        // Populate dropdown
+        populateDropdown();
+
+        // Render
+        renderDomains(domains);
       } catch (e) {
-        document.getElementById('ideas-list').innerHTML = '<div class="empty-state">No domains yet. Check back soon!</div>';
+        console.error(e);
+        document.getElementById('ideas-list').innerHTML = '<div class="empty-state">Failed to load domains.</div>';
       }
     }
 
-    function getTimeRemaining(expiresDate) {
-      const now = new Date();
-      const expires = new Date(expiresDate);
-      const diff = expires - now;
+    function populateDropdown() {
+      const select = document.getElementById('pitch-domain');
+      select.innerHTML = '<option value="">Select a domain...</option>';
 
-      if (diff <= 0) return { text: 'Expired', status: 'urgent', ms: 0 };
+      // Add top 50 by value to dropdown
+      const topDomains = [...domains].sort((a, b) => b.value - a.value).slice(0, 50);
+      topDomains.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.domain;
+        opt.textContent = d.value > 100 ? `${d.domain} ($${d.value})` : d.domain;
+        select.appendChild(opt);
+      });
 
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-      if (days > 3) return { text: `${days}d remaining`, status: 'safe', ms: diff };
-      if (days > 0) return { text: `${days}d ${hours}h left`, status: 'warning', ms: diff };
-      return { text: `${hours}h left`, status: 'urgent', ms: diff };
+      const otherOpt = document.createElement('option');
+      otherOpt.value = 'other';
+      otherOpt.textContent = 'Other / Custom idea';
+      select.appendChild(otherOpt);
     }
 
-    function renderIdeas(list) {
+    function renderDomains(list) {
       const container = document.getElementById('ideas-list');
 
-      if (!list.length) {
+      // Limit to 50 for performance
+      const displayList = list.slice(0, 50);
+
+      if (!displayList.length) {
         container.innerHTML = '<div class="empty-state">No domains found</div>';
         return;
       }
 
-      container.innerHTML = list.map(idea => {
-        const time = getTimeRemaining(idea.expires);
+      container.innerHTML = displayList.map(d => {
+        const catLabels = { vibe: '✨ Vibe', founder: '🚀 Founder', privacy: '🔒 Privacy', funny: '😂 Funny', other: '📁 Other' };
 
         return `
-          <article class="idea-card" data-id="${idea.id}">
+          <article class="idea-card">
             <div class="idea-header">
-              <h2 class="idea-title" style="color: var(--gold);">${idea.domain}</h2>
-              <span class="idea-countdown ${time.status}" aria-label="Time remaining">
-                ⏱ ${time.text}
-              </span>
+              <h2 class="idea-title" style="color: var(--gold);">${d.domain}</h2>
+              <span class="idea-countdown safe">Est. $${d.value || 0}</span>
             </div>
-            <p class="idea-desc">${idea.description}</p>
+            <p class="idea-desc">This domain is looking for a builder. What should it become?</p>
             <div class="idea-footer">
-              <div class="idea-tags" role="list" aria-label="Tags">
-                <span class="tag" role="listitem">${idea.category}</span>
-                <span class="tag" role="listitem">Est. ${idea.value}</span>
+              <div class="idea-tags">
+                <span class="tag">${catLabels[d.category] || 'Other'}</span>
+                ${d.expires ? `<span class="tag">Exp: ${d.expires}</span>` : ''}
               </div>
               <div class="idea-actions">
-                <span class="pledge-count"><strong>$${idea.prize.toLocaleString()}</strong> prize</span>
-                <button
-                  class="pledge-btn"
-                  onclick="openModalWithDomain('${idea.domain}')"
-                >
-                  Submit Pitch →
+                <button class="pledge-btn" onclick="openModalWithDomain('${d.domain}')">
+                  Apply to Build →
                 </button>
               </div>
-            </div>
-            <div class="pledge-progress">
-              <div class="progress-bar" role="progressbar" aria-valuenow="${idea.submissions}" aria-valuemin="0" aria-valuemax="10">
-                <div class="progress-fill" style="width: ${Math.min(idea.submissions * 10, 100)}%"></div>
-              </div>
-              <span class="progress-label">
-                ${idea.submissions} pitch${idea.submissions !== 1 ? 'es' : ''} submitted
-              </span>
             </div>
           </article>
         `;
       }).join('');
+
+      if (list.length > 50) {
+        container.innerHTML += `<div class="empty-state">Showing 50 of ${list.length} domains. Use search or filters to narrow down.</div>`;
+      }
+    }
+
+    function filterDomains() {
+      let filtered = [...domains];
+
+      // Apply category filter
+      if (currentFilter !== 'all') {
+        if (currentFilter === 'highvalue') {
+          filtered = filtered.filter(d => d.value >= 1000);
+          filtered.sort((a, b) => b.value - a.value);
+        } else {
+          filtered = filtered.filter(d => d.category === currentFilter);
+        }
+      }
+
+      // Apply search
+      if (searchTerm) {
+        filtered = filtered.filter(d => d.domain.toLowerCase().includes(searchTerm.toLowerCase()));
+      }
+
+      return filtered;
     }
 
     function openModalWithDomain(domain) {
@@ -770,52 +816,20 @@
       document.getElementById('pitch-domain').value = domain;
     }
 
-    function togglePledge(id) {
-      const idx = pledgedIds.indexOf(id);
-      const idea = ideas.find(i => i.id === id);
-
-      if (idx === -1) {
-        pledgedIds.push(id);
-        if (idea) idea.pledges++;
-      } else {
-        pledgedIds.splice(idx, 1);
-        if (idea) idea.pledges = Math.max(0, idea.pledges - 1);
-      }
-
-      localStorage.setItem('pledged', JSON.stringify(pledgedIds));
-      updateStats();
-      renderIdeas(filterIdeas(currentFilter));
-    }
-
-    // Filters
-    let currentFilter = 'all';
-
-    function filterIdeas(filter) {
-      currentFilter = filter;
-      let filtered = [...ideas];
-
-      switch (filter) {
-        case 'highvalue':
-          filtered = filtered.filter(i => parseInt(i.value.replace(/[^0-9]/g, '')) >= 1000);
-          filtered.sort((a, b) => parseInt(b.value.replace(/[^0-9]/g, '')) - parseInt(a.value.replace(/[^0-9]/g, '')));
-          break;
-        case 'founder':
-          filtered = filtered.filter(i => i.category === 'Founder Tools' || i.category === 'Creator Tools');
-          break;
-        case 'vibe':
-          filtered = filtered.filter(i => i.category === 'Vibe & Culture');
-          break;
-      }
-
-      return filtered;
-    }
-
+    // Filter buttons
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        renderIdeas(filterIdeas(btn.dataset.filter));
+        currentFilter = btn.dataset.filter;
+        renderDomains(filterDomains());
       });
+    });
+
+    // Search
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      searchTerm = e.target.value;
+      renderDomains(filterDomains());
     });
 
     // Modal
@@ -830,6 +844,7 @@
       if (e.key === 'Escape') closeModal();
     });
 
+    // Form submission - using Formspree would be better, but mailto for now
     document.getElementById('submit-form').addEventListener('submit', (e) => {
       e.preventDefault();
 
@@ -838,33 +853,33 @@
       const idea = document.getElementById('pitch-idea').value;
       const why = document.getElementById('pitch-why').value;
 
-      // Build email body
-      const subject = encodeURIComponent(`[fortune0 Pitch] ${domain}`);
+      const subject = encodeURIComponent(`[fortune0] Application to build: ${domain}`);
       const body = encodeURIComponent(
 `DOMAIN: ${domain}
 
-PITCH:
+WHAT I'D BUILD:
 ${idea}
 
 WHY ME:
 ${why || 'Not provided'}
 
-FROM: ${email}
+CONTACT: ${email}
+
+---
+Sent from fortune0.com
 `);
 
-      // Open mailto link - this actually sends an email
       window.location.href = `mailto:lolztex@gmail.com?subject=${subject}&body=${body}`;
 
-      // Also show confirmation
       setTimeout(() => {
-        alert('Your email client should open. Send the email to submit your pitch!');
+        alert('Your email app should open. Send the email to apply!');
         e.target.reset();
         closeModal();
       }, 100);
     });
 
     // Init
-    loadIdeas();
+    loadDomains();
   </script>
 </body>
 </html>

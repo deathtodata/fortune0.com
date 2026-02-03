@@ -1,0 +1,24 @@
+{
+  "siteName": "fortune0",
+  "tagline": "230 domains looking for builders",
+  "model": "hiring",
+  "compensation": {
+    "type": "negotiable",
+    "options": ["hourly", "revenue-share", "equity", "project-based"]
+  },
+  "contact": "matt@fortune0.com",
+  "categories": [
+    { "id": "all", "label": "All Domains", "icon": "" },
+    { "id": "highvalue", "label": "High Value ($1K+)", "icon": "💰" },
+    { "id": "vibe", "label": "Vibe & Culture", "icon": "✨" },
+    { "id": "founder", "label": "Founder Tools", "icon": "🚀" },
+    { "id": "privacy", "label": "Privacy & Freedom", "icon": "🔒" },
+    { "id": "funny", "label": "Funny / Viral", "icon": "😂" }
+  ],
+  "domainTags": {
+    "vibe": ["vibe", "proof", "feels", "emotion"],
+    "founder": ["idea", "ship", "startup", "mvp", "finish", "pitch"],
+    "privacy": ["death", "data", "privacy", "bigtech", "delete"],
+    "funny": ["dumb", "shit", "fart", "yikes", "oof", "suck", "trash", "cringe"]
+  }
+}
