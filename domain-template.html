@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="page-title">Domain</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .glow {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+    }
+
+    .domain {
+      font-size: clamp(2.5rem, 10vw, 5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #D4AF37 0%, #F4E4BA 50%, #D4AF37 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+    }
+
+    .tagline {
+      font-size: 1.25rem;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+
+    .prize {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: rgba(212,175,55,0.1);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 100px;
+      color: #D4AF37;
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .form-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-title {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    input[type="email"] {
+      flex: 1;
+      min-width: 200px;
+      padding: 1rem 1.25rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    input[type="email"]:focus {
+      outline: none;
+      border-color: #D4AF37;
+    }
+
+    input::placeholder {
+      color: rgba(255,255,255,0.3);
+    }
+
+    button {
+      padding: 1rem 2rem;
+      background: #D4AF37;
+      border: none;
+      border-radius: 12px;
+      color: #000;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(212,175,55,0.4);
+    }
+
+    .or-divider {
+      color: rgba(255,255,255,0.3);
+      margin: 1.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    .code-section {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    input[type="text"] {
+      width: 180px;
+      padding: 1rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1.1rem;
+      font-family: inherit;
+      text-align: center;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #D4AF37;
+    }
+
+    .code-btn {
+      background: transparent;
+      border: 1px solid #D4AF37;
+      color: #D4AF37;
+    }
+
+    .code-btn:hover {
+      background: #D4AF37;
+      color: #000;
+    }
+
+    .footer {
+      margin-top: 2rem;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.85rem;
+    }
+
+    .footer a {
+      color: #D4AF37;
+      text-decoration: none;
+    }
+
+    .success {
+      display: none;
+      padding: 1rem;
+      background: rgba(107,203,119,0.1);
+      border: 1px solid rgba(107,203,119,0.3);
+      border-radius: 12px;
+      color: #6BCB77;
+      margin-top: 1rem;
+    }
+
+    .success.show { display: block; }
+
+    @media (max-width: 500px) {
+      .input-row { flex-direction: column; }
+      input[type="email"] { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow"></div>
+
+  <div class="container">
+    <h1 class="domain" id="domain-name">domain.com</h1>
+    <p class="tagline" id="tagline">This domain is looking for its purpose. Got an idea?</p>
+    <div class="prize">🏆 $5,000 for best pitch</div>
+
+    <div class="form-box">
+      <p class="form-title">Get notified when voting opens</p>
+      <form class="input-row" id="notify-form">
+        <input type="email" id="email" placeholder="your@email.com" required>
+        <button type="submit">Notify Me</button>
+      </form>
+
+      <div class="or-divider">— or enter access code —</div>
+
+      <div class="code-section">
+        <input type="text" id="code" placeholder="CODE" maxlength="10">
+        <button type="button" class="code-btn" onclick="checkCode()">Enter</button>
+      </div>
+
+      <div class="success" id="success">✓ You're in! Check your email.</div>
+    </div>
+
+    <p class="footer">
+      Part of <a href="https://fortune0.com">fortune0</a> — where ideas compete to exist
+    </p>
+  </div>
+
+  <script>
+    // Get domain from URL param or use current hostname
+    const params = new URLSearchParams(window.location.search);
+    const domain = params.get('d') || window.location.hostname;
+
+    // Config for specific domains (optional customization)
+    const domainConfig = {
+      'toneswitch.com': { tagline: 'Voice AI needs a home. What should this become?' },
+      'vibedevice.com': { tagline: 'The vibe economy needs hardware. What\'s the device?' },
+      'civicresume.com': { tagline: 'Your civic life as a resume. What\'s the product?' },
+      'wrongtab.com': { tagline: '47 tabs open. Can\'t find anything. Sound familiar?' },
+      'scaredofshipping.com': { tagline: 'The fear that kills startups. What\'s the cure?' },
+      'finishthisidea.com': { tagline: 'Half-finished ideas everywhere. What helps them ship?' },
+      'proofofvibe.com': { tagline: 'Proof-of-work for machines. Proof-of-vibe for humans.' },
+      'saveorsink.com': { tagline: 'High stakes. Save it or sink it. What\'s the game?' },
+      'canyouratemyidea.com': { tagline: 'Brutal feedback. No mercy. What\'s the platform?' },
+      'feelslikework.com': { tagline: 'When side projects stop being fun. What helps?' },
+      'kindstamp.com': { tagline: 'Kindness needs proof. What\'s the stamp?' },
+      'deathtobigtech.com': { tagline: 'The rebellion needs a home. Join us.' }
+    };
+
+    // Apply config
+    document.getElementById('domain-name').textContent = domain;
+    document.getElementById('page-title').textContent = domain;
+
+    if (domainConfig[domain]) {
+      document.getElementById('tagline').textContent = domainConfig[domain].tagline;
+    }
+
+    // Notify form - sends email via mailto (simple, works)
+    document.getElementById('notify-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+
+      // Open mailto to Matt with the signup
+      const subject = encodeURIComponent(`[${domain}] New signup`);
+      const body = encodeURIComponent(`New signup for ${domain}:\n\nEmail: ${email}`);
+      window.location.href = `mailto:lolztex@gmail.com?subject=${subject}&body=${body}`;
+
+      document.getElementById('success').classList.add('show');
+    });
+
+    // Access code check
+    const VALID_CODES = ['FORTUNE1', 'F0LAUNCH', 'D2D2026'];
+
+    function checkCode() {
+      const code = document.getElementById('code').value.toUpperCase().trim();
+      if (VALID_CODES.includes(code)) {
+        localStorage.setItem('f0_access', code);
+        window.location.href = `https://fortune0.com/ideas.html`;
+      } else {
+        alert('Invalid code. Subscribe at death2data.com for access.');
+      }
+    }
+
+    // Enter key for code
+    document.getElementById('code').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') checkCode();
+    });
+  </script>
+</body>
+</html>
