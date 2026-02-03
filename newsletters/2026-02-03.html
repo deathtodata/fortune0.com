@@ -7,11 +7,9 @@
     <meta name="description" content="The first edition of the fortune0 newsletter">
     <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 
-    <!-- Open Graph for sharing -->
     <meta property="og:title" content="Welcome to fortune0">
-    <meta property="og:description" content="The first edition of the fortune0 newsletter - ideas worth keeping alive">
+    <meta property="og:description" content="Subscriber-only content from fortune0">
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://fortune0.com/newsletters/2026-02-03.html">
 
     <style>
         * {
@@ -45,6 +43,138 @@
             max-width: 680px;
             margin: 0 auto;
             padding: 60px 24px;
+        }
+
+        /* Gate overlay */
+        .gate-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .gate-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .gate-box {
+            background: linear-gradient(135deg, rgba(20,20,20,0.95) 0%, rgba(10,10,10,0.98) 100%);
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 20px;
+            padding: 48px;
+            max-width: 440px;
+            text-align: center;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.8);
+        }
+
+        .gate-logo {
+            font-size: 2rem;
+            font-weight: 200;
+            letter-spacing: 0.3em;
+            color: #D4AF37;
+            margin-bottom: 8px;
+        }
+
+        .gate-title {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-bottom: 16px;
+            color: #fff;
+        }
+
+        .gate-subtitle {
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 32px;
+            font-size: 0.95rem;
+        }
+
+        .gate-input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 0.3em;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+
+        .gate-input:focus {
+            outline: none;
+            border-color: #D4AF37;
+            background: rgba(212,175,55,0.05);
+        }
+
+        .gate-input::placeholder {
+            letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .gate-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #D4AF37 0%, #B8960C 100%);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 24px;
+        }
+
+        .gate-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(212,175,55,0.3);
+        }
+
+        .gate-error {
+            color: #ff6b6b;
+            font-size: 0.9rem;
+            margin-top: -8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .gate-error.show {
+            display: block;
+        }
+
+        .gate-subscribe {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+        }
+
+        .gate-subscribe a {
+            color: #D4AF37;
+            text-decoration: none;
+        }
+
+        /* Preview content (blurred) */
+        .preview-blur {
+            filter: blur(8px);
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .unlocked .preview-blur {
+            filter: none;
+            user-select: auto;
+            pointer-events: auto;
         }
 
         /* Header */
@@ -84,9 +214,16 @@
             margin-bottom: 16px;
         }
 
-        .issue-meta {
-            color: rgba(255,255,255,0.4);
-            font-size: 0.9rem;
+        .subscriber-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(212,175,55,0.1);
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            color: #D4AF37;
+            text-transform: uppercase;
         }
 
         /* Content */
@@ -106,25 +243,13 @@
             margin: 48px 0 20px;
         }
 
-        article h3 {
-            font-size: 1.2rem;
-            font-weight: 500;
-            color: #D4AF37;
-            margin: 36px 0 16px;
-        }
-
         article a {
             color: #D4AF37;
             text-decoration: none;
             border-bottom: 1px solid rgba(212,175,55,0.3);
-            transition: border-color 0.3s;
         }
 
-        article a:hover {
-            border-color: #D4AF37;
-        }
-
-        article ul, article ol {
+        article ul {
             margin: 0 0 24px 24px;
         }
 
@@ -132,15 +257,6 @@
             margin-bottom: 12px;
         }
 
-        article blockquote {
-            border-left: 3px solid #D4AF37;
-            padding-left: 24px;
-            margin: 32px 0;
-            font-style: italic;
-            color: rgba(255,255,255,0.7);
-        }
-
-        /* Highlight box */
         .highlight {
             background: linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(139,115,85,0.05) 100%);
             border: 1px solid rgba(212,175,55,0.2);
@@ -157,70 +273,27 @@
             margin-bottom: 12px;
         }
 
-        /* Footer */
         footer {
             margin-top: 64px;
             padding-top: 32px;
             border-top: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .share-section {
-            margin-bottom: 32px;
-        }
-
-        .share-section h4 {
-            color: rgba(255,255,255,0.4);
-            font-size: 0.85rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            margin-bottom: 16px;
-        }
-
-        .share-links {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .share-links a {
-            padding: 10px 20px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            color: #fff;
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-        }
-
-        .share-links a:hover {
-            background: rgba(212,175,55,0.1);
-            border-color: rgba(212,175,55,0.3);
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
+            text-align: center;
             color: rgba(255,255,255,0.4);
             font-size: 0.9rem;
         }
 
-        .footer-links a {
+        footer a {
             color: #D4AF37;
             text-decoration: none;
         }
 
-        /* Mobile */
         @media (max-width: 600px) {
+            .gate-box {
+                margin: 20px;
+                padding: 32px 24px;
+            }
             h1 {
                 font-size: 1.8rem;
-            }
-
-            article {
-                font-size: 1rem;
             }
         }
     </style>
@@ -228,15 +301,32 @@
 <body>
     <div class="bg-gradient"></div>
 
-    <div class="container">
+    <!-- Gate Overlay -->
+    <div class="gate-overlay" id="gate">
+        <div class="gate-box">
+            <div class="gate-logo">fortune0</div>
+            <h2 class="gate-title">Subscriber Content</h2>
+            <p class="gate-subtitle">Enter your access code to read this issue.<br>Codes are sent to active subscribers.</p>
+
+            <input type="text" class="gate-input" id="codeInput" placeholder="ACCESS CODE" maxlength="8" autocomplete="off">
+            <p class="gate-error" id="gateError">Invalid code. Check your email for the correct code.</p>
+            <button class="gate-button" onclick="checkCode()">Unlock Content</button>
+
+            <p class="gate-subscribe">
+                Not a subscriber? <a href="https://death2data.com">Join for $1/month →</a>
+            </p>
+        </div>
+    </div>
+
+    <div class="container" id="content">
         <header>
             <a href="../newsletter.html" class="back-link">← All Issues</a>
             <div class="issue-date">Issue #1 · February 3, 2026</div>
             <h1>Welcome to fortune0</h1>
-            <div class="issue-meta">5 min read</div>
+            <span class="subscriber-badge">Subscriber Only</span>
         </header>
 
-        <article>
+        <article class="preview-blur">
             <p>
                 You're reading the first fortune0 newsletter. If you're here, you probably believe
                 the same thing we do: the best ideas shouldn't need permission to exist.
@@ -271,54 +361,34 @@
                 <li><strong>Ideas that hit their threshold survive.</strong> They get more time. More visibility. A chance to become real.</li>
             </ul>
 
-            <p>
-                Think of it like natural selection for ideas, except the environment is human attention and belief.
-            </p>
-
-            <h2>Why this matters</h2>
+            <h2>We need your ideas</h2>
 
             <p>
-                Every day, thousands of good ideas die in someone's Notes app. The person
-                who had the idea either didn't know the right people, didn't have the resources,
-                or just didn't have the energy to navigate the gatekeeping.
+                Here's the ask: <strong>What would YOU put on fortune0?</strong>
             </p>
 
             <p>
-                Meanwhile, mediocre ideas with good connections get funded all the time.
-            </p>
-
-            <p>
-                fortune0 is an experiment in fixing that asymmetry. What if the only thing
-                that mattered was whether strangers on the internet thought your idea was
-                worth $1 of belief?
+                You're already paying $1/month. That means you get it. You understand that ideas have value
+                before they become products. So what idea have you been sitting on? What would you want
+                to see exist in the world?
             </p>
 
             <div class="highlight">
-                <h4>This week's ideas to watch</h4>
+                <h4>Reply to this email with:</h4>
                 <p>
-                    Check out <a href="../ideas.html">the ideas page</a> to see what's currently
-                    fighting for survival. Some will make it. Most won't. That's the point.
+                    <strong>1. Your idea</strong> (one sentence)<br>
+                    <strong>2. Why it matters</strong> (one sentence)<br>
+                    <strong>3. What you'd sell for $1</strong> (optional - could be advice, a template, access to something)
                 </p>
             </div>
 
-            <h2>What's next</h2>
-
             <p>
-                This is just the beginning. In the coming weeks, we'll be:
-            </p>
-
-            <ul>
-                <li>Opening up idea submissions to everyone</li>
-                <li>Building tools for idea creators to rally support</li>
-                <li>Experimenting with what happens when ideas survive—do they become companies? Communities? Something else?</li>
-            </ul>
-
-            <p>
-                If you have thoughts, reply to this email. Seriously. We read everything.
+                The best submissions become the first real ideas on fortune0. Your name attached.
+                Your idea in front of everyone who joins after you.
             </p>
 
             <p>
-                See you next week.
+                You're not just a subscriber. You're a founding member.
             </p>
 
             <p>
@@ -327,20 +397,49 @@
         </article>
 
         <footer>
-            <div class="share-section">
-                <h4>Share this issue</h4>
-                <div class="share-links">
-                    <a href="https://twitter.com/intent/tweet?text=Welcome%20to%20fortune0&url=https://fortune0.com/newsletters/2026-02-03.html" target="_blank">Twitter</a>
-                    <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://fortune0.com/newsletters/2026-02-03.html" target="_blank">LinkedIn</a>
-                    <a href="mailto:?subject=Welcome%20to%20fortune0&body=Check%20this%20out:%20https://fortune0.com/newsletters/2026-02-03.html">Email</a>
-                </div>
-            </div>
-
-            <div class="footer-links">
-                <a href="../newsletter.html">← All Issues</a>
-                <span>fortune0.com</span>
-            </div>
+            <p><a href="https://death2data.com">death2data.com</a> · <a href="../newsletter.html">All Issues</a></p>
         </footer>
     </div>
+
+    <script>
+        // Simple access code system
+        // Change this code each issue - email it to your subscribers
+        const VALID_CODES = ['FORTUNE1', 'F0LAUNCH', 'D2D2026'];
+
+        // Check if already unlocked
+        const savedCode = localStorage.getItem('f0_access');
+        if (savedCode && VALID_CODES.includes(savedCode.toUpperCase())) {
+            unlockContent();
+        }
+
+        function checkCode() {
+            const input = document.getElementById('codeInput').value.toUpperCase().trim();
+            const error = document.getElementById('gateError');
+
+            if (VALID_CODES.includes(input)) {
+                localStorage.setItem('f0_access', input);
+                unlockContent();
+            } else {
+                error.classList.add('show');
+                document.getElementById('codeInput').style.borderColor = '#ff6b6b';
+            }
+        }
+
+        function unlockContent() {
+            document.getElementById('gate').classList.add('hidden');
+            document.getElementById('content').classList.add('unlocked');
+        }
+
+        // Enter key submits
+        document.getElementById('codeInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') checkCode();
+        });
+
+        // Clear error on input
+        document.getElementById('codeInput').addEventListener('input', function() {
+            document.getElementById('gateError').classList.remove('show');
+            this.style.borderColor = 'rgba(255,255,255,0.1)';
+        });
+    </script>
 </body>
 </html>
