@@ -595,29 +595,29 @@
   <main>
     <div class="page-header">
       <h1 class="page-title">Ideas</h1>
-      <p class="page-desc">Ideas live or die by community pledge. Below threshold? Gone forever.</p>
+      <p class="page-desc">Real domains. $5,000 prize for best pitch. You decide what gets built.</p>
     </div>
 
     <div class="stats-bar">
       <div class="stat">
-        <div class="stat-value" id="stat-total">0</div>
-        <div class="stat-label">Active Ideas</div>
+        <div class="stat-value" id="stat-total">12</div>
+        <div class="stat-label">Open Domains</div>
       </div>
       <div class="stat">
-        <div class="stat-value" id="stat-pledges">0</div>
-        <div class="stat-label">Total Pledges</div>
+        <div class="stat-value">$5K</div>
+        <div class="stat-label">Per Winner</div>
       </div>
       <div class="stat">
-        <div class="stat-value" id="stat-dying">0</div>
-        <div class="stat-label">Dying Soon</div>
+        <div class="stat-value" id="stat-dying">7</div>
+        <div class="stat-label">Days Left</div>
       </div>
     </div>
 
     <div class="filters">
-      <button class="filter-btn active" data-filter="all">All Ideas</button>
-      <button class="filter-btn" data-filter="urgent">🔥 Dying Soon</button>
-      <button class="filter-btn" data-filter="hot">⚡ Most Pledged</button>
-      <button class="filter-btn" data-filter="new">✨ New</button>
+      <button class="filter-btn active" data-filter="all">All Domains</button>
+      <button class="filter-btn" data-filter="highvalue">💰 High Value</button>
+      <button class="filter-btn" data-filter="founder">🚀 Founder Tools</button>
+      <button class="filter-btn" data-filter="vibe">✨ Vibe & Culture</button>
     </div>
 
     <div class="ideas-list" id="ideas-list"></div>
@@ -626,31 +626,42 @@
   <div class="modal-overlay" id="modal">
     <div class="modal">
       <div class="modal-header">
-        <h2 class="modal-title">Submit an Idea</h2>
+        <h2 class="modal-title">Submit Your Pitch</h2>
         <button class="modal-close" onclick="closeModal()">&times;</button>
       </div>
       <form id="submit-form">
         <div class="form-group">
           <label class="form-label">Your Email *</label>
-          <input type="email" class="form-input" name="email" required placeholder="you@email.com">
+          <input type="email" class="form-input" id="pitch-email" name="email" required placeholder="you@email.com">
         </div>
         <div class="form-group">
-          <label class="form-label">Idea Title *</label>
-          <input type="text" class="form-input" name="title" required placeholder="A bold prediction or thesis">
+          <label class="form-label">Which Domain? *</label>
+          <select class="form-input" id="pitch-domain" name="domain" required>
+            <option value="">Select a domain...</option>
+            <option value="toneswitch.com">toneswitch.com ($1,691 value)</option>
+            <option value="vibedevice.com">vibedevice.com ($1,645 value)</option>
+            <option value="civicresume.com">civicresume.com ($2,080 value)</option>
+            <option value="finishthisidea.com">finishthisidea.com</option>
+            <option value="scaredofshipping.com">scaredofshipping.com</option>
+            <option value="wrongtab.com">wrongtab.com ($1,449 value)</option>
+            <option value="proofofvibe.com">proofofvibe.com</option>
+            <option value="saveorsink.com">saveorsink.com ($1,431 value)</option>
+            <option value="canyouratemyidea.com">canyouratemyidea.com</option>
+            <option value="feelslikework.com">feelslikework.com ($1,100 value)</option>
+            <option value="kindstamp.com">kindstamp.com ($1,626 value)</option>
+            <option value="deathtobigtech.com">deathtobigtech.com</option>
+            <option value="other">Other / My own idea</option>
+          </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Description *</label>
-          <textarea class="form-input" name="description" required placeholder="What's the idea? Why will it happen? What's the evidence?"></textarea>
+          <label class="form-label">Your Pitch (one paragraph) *</label>
+          <textarea class="form-input" id="pitch-idea" name="idea" required placeholder="What should this domain become? What's the product/service/community?"></textarea>
         </div>
         <div class="form-group">
-          <label class="form-label">Supporting Link (optional)</label>
-          <input type="url" class="form-input" name="link" placeholder="https://...">
+          <label class="form-label">Why You? (optional)</label>
+          <textarea class="form-input" id="pitch-why" name="why" placeholder="Why are you the right person to build this?"></textarea>
         </div>
-        <div class="form-group">
-          <label class="form-label">Tags</label>
-          <input type="text" class="form-input" name="tags" placeholder="AI, Privacy, Startups">
-        </div>
-        <button type="submit" class="form-submit">Submit Idea</button>
+        <button type="submit" class="form-submit">Submit Pitch →</button>
       </form>
     </div>
   </div>
@@ -684,21 +695,11 @@
       try {
         const res = await fetch('/ideas.json?t=' + Date.now());
         ideas = await res.json();
-        updateStats();
+        document.getElementById('stat-total').textContent = ideas.length;
         renderIdeas(ideas);
       } catch (e) {
-        document.getElementById('ideas-list').innerHTML = '<div class="empty-state">No ideas yet. Be the first!</div>';
+        document.getElementById('ideas-list').innerHTML = '<div class="empty-state">No domains yet. Check back soon!</div>';
       }
-    }
-
-    function updateStats() {
-      const total = ideas.length;
-      const pledges = ideas.reduce((sum, i) => sum + i.pledges, 0);
-      const dying = ideas.filter(i => getTimeRemaining(i.expires).status !== 'safe').length;
-
-      document.getElementById('stat-total').textContent = total;
-      document.getElementById('stat-pledges').textContent = pledges;
-      document.getElementById('stat-dying').textContent = dying;
     }
 
     function getTimeRemaining(expiresDate) {
@@ -720,20 +721,17 @@
       const container = document.getElementById('ideas-list');
 
       if (!list.length) {
-        container.innerHTML = '<div class="empty-state">No ideas found</div>';
+        container.innerHTML = '<div class="empty-state">No domains found</div>';
         return;
       }
 
       container.innerHTML = list.map(idea => {
         const time = getTimeRemaining(idea.expires);
-        const isPledged = pledgedIds.includes(idea.id);
-        const progress = Math.min((idea.pledges / PLEDGE_THRESHOLD) * 100, 100);
-        const needsMore = PLEDGE_THRESHOLD - idea.pledges;
 
         return `
           <article class="idea-card" data-id="${idea.id}">
             <div class="idea-header">
-              <h2 class="idea-title"><a href="/idea.html?id=${idea.id}" style="color: inherit; text-decoration: none;">${idea.title}</a></h2>
+              <h2 class="idea-title" style="color: var(--gold);">${idea.domain}</h2>
               <span class="idea-countdown ${time.status}" aria-label="Time remaining">
                 ⏱ ${time.text}
               </span>
@@ -741,30 +739,35 @@
             <p class="idea-desc">${idea.description}</p>
             <div class="idea-footer">
               <div class="idea-tags" role="list" aria-label="Tags">
-                ${idea.tags.map(t => `<span class="tag" role="listitem">${t}</span>`).join('')}
+                <span class="tag" role="listitem">${idea.category}</span>
+                <span class="tag" role="listitem">Est. ${idea.value}</span>
               </div>
               <div class="idea-actions">
-                <span class="pledge-count"><strong>${idea.pledges}</strong> pledges</span>
+                <span class="pledge-count"><strong>$${idea.prize.toLocaleString()}</strong> prize</span>
                 <button
-                  class="pledge-btn ${isPledged ? 'pledged' : ''}"
-                  onclick="togglePledge('${idea.id}')"
-                  aria-pressed="${isPledged}"
+                  class="pledge-btn"
+                  onclick="openModalWithDomain('${idea.domain}')"
                 >
-                  ${isPledged ? '✓ Pledged' : '+ Pledge'}
+                  Submit Pitch →
                 </button>
               </div>
             </div>
             <div class="pledge-progress">
-              <div class="progress-bar" role="progressbar" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-fill" style="width: ${progress}%"></div>
+              <div class="progress-bar" role="progressbar" aria-valuenow="${idea.submissions}" aria-valuemin="0" aria-valuemax="10">
+                <div class="progress-fill" style="width: ${Math.min(idea.submissions * 10, 100)}%"></div>
               </div>
               <span class="progress-label">
-                ${progress >= 100 ? 'Threshold reached! Idea will survive.' : `${needsMore} more pledge${needsMore !== 1 ? 's' : ''} needed to survive`}
+                ${idea.submissions} pitch${idea.submissions !== 1 ? 'es' : ''} submitted
               </span>
             </div>
           </article>
         `;
       }).join('');
+    }
+
+    function openModalWithDomain(domain) {
+      document.getElementById('modal').classList.add('active');
+      document.getElementById('pitch-domain').value = domain;
     }
 
     function togglePledge(id) {
@@ -792,17 +795,15 @@
       let filtered = [...ideas];
 
       switch (filter) {
-        case 'urgent':
-          filtered = filtered.filter(i => {
-            const t = getTimeRemaining(i.expires);
-            return t.status === 'urgent' || t.status === 'warning';
-          });
+        case 'highvalue':
+          filtered = filtered.filter(i => parseInt(i.value.replace(/[^0-9]/g, '')) >= 1000);
+          filtered.sort((a, b) => parseInt(b.value.replace(/[^0-9]/g, '')) - parseInt(a.value.replace(/[^0-9]/g, '')));
           break;
-        case 'hot':
-          filtered.sort((a, b) => b.pledges - a.pledges);
+        case 'founder':
+          filtered = filtered.filter(i => i.category === 'Founder Tools' || i.category === 'Creator Tools');
           break;
-        case 'new':
-          filtered.sort((a, b) => new Date(b.submitted) - new Date(a.submitted));
+        case 'vibe':
+          filtered = filtered.filter(i => i.category === 'Vibe & Culture');
           break;
       }
 
@@ -831,10 +832,35 @@
 
     document.getElementById('submit-form').addEventListener('submit', (e) => {
       e.preventDefault();
-      const form = e.target;
-      alert(`Thanks! "${form.title.value}" submitted for review.`);
-      form.reset();
-      closeModal();
+
+      const email = document.getElementById('pitch-email').value;
+      const domain = document.getElementById('pitch-domain').value;
+      const idea = document.getElementById('pitch-idea').value;
+      const why = document.getElementById('pitch-why').value;
+
+      // Build email body
+      const subject = encodeURIComponent(`[fortune0 Pitch] ${domain}`);
+      const body = encodeURIComponent(
+`DOMAIN: ${domain}
+
+PITCH:
+${idea}
+
+WHY ME:
+${why || 'Not provided'}
+
+FROM: ${email}
+`);
+
+      // Open mailto link - this actually sends an email
+      window.location.href = `mailto:lolztex@gmail.com?subject=${subject}&body=${body}`;
+
+      // Also show confirmation
+      setTimeout(() => {
+        alert('Your email client should open. Send the email to submit your pitch!');
+        e.target.reset();
+        closeModal();
+      }, 100);
     });
 
     // Init
