@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to fortune0 | February 3, 2026</title>
+    <meta name="description" content="The first edition of the fortune0 newsletter">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+
+    <!-- Open Graph for sharing -->
+    <meta property="og:title" content="Welcome to fortune0">
+    <meta property="og:description" content="The first edition of the fortune0 newsletter - ideas worth keeping alive">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://fortune0.com/newsletters/2026-02-03.html">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            line-height: 1.7;
+        }
+
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(139, 115, 85, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.9) 0%, #000 100%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+
+        /* Header */
+        header {
+            margin-bottom: 48px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 32px;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #D4AF37;
+        }
+
+        .issue-date {
+            color: #D4AF37;
+            font-size: 0.85rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+
+        .issue-meta {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.9rem;
+        }
+
+        /* Content */
+        article {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.85);
+        }
+
+        article p {
+            margin-bottom: 24px;
+        }
+
+        article h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #fff;
+            margin: 48px 0 20px;
+        }
+
+        article h3 {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #D4AF37;
+            margin: 36px 0 16px;
+        }
+
+        article a {
+            color: #D4AF37;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(212,175,55,0.3);
+            transition: border-color 0.3s;
+        }
+
+        article a:hover {
+            border-color: #D4AF37;
+        }
+
+        article ul, article ol {
+            margin: 0 0 24px 24px;
+        }
+
+        article li {
+            margin-bottom: 12px;
+        }
+
+        article blockquote {
+            border-left: 3px solid #D4AF37;
+            padding-left: 24px;
+            margin: 32px 0;
+            font-style: italic;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* Highlight box */
+        .highlight {
+            background: linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(139,115,85,0.05) 100%);
+            border: 1px solid rgba(212,175,55,0.2);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 32px 0;
+        }
+
+        .highlight h4 {
+            color: #D4AF37;
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .share-section {
+            margin-bottom: 32px;
+        }
+
+        .share-section h4 {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .share-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .share-links a {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .share-links a:hover {
+            background: rgba(212,175,55,0.1);
+            border-color: rgba(212,175,55,0.3);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            color: rgba(255,255,255,0.4);
+            font-size: 0.9rem;
+        }
+
+        .footer-links a {
+            color: #D4AF37;
+            text-decoration: none;
+        }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            article {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+
+    <div class="container">
+        <header>
+            <a href="../newsletter.html" class="back-link">← All Issues</a>
+            <div class="issue-date">Issue #1 · February 3, 2026</div>
+            <h1>Welcome to fortune0</h1>
+            <div class="issue-meta">5 min read</div>
+        </header>
+
+        <article>
+            <p>
+                You're reading the first fortune0 newsletter. If you're here, you probably believe
+                the same thing we do: the best ideas shouldn't need permission to exist.
+            </p>
+
+            <p>
+                Traditional incubators pick winners. VCs pick winners. Accelerators pick winners.
+                Someone, somewhere, decides which ideas deserve resources and attention.
+                Everyone else gets a polite rejection email.
+            </p>
+
+            <p>
+                We think that's backwards.
+            </p>
+
+            <h2>What is fortune0?</h2>
+
+            <p>
+                fortune0 is a place where ideas live or die based on one thing: whether enough
+                people believe in them to pledge support. No pitch decks. No warm intros.
+                No gatekeepers.
+            </p>
+
+            <p>
+                Here's how it works:
+            </p>
+
+            <ul>
+                <li><strong>Someone posts an idea.</strong> Could be a product, a project, a company, a movement—anything.</li>
+                <li><strong>The clock starts.</strong> Every idea has a countdown. If it doesn't reach its pledge threshold before time runs out, it disappears.</li>
+                <li><strong>People pledge.</strong> $1, $5, or $10. Not to buy anything—just to say "I think this should exist."</li>
+                <li><strong>Ideas that hit their threshold survive.</strong> They get more time. More visibility. A chance to become real.</li>
+            </ul>
+
+            <p>
+                Think of it like natural selection for ideas, except the environment is human attention and belief.
+            </p>
+
+            <h2>Why this matters</h2>
+
+            <p>
+                Every day, thousands of good ideas die in someone's Notes app. The person
+                who had the idea either didn't know the right people, didn't have the resources,
+                or just didn't have the energy to navigate the gatekeeping.
+            </p>
+
+            <p>
+                Meanwhile, mediocre ideas with good connections get funded all the time.
+            </p>
+
+            <p>
+                fortune0 is an experiment in fixing that asymmetry. What if the only thing
+                that mattered was whether strangers on the internet thought your idea was
+                worth $1 of belief?
+            </p>
+
+            <div class="highlight">
+                <h4>This week's ideas to watch</h4>
+                <p>
+                    Check out <a href="../ideas.html">the ideas page</a> to see what's currently
+                    fighting for survival. Some will make it. Most won't. That's the point.
+                </p>
+            </div>
+
+            <h2>What's next</h2>
+
+            <p>
+                This is just the beginning. In the coming weeks, we'll be:
+            </p>
+
+            <ul>
+                <li>Opening up idea submissions to everyone</li>
+                <li>Building tools for idea creators to rally support</li>
+                <li>Experimenting with what happens when ideas survive—do they become companies? Communities? Something else?</li>
+            </ul>
+
+            <p>
+                If you have thoughts, reply to this email. Seriously. We read everything.
+            </p>
+
+            <p>
+                See you next week.
+            </p>
+
+            <p>
+                —Matt
+            </p>
+        </article>
+
+        <footer>
+            <div class="share-section">
+                <h4>Share this issue</h4>
+                <div class="share-links">
+                    <a href="https://twitter.com/intent/tweet?text=Welcome%20to%20fortune0&url=https://fortune0.com/newsletters/2026-02-03.html" target="_blank">Twitter</a>
+                    <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://fortune0.com/newsletters/2026-02-03.html" target="_blank">LinkedIn</a>
+                    <a href="mailto:?subject=Welcome%20to%20fortune0&body=Check%20this%20out:%20https://fortune0.com/newsletters/2026-02-03.html">Email</a>
+                </div>
+            </div>
+
+            <div class="footer-links">
+                <a href="../newsletter.html">← All Issues</a>
+                <span>fortune0.com</span>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

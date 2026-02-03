@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter | fortune0</title>
+    <meta name="description" content="Weekly updates from fortune0 - ideas worth keeping alive">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(139, 115, 85, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.9) 0%, #000 100%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            margin-bottom: 8px;
+        }
+
+        .logo a {
+            color: #D4AF37;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        .logo a:hover {
+            opacity: 0.8;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 200;
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #D4AF37 0%, #F4E4BA 50%, #D4AF37 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.5);
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        /* Latest issue feature */
+        .latest {
+            background: linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(139,115,85,0.05) 100%);
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .latest::before {
+            content: 'LATEST';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            color: #D4AF37;
+            background: rgba(212,175,55,0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(212,175,55,0.3);
+        }
+
+        .latest h2 {
+            font-size: 1.8rem;
+            font-weight: 400;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        .latest .date {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .latest .preview {
+            color: rgba(255,255,255,0.7);
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
+        .read-btn {
+            display: inline-block;
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #D4AF37 0%, #B8960C 100%);
+            color: #000;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .read-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(212,175,55,0.3);
+        }
+
+        /* Archive */
+        .archive h3 {
+            font-size: 1rem;
+            font-weight: 400;
+            letter-spacing: 0.2em;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 24px;
+            text-transform: uppercase;
+        }
+
+        .archive-list {
+            list-style: none;
+        }
+
+        .archive-item {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .archive-item a {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            color: #fff;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .archive-item a:hover {
+            color: #D4AF37;
+            padding-left: 12px;
+        }
+
+        .archive-item .title {
+            font-weight: 400;
+        }
+
+        .archive-item .date {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.9rem;
+        }
+
+        .archive-item a:hover .date {
+            color: rgba(212,175,55,0.6);
+        }
+
+        /* Empty state */
+        .coming-soon {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .coming-soon p {
+            margin-bottom: 20px;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 80px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: #D4AF37;
+            text-decoration: none;
+        }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .latest {
+                padding: 30px 20px;
+            }
+
+            .latest h2 {
+                font-size: 1.4rem;
+                padding-right: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo"><a href="/">fortune0</a></div>
+            <h1>Newsletter</h1>
+            <p class="subtitle">Weekly updates on ideas worth keeping alive</p>
+        </header>
+
+        <!-- Latest Issue -->
+        <article class="latest">
+            <h2>Welcome to fortune0</h2>
+            <div class="date">February 3, 2026</div>
+            <p class="preview">
+                This is the first edition of the fortune0 newsletter. We're building something different here — a place where ideas live or die based on collective belief. No gatekeepers, no pitch decks, no waiting for permission. Just ideas and the people willing to back them.
+            </p>
+            <a href="newsletters/2026-02-03.html" class="read-btn">Read Issue →</a>
+        </article>
+
+        <!-- Archive -->
+        <section class="archive">
+            <h3>Archive</h3>
+            <ul class="archive-list">
+                <li class="archive-item">
+                    <a href="newsletters/2026-02-03.html">
+                        <span class="title">Welcome to fortune0</span>
+                        <span class="date">Feb 3, 2026</span>
+                    </a>
+                </li>
+                <!-- Add more issues here as you publish them -->
+            </ul>
+        </section>
+
+        <footer>
+            <p>Subscribe for $1/month at <a href="https://death2data.com">death2data.com</a></p>
+        </footer>
+    </div>
+</body>
+</html>
