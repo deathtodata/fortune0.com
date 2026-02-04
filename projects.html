@@ -292,14 +292,33 @@
         <div class="stat-label">Launched</div>
       </div>
       <div class="stat">
-        <div class="stat-value">229</div>
-        <div class="stat-label">Building / Open</div>
+        <div class="stat-value" id="stat-signups">—</div>
+        <div class="stat-label">Signups</div>
       </div>
       <div class="stat">
-        <div class="stat-value">6</div>
-        <div class="stat-label">Paying Users</div>
+        <div class="stat-value" id="stat-subscribers">—</div>
+        <div class="stat-label">Subscribers</div>
       </div>
     </div>
+
+    <script>
+      // Fetch live stats from worker
+      async function loadStats() {
+        try {
+          const res = await fetch('https://fortune0-forms.mattmauersp.workers.dev', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'get-stats' })
+          });
+          const stats = await res.json();
+          document.getElementById('stat-signups').textContent = stats.totalSignups;
+          document.getElementById('stat-subscribers').textContent = stats.totalSubscribers;
+        } catch (e) {
+          console.error('Failed to load stats:', e);
+        }
+      }
+      loadStats();
+    </script>
 
     <div class="projects-grid">
       <!-- death2data.com -->

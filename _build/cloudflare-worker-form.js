@@ -48,6 +48,39 @@ export default {
       const data = await request.json();
       const { email, domain, source, action } = data;
 
+      // PUBLIC STATS - returns counts only, no emails leaked
+      if (action === 'get-stats') {
+        const list = await env.SUBMISSIONS.list();
+        let totalSignups = 0;
+        let totalSubscribers = 0;
+        const domainCounts = {};
+
+        for (const entry of list.keys) {
+          if (entry.name === '_all_emails') continue;
+          if (entry.name.startsWith('subscriber:')) {
+            totalSubscribers++;
+            continue;
+          }
+          // Regular signup
+          totalSignups++;
+          const val = await env.SUBMISSIONS.get(entry.name);
+          if (val) {
+            const data = JSON.parse(val);
+            const d = data.domain || 'fortune0.com';
+            domainCounts[d] = (domainCounts[d] || 0) + 1;
+          }
+        }
+
+        return new Response(JSON.stringify({
+          totalSignups,
+          totalSubscribers,
+          domainCounts,
+          lastUpdated: new Date().toISOString()
+        }), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        });
+      }
+
       // ACCESS CHECK - returns only true/false, no data leaked
       if (action === 'check-access') {
         if (!email) {
