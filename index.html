@@ -336,10 +336,9 @@
   <header>
     <a href="/" class="logo">fortune<span>0</span></a>
     <nav class="nav-links">
-      <a href="/ideas.html">Domains</a>
-      <a href="/projects.html">Launched</a>
-      <a href="/why.html">Why</a>
-      <a href="/ideas.html" class="nav-btn">Browse Ideas</a>
+      <a href="https://death2data.com">death2data</a>
+      <a href="/projects.html">Projects</a>
+      <a href="https://buy.stripe.com/cNieVd5Vjb6N2ZY6Fq4wM00" class="nav-btn">Subscribe $1</a>
     </nav>
   </header>
   <div class="orb orb-1"></div>
@@ -354,25 +353,41 @@
       <p class="tagline">Ideas that survive</p>
       <h1 class="title">fortune0</h1>
       <p class="subtitle">
-        Time-limited communities around ideas.<br>
-        <strong>They expire unless people pledge to keep them alive.</strong>
+        We build privacy tools and weird software.<br>
+        <strong>Subscribe for $1 to get early access to everything.</strong>
       </p>
 
       <div class="cta-container">
         <form class="email-form" id="form">
           <input type="email" name="email" placeholder="your@email.com" required>
-          <button type="submit">Get early access</button>
+          <button type="submit">Get updates</button>
         </form>
-        <p style="margin-top: 1.5rem;"><a href="/ideas.html" style="color: var(--gold); text-decoration: none; font-size: 0.95rem; opacity: 0.9;">Browse ideas →</a></p>
+        <p style="margin-top: 1rem;">
+          <a href="https://buy.stripe.com/cNieVd5Vjb6N2ZY6Fq4wM00" style="color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: 600;">
+            Or subscribe now — $1/month →
+          </a>
+        </p>
       </div>
     </div>
   </div>
 
   <div class="concept">
-    <span><span class="dot"></span>Ephemeral by default</span>
-    <span><span class="dot"></span>Pledge to persist</span>
-    <span><span class="dot"></span>Ideas compete</span>
+    <span><span class="dot"></span><a href="https://death2data.com" style="color: inherit; text-decoration: none;">death2data.com</a> — LIVE</span>
+    <span><span class="dot"></span><span id="sub-count">—</span> subscribers</span>
+    <span><span class="dot"></span>230+ domains ready</span>
   </div>
+
+  <script>
+    // Load live stats
+    fetch('https://fortune0-forms.mattmauersp.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get-stats' })
+    })
+    .then(r => r.json())
+    .then(s => { document.getElementById('sub-count').textContent = s.totalSubscribers; })
+    .catch(() => {});
+  </script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
