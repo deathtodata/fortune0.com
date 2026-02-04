@@ -1017,7 +1017,9 @@
     "domain": "death2data.com",
     "value": 17,
     "expires": "2026-08-28",
-    "status": "open"
+    "status": "launched",
+    "builder": "Matt",
+    "launched": "2025"
   },
   {
     "domain": "fireworkssuck.com",

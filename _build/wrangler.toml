@@ -1,0 +1,14 @@
+name = "fortune0-forms"
+main = "cloudflare-worker-form.js"
+compatibility_date = "2024-01-01"
+
+# KV Namespace binding - you'll need to create this in Cloudflare dashboard
+# and replace the id with your actual KV namespace ID
+[[kv_namespaces]]
+binding = "SUBMISSIONS"
+id = "40b66c05fd3949b488200affebfecb59"
+
+# Optional: Add your custom domain later
+# routes = [
+#   { pattern = "forms.fortune0.com/*", zone_name = "fortune0.com" }
+# ]

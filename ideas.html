@@ -363,6 +363,82 @@
       font-weight: 500;
     }
 
+    /* Status badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 100px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .status-badge.open {
+      background: rgba(107, 203, 119, 0.15);
+      color: #6BCB77;
+      border: 1px solid rgba(107, 203, 119, 0.3);
+    }
+    .status-badge.claimed {
+      background: rgba(255, 217, 61, 0.15);
+      color: #FFD93D;
+      border: 1px solid rgba(255, 217, 61, 0.3);
+    }
+    .status-badge.building {
+      background: rgba(78, 205, 196, 0.15);
+      color: #4ECDC4;
+      border: 1px solid rgba(78, 205, 196, 0.3);
+    }
+    .status-badge.launched {
+      background: rgba(212, 175, 55, 0.15);
+      color: var(--gold);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+    }
+    .status-badge.abandoned {
+      background: rgba(255, 107, 107, 0.15);
+      color: #FF6B6B;
+      border: 1px solid rgba(255, 107, 107, 0.3);
+    }
+
+    /* Expiration urgency */
+    .expiry-tag {
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .expiry-tag.critical {
+      background: rgba(255, 107, 107, 0.2);
+      color: #FF6B6B;
+    }
+    .expiry-tag.soon {
+      background: rgba(255, 217, 61, 0.15);
+      color: #FFD93D;
+    }
+    .expiry-tag.safe {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--gray);
+    }
+
+    /* View project button for launched domains */
+    .pledge-btn.view-project {
+      background: var(--gold);
+      color: var(--black);
+      border-color: var(--gold);
+    }
+    .pledge-btn.view-project:hover {
+      background: #e6c445;
+      box-shadow: 0 0 20px rgba(var(--gold-rgb), 0.4);
+    }
+
+    /* Claimed/building - disabled style */
+    .pledge-btn.claimed {
+      opacity: 0.5;
+      cursor: not-allowed;
+      border-style: dashed;
+    }
+
     .idea-actions {
       display: flex;
       align-items: center;
@@ -586,10 +662,12 @@
   <header>
     <a href="/" class="logo">fortune<span>0</span></a>
     <nav class="nav-links">
-      <a href="/">Home</a>
-      <a href="/ideas.html">Ideas</a>
+      <a href="/ideas.html">Domains</a>
+      <a href="/projects.html">Launched</a>
+      <a href="/why.html">Why</a>
+      <a href="/newsletter.html">Newsletter</a>
     </nav>
-    <button class="submit-btn" onclick="openModal()">+ Submit Idea</button>
+    <button class="submit-btn" onclick="openModal()">Apply to Build</button>
   </header>
 
   <main>
@@ -600,30 +678,42 @@
 
     <div class="stats-bar">
       <div class="stat">
-        <div class="stat-value" id="stat-total">230</div>
-        <div class="stat-label">Domains</div>
+        <div class="stat-value" id="stat-open">0</div>
+        <div class="stat-label">Open</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-building">0</div>
+        <div class="stat-label">Building</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="stat-launched">0</div>
+        <div class="stat-label">Launched</div>
       </div>
       <div class="stat">
         <div class="stat-value" id="stat-value">$0</div>
-        <div class="stat-label">Portfolio Value</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">Hiring</div>
-        <div class="stat-label">Model</div>
+        <div class="stat-label">Portfolio</div>
       </div>
     </div>
 
     <div class="filters">
-      <button class="filter-btn active" data-filter="all">All Domains</button>
-      <button class="filter-btn" data-filter="highvalue">💰 High Value</button>
-      <button class="filter-btn" data-filter="founder">🚀 Founder Tools</button>
-      <button class="filter-btn" data-filter="vibe">✨ Vibe & Culture</button>
-      <button class="filter-btn" data-filter="privacy">🔒 Privacy</button>
-      <button class="filter-btn" data-filter="funny">😂 Funny</button>
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="open">Open</button>
+      <button class="filter-btn" data-filter="launched">Launched</button>
+      <button class="filter-btn" data-filter="expiring">Expiring</button>
+      <button class="filter-btn" data-filter="highvalue">High Value</button>
+      <button class="filter-btn" data-filter="privacy">Privacy</button>
     </div>
 
     <div style="margin-bottom: 1.5rem;">
       <input type="text" id="search-input" placeholder="Search domains..." style="width: 100%; padding: 0.75rem 1rem; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 10px; color: var(--white); font-size: 1rem;">
+    </div>
+
+    <div style="margin-bottom: 2rem; padding: 1rem 1.5rem; background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <strong style="color: var(--gold);">Become a Believer</strong>
+        <p style="color: var(--gray); font-size: 0.9rem; margin: 0.25rem 0 0;">Not ready to build? Sponsor a domain's renewal and keep the dream alive.</p>
+      </div>
+      <a href="/CONTRIBUTING.md#domain-believer-program" style="padding: 0.5rem 1rem; background: transparent; border: 1px solid var(--gold); border-radius: 100px; color: var(--gold); font-size: 0.85rem; font-weight: 600; text-decoration: none;">Learn More →</a>
     </div>
 
     <div class="ideas-list" id="ideas-list"></div>
@@ -715,8 +805,14 @@
         }));
 
         // Update stats
-        document.getElementById('stat-total').textContent = domains.length;
+        const openCount = domains.filter(d => !d.status || d.status === 'open' || d.status === 'abandoned').length;
+        const buildingCount = domains.filter(d => d.status === 'building' || d.status === 'claimed').length;
+        const launchedCount = domains.filter(d => d.status === 'launched').length;
         const totalValue = domains.reduce((sum, d) => sum + (d.value || 0), 0);
+
+        document.getElementById('stat-open').textContent = openCount;
+        document.getElementById('stat-building').textContent = buildingCount;
+        document.getElementById('stat-launched').textContent = launchedCount;
         document.getElementById('stat-value').textContent = '$' + totalValue.toLocaleString();
 
         // Populate dropdown
@@ -760,25 +856,80 @@
         return;
       }
 
+      // Status configuration - no emojis, text only
+      const statusConfig = {
+        open: { label: 'OPEN', class: 'open' },
+        claimed: { label: 'CLAIMED', class: 'claimed' },
+        building: { label: 'BUILDING', class: 'building' },
+        launched: { label: 'LIVE', class: 'launched' },
+        abandoned: { label: 'REOPENED', class: 'abandoned' }
+      };
+
+      // Calculate days until expiration
+      function getDaysUntil(dateStr) {
+        if (!dateStr) return null;
+        const expiry = new Date(dateStr);
+        const today = new Date();
+        const diff = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+        return diff;
+      }
+
+      // Get expiry tag HTML - no emojis
+      function getExpiryTag(days) {
+        if (days === null) return '';
+        if (days < 0) return `<span class="expiry-tag critical">EXPIRED</span>`;
+        if (days <= 30) return `<span class="expiry-tag critical">${days}d left</span>`;
+        if (days <= 90) return `<span class="expiry-tag soon">${days}d left</span>`;
+        return `<span class="expiry-tag safe">${days}d</span>`;
+      }
+
+      // Get button based on status
+      function getButton(d) {
+        const status = d.status || 'open';
+        if (status === 'launched') {
+          return `<a href="https://${d.domain}" target="_blank" class="pledge-btn view-project">View Project →</a>`;
+        }
+        if (status === 'claimed' || status === 'building') {
+          return `<button class="pledge-btn claimed" disabled>${d.builder || 'Builder'} is working</button>`;
+        }
+        // open or abandoned
+        return `<button class="pledge-btn" onclick="openModalWithDomain('${d.domain}')">Apply to Build →</button>`;
+      }
+
+      // Get description based on status
+      function getDesc(d) {
+        const status = d.status || 'open';
+        if (status === 'launched') return `Built by ${d.builder || 'fortune0'}. Live now.`;
+        if (status === 'building') return `${d.builder || 'A builder'} is actively building this domain.`;
+        if (status === 'claimed') return `${d.builder || 'A builder'} has claimed this domain and will start building soon.`;
+        if (status === 'abandoned') return `Previously claimed but reopened. Your chance to build it right.`;
+        return 'This domain is looking for a builder. What should it become?';
+      }
+
+      const catLabels = { vibe: 'Vibe', founder: 'Founder', privacy: 'Privacy', funny: 'Funny', other: 'Other' };
+
       container.innerHTML = displayList.map(d => {
-        const catLabels = { vibe: '✨ Vibe', founder: '🚀 Founder', privacy: '🔒 Privacy', funny: '😂 Funny', other: '📁 Other' };
+        const status = d.status || 'open';
+        const statusInfo = statusConfig[status] || statusConfig.open;
+        const daysLeft = getDaysUntil(d.expires);
 
         return `
           <article class="idea-card">
             <div class="idea-header">
-              <h2 class="idea-title" style="color: var(--gold);">${d.domain}</h2>
+              <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
+                <h2 class="idea-title" style="color: var(--gold); margin: 0;">${d.domain}</h2>
+                <span class="status-badge ${statusInfo.class}">${statusInfo.label}</span>
+              </div>
               <span class="idea-countdown safe">Est. $${d.value || 0}</span>
             </div>
-            <p class="idea-desc">This domain is looking for a builder. What should it become?</p>
+            <p class="idea-desc">${getDesc(d)}</p>
             <div class="idea-footer">
               <div class="idea-tags">
                 <span class="tag">${catLabels[d.category] || 'Other'}</span>
-                ${d.expires ? `<span class="tag">Exp: ${d.expires}</span>` : ''}
+                ${getExpiryTag(daysLeft)}
               </div>
               <div class="idea-actions">
-                <button class="pledge-btn" onclick="openModalWithDomain('${d.domain}')">
-                  Apply to Build →
-                </button>
+                ${getButton(d)}
               </div>
             </div>
           </article>
@@ -793,12 +944,28 @@
     function filterDomains() {
       let filtered = [...domains];
 
-      // Apply category filter
+      // Apply filter
       if (currentFilter !== 'all') {
         if (currentFilter === 'highvalue') {
           filtered = filtered.filter(d => d.value >= 1000);
           filtered.sort((a, b) => b.value - a.value);
+        } else if (currentFilter === 'open') {
+          filtered = filtered.filter(d => !d.status || d.status === 'open' || d.status === 'abandoned');
+        } else if (currentFilter === 'launched') {
+          filtered = filtered.filter(d => d.status === 'launched');
+        } else if (currentFilter === 'expiring') {
+          // Domains expiring in < 90 days
+          const today = new Date();
+          filtered = filtered.filter(d => {
+            if (!d.expires) return false;
+            const expiry = new Date(d.expires);
+            const days = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+            return days > 0 && days <= 90;
+          });
+          // Sort by soonest expiring first
+          filtered.sort((a, b) => new Date(a.expires) - new Date(b.expires));
         } else {
+          // Category filter
           filtered = filtered.filter(d => d.category === currentFilter);
         }
       }
@@ -844,8 +1011,8 @@
       if (e.key === 'Escape') closeModal();
     });
 
-    // Form submission - using Formspree would be better, but mailto for now
-    document.getElementById('submit-form').addEventListener('submit', (e) => {
+    // Form submission - posts to Cloudflare Worker
+    document.getElementById('submit-form').addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const email = document.getElementById('pitch-email').value;
@@ -869,13 +1036,38 @@ CONTACT: ${email}
 Sent from fortune0.com
 `);
 
-      window.location.href = `mailto:lolztex@gmail.com?subject=${subject}&body=${body}`;
+      const btn = e.target.querySelector('button');
+      btn.textContent = 'Submitting...';
+      btn.disabled = true;
 
-      setTimeout(() => {
-        alert('Your email app should open. Send the email to apply!');
-        e.target.reset();
-        closeModal();
-      }, 100);
+      try {
+        const res = await fetch('https://fortune0-forms.mattmauersp.workers.dev', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            domain,
+            idea,
+            why,
+            source: 'ideas-apply'
+          })
+        });
+        if (res.ok) {
+          btn.textContent = 'Applied!';
+          setTimeout(() => {
+            e.target.reset();
+            closeModal();
+            btn.textContent = 'Apply to Build →';
+            btn.disabled = false;
+          }, 1500);
+        } else {
+          throw new Error('Failed');
+        }
+      } catch (err) {
+        btn.textContent = 'Apply to Build →';
+        btn.disabled = false;
+        alert('Something went wrong. Try again?');
+      }
     });
 
     // Init

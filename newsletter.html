@@ -230,14 +230,65 @@
                 padding-right: 60px;
             }
         }
+        /* Nav bar */
+        .nav-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 2rem;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .nav-logo {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+        }
+        .nav-logo span { color: #D4AF37; }
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        .nav-links a {
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: #fff; }
+        .nav-btn {
+            padding: 0.65rem 1.25rem;
+            background: #D4AF37;
+            color: #000;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
+    <nav class="nav-bar">
+        <a href="/" class="nav-logo">fortune<span>0</span></a>
+        <div class="nav-links">
+            <a href="/ideas.html">Domains</a>
+            <a href="/projects.html">Launched</a>
+            <a href="/why.html">Why</a>
+            <a href="/ideas.html" class="nav-btn">Browse Ideas</a>
+        </div>
+    </nav>
+
     <div class="bg-gradient"></div>
 
-    <div class="container">
+    <div class="container" style="padding-top: 100px;">
         <header>
-            <div class="logo"><a href="/">fortune0</a></div>
             <h1>Newsletter</h1>
             <p class="subtitle">Weekly updates on ideas worth keeping alive</p>
         </header>

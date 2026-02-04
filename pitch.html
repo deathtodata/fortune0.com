@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch Animator | fortune0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        :root {
+            --black: #000;
+            --white: #fff;
+            --gold: #d4af37;
+            --gray: #888;
+            --dark-gray: #222;
+            --light-gray: #333;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--black);
+            color: var(--white);
+            font-family: system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: #0a0a0a;
+            border-right: 1px solid var(--dark-gray);
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gray);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--gold);
+            border-radius: 50%;
+        }
+
+        /* Domain selector */
+        .domain-search {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--dark-gray);
+            border: 1px solid var(--light-gray);
+            color: var(--white);
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .domain-search:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .domain-list {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid var(--light-gray);
+            background: var(--dark-gray);
+        }
+
+        .domain-item {
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .domain-item:hover { background: var(--light-gray); }
+        .domain-item.selected { background: #1a1a0a; color: var(--gold); }
+
+        /* Controls */
+        .control-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 4px;
+            background: var(--light-gray);
+            border-radius: 2px;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--gold);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .value-display {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--gray);
+            min-width: 50px;
+            text-align: right;
+        }
+
+        /* Button grid for easing selection */
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .option-btn {
+            padding: 0.5rem;
+            background: var(--dark-gray);
+            border: 1px solid var(--light-gray);
+            color: var(--gray);
+            font-size: 0.75rem;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .option-btn:hover {
+            border-color: var(--gray);
+            color: var(--white);
+        }
+
+        .option-btn.active {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        /* Text inputs */
+        .text-input {
+            width: 100%;
+            padding: 0.5rem;
+            background: var(--dark-gray);
+            border: 1px solid var(--light-gray);
+            color: var(--white);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        /* Action buttons */
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--gold);
+            border: none;
+            color: var(--black);
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn:hover { background: #e5c349; }
+
+        .btn-secondary {
+            background: var(--dark-gray);
+            color: var(--white);
+            border: 1px solid var(--light-gray);
+        }
+
+        .btn-secondary:hover {
+            background: var(--light-gray);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-row .btn {
+            flex: 1;
+        }
+
+        /* Main canvas area */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .canvas-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .canvas-container {
+            width: 100%;
+            max-width: 900px;
+            aspect-ratio: 16/9;
+            background: var(--black);
+            border: 1px solid var(--dark-gray);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animation elements */
+        .anim-element {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .anim-text {
+            font-weight: bold;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .anim-ring {
+            border: 6px solid var(--white);
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .anim-ring-fill {
+            position: absolute;
+            top: -6px;
+            left: -6px;
+            right: -6px;
+            bottom: -6px;
+            border: 6px solid var(--gold);
+            border-radius: 50%;
+            clip-path: polygon(50% 50%, 50% 0%, 50% 0%, 50% 50%);
+        }
+
+        .anim-ring-inner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 60%;
+            background: var(--black);
+            border-radius: 50%;
+        }
+
+        .scanlines {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(255,255,255,0.02) 2px,
+                rgba(255,255,255,0.02) 4px
+            );
+            pointer-events: none;
+        }
+
+        .glitch-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            opacity: 0;
+            background: var(--gold);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .container { flex-direction: column; }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--dark-gray);
+                max-height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">fortune0 / pitch</div>
+
+            <!-- Domain -->
+            <div class="section">
+                <div class="section-title">Domain</div>
+                <input type="text" class="domain-search" id="domainSearch" placeholder="Search domains...">
+                <div class="domain-list" id="domainList"></div>
+            </div>
+
+            <!-- Timing -->
+            <div class="section">
+                <div class="section-title">Timing</div>
+
+                <div class="control-group">
+                    <label>Duration (ms)</label>
+                    <div class="control-row">
+                        <input type="range" id="duration" min="200" max="2000" step="50" value="600">
+                        <span class="value-display" id="duration-val">600</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Delay (ms)</label>
+                    <div class="control-row">
+                        <input type="range" id="delay" min="0" max="500" step="25" value="100">
+                        <span class="value-display" id="delay-val">100</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Stagger (ms)</label>
+                    <div class="control-row">
+                        <input type="range" id="stagger" min="0" max="200" step="10" value="50">
+                        <span class="value-display" id="stagger-val">50</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Easing -->
+            <div class="section">
+                <div class="section-title">Easing</div>
+                <div class="button-grid" id="easingGrid">
+                    <button class="option-btn active" data-easing="easeOutExpo">Expo</button>
+                    <button class="option-btn" data-easing="easeOutBack">Back</button>
+                    <button class="option-btn" data-easing="easeOutElastic(1, .5)">Elastic</button>
+                    <button class="option-btn" data-easing="easeOutBounce">Bounce</button>
+                    <button class="option-btn" data-easing="spring(1, 80, 10, 0)">Spring</button>
+                    <button class="option-btn" data-easing="linear">Linear</button>
+                </div>
+            </div>
+
+            <!-- Spring (when spring selected) -->
+            <div class="section" id="springSection" style="display: none;">
+                <div class="section-title">Spring Physics</div>
+
+                <div class="control-group">
+                    <label>Stiffness</label>
+                    <div class="control-row">
+                        <input type="range" id="springStiffness" min="10" max="200" step="5" value="80">
+                        <span class="value-display" id="springStiffness-val">80</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Damping</label>
+                    <div class="control-row">
+                        <input type="range" id="springDamping" min="1" max="30" step="1" value="10">
+                        <span class="value-display" id="springDamping-val">10</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stagger Mode -->
+            <div class="section">
+                <div class="section-title">Stagger Mode</div>
+                <div class="button-grid" id="staggerGrid">
+                    <button class="option-btn active" data-stagger="word">Per Word</button>
+                    <button class="option-btn" data-stagger="char">Per Char</button>
+                    <button class="option-btn" data-stagger="line">Per Line</button>
+                    <button class="option-btn" data-stagger="none">None</button>
+                </div>
+            </div>
+
+            <!-- Style -->
+            <div class="section">
+                <div class="section-title">Style</div>
+                <div class="button-grid" id="styleGrid">
+                    <button class="option-btn active" data-style="glitch">Glitch</button>
+                    <button class="option-btn" data-style="minimal">Minimal</button>
+                    <button class="option-btn" data-style="ring">Ring</button>
+                    <button class="option-btn" data-style="typing">Typing</button>
+                </div>
+            </div>
+
+            <!-- Concepts -->
+            <div class="section">
+                <div class="section-title">Concepts</div>
+                <input type="text" class="text-input" id="concept1" placeholder="Concept 1">
+                <input type="text" class="text-input" id="concept2" placeholder="Concept 2">
+                <input type="text" class="text-input" id="concept3" placeholder="Concept 3">
+            </div>
+
+            <!-- Actions -->
+            <div class="section">
+                <button class="btn" id="playBtn">Play Animation</button>
+                <div class="btn-row">
+                    <button class="btn btn-secondary" id="loopBtn">Loop</button>
+                    <button class="btn btn-secondary" id="resetBtn">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="canvas-wrapper">
+                <div class="canvas-container" id="canvas">
+                    <div class="scanlines"></div>
+                    <div class="glitch-overlay" id="glitchOverlay"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let domains = [];
+        let selectedDomain = 'fortune0.com';
+        let currentEasing = 'easeOutExpo';
+        let currentStagger = 'word';
+        let currentStyle = 'glitch';
+        let isLooping = false;
+        let timeline = null;
+
+        // Load domains
+        fetch('/domains.json')
+            .then(r => r.json())
+            .then(data => {
+                domains = data;
+                renderDomainList();
+            })
+            .catch(() => {
+                // Fallback
+                domains = [{ domain: 'fortune0.com' }, { domain: 'death2data.com' }];
+                renderDomainList();
+            });
+
+        function renderDomainList(filter = '') {
+            const list = document.getElementById('domainList');
+            const filtered = domains.filter(d =>
+                d.domain.toLowerCase().includes(filter.toLowerCase())
+            ).slice(0, 30);
+
+            list.innerHTML = filtered.map(d => `
+                <div class="domain-item ${selectedDomain === d.domain ? 'selected' : ''}"
+                     data-domain="${d.domain}">${d.domain}</div>
+            `).join('');
+
+            list.querySelectorAll('.domain-item').forEach(item => {
+                item.onclick = () => {
+                    selectedDomain = item.dataset.domain;
+                    renderDomainList(document.getElementById('domainSearch').value);
+                };
+            });
+        }
+
+        document.getElementById('domainSearch').oninput = (e) => renderDomainList(e.target.value);
+
+        // Slider value displays
+        ['duration', 'delay', 'stagger', 'springStiffness', 'springDamping'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.oninput = () => {
+                    document.getElementById(`${id}-val`).textContent = el.value;
+                    if (id.startsWith('spring')) updateSpringEasing();
+                };
+            }
+        });
+
+        // Option button grids
+        function setupOptionGrid(gridId, callback) {
+            document.getElementById(gridId).querySelectorAll('.option-btn').forEach(btn => {
+                btn.onclick = () => {
+                    document.getElementById(gridId).querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    callback(btn);
+                };
+            });
+        }
+
+        setupOptionGrid('easingGrid', (btn) => {
+            currentEasing = btn.dataset.easing;
+            document.getElementById('springSection').style.display =
+                currentEasing.startsWith('spring') ? 'block' : 'none';
+        });
+
+        setupOptionGrid('staggerGrid', (btn) => {
+            currentStagger = btn.dataset.stagger;
+        });
+
+        setupOptionGrid('styleGrid', (btn) => {
+            currentStyle = btn.dataset.style;
+        });
+
+        function updateSpringEasing() {
+            const stiff = document.getElementById('springStiffness').value;
+            const damp = document.getElementById('springDamping').value;
+            currentEasing = `spring(1, ${stiff}, ${damp}, 0)`;
+        }
+
+        // Get current config
+        function getConfig() {
+            return {
+                domain: selectedDomain,
+                duration: parseInt(document.getElementById('duration').value),
+                delay: parseInt(document.getElementById('delay').value),
+                stagger: parseInt(document.getElementById('stagger').value),
+                easing: currentEasing,
+                staggerMode: currentStagger,
+                style: currentStyle,
+                concepts: [
+                    document.getElementById('concept1').value || 'BUILD',
+                    document.getElementById('concept2').value || 'OWN',
+                    document.getElementById('concept3').value || 'SHIP'
+                ].filter(c => c.trim())
+            };
+        }
+
+        // Flash effect
+        function flash(color = 'rgba(212,175,55,0.3)', duration = 150) {
+            const overlay = document.getElementById('glitchOverlay');
+            overlay.style.background = color;
+            anime({
+                targets: overlay,
+                opacity: [0.8, 0],
+                duration: duration,
+                easing: 'easeOutQuad'
+            });
+        }
+
+        // Clear canvas
+        function clearCanvas() {
+            const canvas = document.getElementById('canvas');
+            canvas.querySelectorAll('.anim-element').forEach(el => el.remove());
+        }
+
+        // Create text element
+        function createText(text, fontSize, color, x, y) {
+            const el = document.createElement('div');
+            el.className = 'anim-element anim-text';
+            el.textContent = text;
+            el.style.fontSize = fontSize + 'px';
+            el.style.color = color;
+            el.style.left = x + '%';
+            el.style.top = y + '%';
+            el.style.transform = 'translate(-50%, -50%)';
+            document.getElementById('canvas').appendChild(el);
+            return el;
+        }
+
+        // Create ring element
+        function createRing(size, x, y) {
+            const el = document.createElement('div');
+            el.className = 'anim-element anim-ring';
+            el.style.width = size + 'px';
+            el.style.height = size + 'px';
+            el.style.left = x + '%';
+            el.style.top = y + '%';
+            el.style.transform = 'translate(-50%, -50%)';
+
+            const fill = document.createElement('div');
+            fill.className = 'anim-ring-fill';
+            el.appendChild(fill);
+
+            const inner = document.createElement('div');
+            inner.className = 'anim-ring-inner';
+            el.appendChild(inner);
+
+            document.getElementById('canvas').appendChild(el);
+            return { ring: el, fill };
+        }
+
+        // Split text for stagger
+        function splitText(text, mode) {
+            if (mode === 'char') return text.split('');
+            if (mode === 'word') return text.split(' ');
+            return [text];
+        }
+
+        // Play animation
+        function playAnimation() {
+            if (timeline) timeline.pause();
+            clearCanvas();
+
+            const cfg = getConfig();
+            timeline = anime.timeline({
+                easing: cfg.easing,
+                complete: () => {
+                    if (isLooping) setTimeout(playAnimation, 500);
+                }
+            });
+
+            if (cfg.style === 'glitch') {
+                playGlitchStyle(cfg);
+            } else if (cfg.style === 'minimal') {
+                playMinimalStyle(cfg);
+            } else if (cfg.style === 'ring') {
+                playRingStyle(cfg);
+            } else if (cfg.style === 'typing') {
+                playTypingStyle(cfg);
+            }
+        }
+
+        function playGlitchStyle(cfg) {
+            // Domain name
+            const domainEl = createText(cfg.domain, 48, '#fff', 50, 45);
+
+            timeline.add({
+                targets: domainEl,
+                opacity: [0, 1],
+                translateX: [100, 0],
+                duration: cfg.duration,
+                begin: () => flash()
+            });
+
+            // Concepts
+            cfg.concepts.forEach((concept, i) => {
+                const parts = splitText(concept, cfg.staggerMode);
+                const container = document.createElement('div');
+                container.className = 'anim-element';
+                container.style.left = '50%';
+                container.style.top = (55 + i * 12) + '%';
+                container.style.transform = 'translate(-50%, -50%)';
+                container.style.display = 'flex';
+                container.style.gap = cfg.staggerMode === 'char' ? '0' : '8px';
+
+                parts.forEach(part => {
+                    const span = document.createElement('span');
+                    span.textContent = part;
+                    span.style.fontSize = '32px';
+                    span.style.fontWeight = 'bold';
+                    span.style.color = i % 2 === 0 ? '#d4af37' : '#fff';
+                    span.style.opacity = '0';
+                    span.style.display = 'inline-block';
+                    container.appendChild(span);
+                });
+
+                document.getElementById('canvas').appendChild(container);
+
+                timeline.add({
+                    targets: container.querySelectorAll('span'),
+                    opacity: [0, 1],
+                    translateX: [50, 0],
+                    duration: cfg.duration,
+                    delay: anime.stagger(cfg.stagger),
+                    begin: () => flash('rgba(255,255,255,0.2)', 100)
+                }, `-=${cfg.duration * 0.3}`);
+            });
+        }
+
+        function playMinimalStyle(cfg) {
+            const domainEl = createText(cfg.domain, 42, '#fff', 50, 40);
+
+            timeline.add({
+                targets: domainEl,
+                opacity: [0, 1],
+                duration: cfg.duration * 1.5
+            });
+
+            cfg.concepts.forEach((concept, i) => {
+                const el = createText(concept, 28, i % 2 === 0 ? '#d4af37' : '#888', 50, 55 + i * 10);
+                timeline.add({
+                    targets: el,
+                    opacity: [0, 1],
+                    translateY: [20, 0],
+                    duration: cfg.duration,
+                    delay: cfg.delay
+                }, `-=${cfg.duration * 0.5}`);
+            });
+        }
+
+        function playRingStyle(cfg) {
+            const { ring, fill } = createRing(120, 50, 40);
+
+            timeline.add({
+                targets: ring,
+                opacity: [0, 1],
+                scale: [0.5, 1],
+                duration: cfg.duration
+            });
+
+            timeline.add({
+                targets: fill,
+                clipPath: [
+                    'polygon(50% 50%, 50% 0%, 50% 0%, 50% 50%)',
+                    'polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%)'
+                ],
+                duration: cfg.duration * 1.5,
+                easing: 'easeOutQuad'
+            }, `-=${cfg.duration * 0.5}`);
+
+            const domainEl = createText(cfg.domain, 32, '#fff', 50, 70);
+            timeline.add({
+                targets: domainEl,
+                opacity: [0, 1],
+                translateY: [20, 0],
+                duration: cfg.duration
+            }, `-=${cfg.duration * 0.3}`);
+        }
+
+        function playTypingStyle(cfg) {
+            const lines = [
+                `> loading ${cfg.domain}`,
+                ...cfg.concepts.map(c => `> ${c.toLowerCase()}`),
+                '> ready_'
+            ];
+
+            let y = 30;
+            lines.forEach((line, i) => {
+                const el = createText('', 20, '#0f0', 10, y);
+                el.style.fontFamily = 'monospace';
+                el.style.transform = 'none';
+                el.style.textAlign = 'left';
+
+                timeline.add({
+                    targets: el,
+                    opacity: 1,
+                    duration: 1,
+                    begin: () => {
+                        let charIndex = 0;
+                        const typeInterval = setInterval(() => {
+                            el.textContent = line.substring(0, charIndex + 1);
+                            charIndex++;
+                            if (charIndex >= line.length) clearInterval(typeInterval);
+                        }, 30);
+                    }
+                }, i * (cfg.duration + cfg.delay));
+
+                y += 10;
+            });
+        }
+
+        // Button handlers
+        document.getElementById('playBtn').onclick = playAnimation;
+
+        document.getElementById('loopBtn').onclick = (e) => {
+            isLooping = !isLooping;
+            e.target.style.background = isLooping ? '#d4af37' : '';
+            e.target.style.color = isLooping ? '#000' : '';
+            if (isLooping) playAnimation();
+        };
+
+        document.getElementById('resetBtn').onclick = () => {
+            if (timeline) timeline.pause();
+            isLooping = false;
+            document.getElementById('loopBtn').style.background = '';
+            document.getElementById('loopBtn').style.color = '';
+            clearCanvas();
+        };
+    </script>
+</body>
+</html>

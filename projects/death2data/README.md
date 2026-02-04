@@ -7,7 +7,7 @@
 **Domain:** death2data.com
 **Category:** Privacy & Freedom
 **Estimated Value:** $17
-**Builder:** Matt Mauer
+**Builder:** Matt
 **Started:** 2025
 **Launched:** Live
 

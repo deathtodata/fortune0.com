@@ -259,17 +259,31 @@
       document.getElementById('tagline').textContent = domainConfig[domain].tagline;
     }
 
-    // Notify form - sends email via mailto (simple, works)
-    document.getElementById('notify-form').addEventListener('submit', (e) => {
+    // Notify form - posts to Cloudflare Worker
+    document.getElementById('notify-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
+      const btn = e.target.querySelector('button');
+      btn.textContent = 'Submitting...';
+      btn.disabled = true;
 
-      // Open mailto to Matt with the signup
-      const subject = encodeURIComponent(`[${domain}] New signup`);
-      const body = encodeURIComponent(`New signup for ${domain}:\n\nEmail: ${email}`);
-      window.location.href = `mailto:lolztex@gmail.com?subject=${subject}&body=${body}`;
-
-      document.getElementById('success').classList.add('show');
+      try {
+        const res = await fetch('https://fortune0-forms.mattmauersp.workers.dev', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, domain, source: 'domain-notify' })
+        });
+        if (res.ok) {
+          document.getElementById('success').classList.add('show');
+          btn.textContent = 'Done!';
+        } else {
+          throw new Error('Failed');
+        }
+      } catch (err) {
+        btn.textContent = 'Notify Me';
+        btn.disabled = false;
+        alert('Something went wrong. Try again?');
+      }
     });
 
     // Access code check

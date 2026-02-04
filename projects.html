@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Launched Projects — fortune0</title>
+  <meta name="description" content="Projects that made it. Ideas that became real products.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold: #D4AF37;
+      --gold-rgb: 212, 175, 55;
+      --black: #000000;
+      --white: #ffffff;
+      --gray: rgba(255, 255, 255, 0.5);
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--black);
+      color: var(--white);
+      line-height: 1.6;
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--white);
+      text-decoration: none;
+    }
+    .logo span { color: var(--gold); }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--gray);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+
+    .nav-btn {
+      padding: 0.65rem 1.25rem;
+      background: var(--gold);
+      color: var(--black);
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    /* Main */
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 8rem 2rem 6rem;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .page-header h1 {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+    }
+
+    .page-header p {
+      color: var(--gray);
+      font-size: 1.1rem;
+    }
+
+    /* Stats */
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+      margin-bottom: 4rem;
+      padding: 2rem;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--gold);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Project Cards */
+    .projects-grid {
+      display: grid;
+      gap: 2rem;
+    }
+
+    .project-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 2.5rem;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold), transparent);
+    }
+
+    .project-card:hover {
+      border-color: rgba(255,255,255,0.15);
+      transform: translateY(-4px);
+    }
+
+    .project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+    }
+
+    .project-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .project-status {
+      padding: 0.4rem 1rem;
+      background: rgba(107, 203, 119, 0.15);
+      color: #6BCB77;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .project-desc {
+      color: var(--gray);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .project-meta {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .meta-label {
+      font-size: 0.75rem;
+      color: var(--gray);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .meta-value {
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .project-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .project-btn {
+      padding: 0.8rem 1.5rem;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .project-btn.primary {
+      background: var(--gold);
+      color: var(--black);
+    }
+
+    .project-btn.secondary {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid var(--gold);
+    }
+
+    .project-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* Empty state */
+    .coming-soon {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      margin-top: 2rem;
+    }
+
+    .coming-soon h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .coming-soon p {
+      color: var(--gray);
+    }
+
+    @media (max-width: 640px) {
+      header { padding: 1rem 1.5rem; }
+      .nav-links a:not(.nav-btn) { display: none; }
+      .stats-row { flex-direction: column; gap: 1.5rem; }
+      .project-header { flex-direction: column; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">fortune<span>0</span></a>
+    <nav class="nav-links">
+      <a href="/ideas.html">Domains</a>
+      <a href="/projects.html">Launched</a>
+      <a href="/why.html">Why</a>
+      <a href="/ideas.html" class="nav-btn">Browse Ideas</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="page-header">
+      <h1>Launched Projects</h1>
+      <p>Ideas that survived. Products that shipped. Proof this works.</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-value">1</div>
+        <div class="stat-label">Launched</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">229</div>
+        <div class="stat-label">Building / Open</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">6</div>
+        <div class="stat-label">Paying Users</div>
+      </div>
+    </div>
+
+    <div class="projects-grid">
+      <!-- death2data.com -->
+      <article class="project-card">
+        <div class="project-header">
+          <h2 class="project-title">death2data.com</h2>
+          <span class="project-status">LIVE</span>
+        </div>
+        <p class="project-desc">
+          Privacy tools and digital decluttering for people who want control over their data.
+          $1 notebook membership with local-first AI integration, account deletion workflows,
+          and privacy-focused utilities.
+        </p>
+        <div class="project-meta">
+          <div class="meta-item">
+            <span class="meta-label">Builder</span>
+            <span class="meta-value">Matt</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Launched</span>
+            <span class="meta-value">2025</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Subscribers</span>
+            <span class="meta-value">6 paying</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Model</span>
+            <span class="meta-value">$1/28 days</span>
+          </div>
+        </div>
+        <div class="project-actions">
+          <a href="https://death2data.com" target="_blank" class="project-btn primary">Visit Site →</a>
+          <a href="/projects/death2data/" class="project-btn secondary">View Docs</a>
+        </div>
+      </article>
+    </div>
+
+    <div class="coming-soon">
+      <h3>More coming soon</h3>
+      <p>Have a domain you want to build? <a href="/ideas.html" style="color: var(--gold);">Apply now →</a></p>
+    </div>
+  </main>
+</body>
+</html>

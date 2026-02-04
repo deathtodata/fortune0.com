@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why fortune0 — The Anti-SAFE</title>
+  <meta name="description" content="No lawyers. No minimums. No gatekeeping. Just ideas that survive.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold: #D4AF37;
+      --gold-rgb: 212, 175, 55;
+      --black: #000000;
+      --white: #ffffff;
+      --gray: rgba(255, 255, 255, 0.5);
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--black);
+      color: var(--white);
+      line-height: 1.7;
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--white);
+      text-decoration: none;
+    }
+    .logo span { color: var(--gold); }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--gray);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--white); }
+
+    .nav-btn {
+      padding: 0.65rem 1.25rem;
+      background: var(--gold);
+      color: var(--black);
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    /* Main content */
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 8rem 2rem 6rem;
+    }
+
+    .page-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 2rem;
+    }
+
+    .lede {
+      font-size: 1.3rem;
+      color: var(--gray);
+      margin-bottom: 4rem;
+      line-height: 1.6;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 3rem 0 1.5rem;
+      color: var(--gold);
+    }
+
+    p {
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 1.5rem;
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin: 3rem 0;
+    }
+
+    .compare-box {
+      padding: 2rem;
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .compare-box.old {
+      background: rgba(255, 100, 100, 0.05);
+      border-color: rgba(255, 100, 100, 0.2);
+    }
+
+    .compare-box.new {
+      background: rgba(107, 203, 119, 0.05);
+      border-color: rgba(107, 203, 119, 0.2);
+    }
+
+    .compare-box h3 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+
+    .compare-box.old h3 { color: #FF6B6B; }
+    .compare-box.new h3 { color: #6BCB77; }
+
+    .compare-box ul {
+      list-style: none;
+    }
+
+    .compare-box li {
+      padding: 0.5rem 0;
+      color: var(--gray);
+      font-size: 0.95rem;
+    }
+
+    .spectrum {
+      margin: 3rem 0;
+      padding: 2rem;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+    }
+
+    .spectrum h3 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+
+    .spectrum-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .spectrum-item:last-child {
+      border-bottom: none;
+    }
+
+    .spectrum-level {
+      width: 120px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .spectrum-commit {
+      color: var(--gray);
+      font-size: 0.9rem;
+      flex: 1;
+    }
+
+    .spectrum-vibe {
+      color: var(--gold);
+      font-size: 0.85rem;
+      font-style: italic;
+    }
+
+    blockquote {
+      margin: 2rem 0;
+      padding: 1.5rem 2rem;
+      border-left: 3px solid var(--gold);
+      background: var(--glass);
+      font-size: 1.1rem;
+      font-style: italic;
+      color: rgba(255,255,255,0.9);
+    }
+
+    .cta-section {
+      margin-top: 4rem;
+      padding: 3rem;
+      background: rgba(var(--gold-rgb), 0.08);
+      border: 1px solid rgba(var(--gold-rgb), 0.2);
+      border-radius: 20px;
+      text-align: center;
+    }
+
+    .cta-section h2 {
+      margin-top: 0;
+      color: var(--white);
+    }
+
+    .cta-section p {
+      color: var(--gray);
+      margin-bottom: 2rem;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .cta-btn {
+      padding: 1rem 2rem;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .cta-btn.primary {
+      background: var(--gold);
+      color: var(--black);
+    }
+
+    .cta-btn.secondary {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid var(--gold);
+    }
+
+    .cta-btn:hover {
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 640px) {
+      .comparison { grid-template-columns: 1fr; }
+      header { padding: 1rem 1.5rem; }
+      .nav-links a:not(.nav-btn) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">fortune<span>0</span></a>
+    <nav class="nav-links">
+      <a href="/ideas.html">Domains</a>
+      <a href="/projects.html">Launched</a>
+      <a href="/why.html">Why</a>
+      <a href="/ideas.html" class="nav-btn">Browse Ideas</a>
+    </nav>
+  </header>
+
+  <main>
+    <p class="page-label">Philosophy</p>
+    <h1>The Anti-SAFE</h1>
+    <p class="lede">No lawyers. No minimums. No accreditation. No gatekeeping.<br>Just ideas that survive because people believe in them.</p>
+
+    <h2>The Problem with SAFEs</h2>
+    <p>Y Combinator's SAFE (Simple Agreement for Future Equity) was supposed to make startup investing simpler. Instead, it created a new barrier: you still need lawyers, you still need to be an accredited investor, and you still need to write checks with multiple zeros.</p>
+    <p>The garage startup myth sold us on the idea that anyone could build. But the funding model says only the wealthy can invest.</p>
+
+    <div class="comparison">
+      <div class="compare-box old">
+        <h3>Traditional (SAFE/VC)</h3>
+        <ul>
+          <li>→ $25K+ minimum checks</li>
+          <li>→ Accredited investors only</li>
+          <li>→ Lawyers for every deal</li>
+          <li>→ Equity = years to liquidity</li>
+          <li>→ Pitch decks & boardrooms</li>
+          <li>→ Permission required</li>
+        </ul>
+      </div>
+      <div class="compare-box new">
+        <h3>fortune0 (Believer Model)</h3>
+        <ul>
+          <li>→ $15 domain renewals</li>
+          <li>→ Anyone can participate</li>
+          <li>→ No legal overhead</li>
+          <li>→ Rev share on success</li>
+          <li>→ GitHub & good vibes</li>
+          <li>→ Permissionless entry</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>The Participation Spectrum</h2>
+    <p>Not everyone wants to write code. Not everyone wants to write checks. fortune0 lets you participate at whatever level feels right.</p>
+
+    <div class="spectrum">
+      <h3>Choose Your Entry Point</h3>
+      <div class="spectrum-item">
+        <span class="spectrum-level">→ Observer</span>
+        <span class="spectrum-commit">Browse domains, no commitment</span>
+        <span class="spectrum-vibe">"This is interesting"</span>
+      </div>
+      <div class="spectrum-item">
+        <span class="spectrum-level">→ Subscriber</span>
+        <span class="spectrum-commit">Email signup, get updates</span>
+        <span class="spectrum-vibe">"Keep me posted"</span>
+      </div>
+      <div class="spectrum-item">
+        <span class="spectrum-level">→ Believer</span>
+        <span class="spectrum-commit">~$15/year domain sponsorship</span>
+        <span class="spectrum-vibe">"I believe in this one"</span>
+      </div>
+      <div class="spectrum-item">
+        <span class="spectrum-level">→ Builder</span>
+        <span class="spectrum-commit">Apply to build, time + skill</span>
+        <span class="spectrum-vibe">"Let me make it real"</span>
+      </div>
+      <div class="spectrum-item">
+        <span class="spectrum-level">→ Partner</span>
+        <span class="spectrum-commit">Equity stake, long-term</span>
+        <span class="spectrum-vibe">"Let's build a company"</span>
+      </div>
+    </div>
+
+    <h2>How It Actually Works</h2>
+    <p>fortune0 owns 230+ domains. Each one is an idea waiting to happen. Some are jokes. Some could be billion-dollar companies. Most are somewhere in between.</p>
+    <p>Domains expire every year. If nobody cares enough to keep them alive, they die. This is natural selection for ideas.</p>
+    <p>Believers can sponsor a domain's renewal. Builders can pitch what to build on it. If something gets built and makes money, everyone who believed early gets a piece.</p>
+
+    <blockquote>
+      "We don't need your money. We need your belief. The money is just proof you mean it."
+    </blockquote>
+
+    <h2>Why This Matters</h2>
+    <p>The internet was supposed to democratize creation. Instead, we got a system where the same people who could afford to invest in 1990 are the same people who can afford to invest today.</p>
+    <p>fortune0 is an experiment: what if participation started at $15 instead of $25,000? What if believing in an idea was as simple as keeping it alive for one more year?</p>
+    <p>Maybe most of these domains go nowhere. That's fine. The ones that matter will survive because people believed in them.</p>
+
+    <div class="cta-section">
+      <h2>Ready to Participate?</h2>
+      <p>No pitch deck required. No lawyers. Just pick your level and jump in.</p>
+      <div class="cta-buttons">
+        <a href="/ideas.html" class="cta-btn primary">Browse Domains →</a>
+        <a href="/CONTRIBUTING.md#domain-believer-program" class="cta-btn secondary">Become a Believer</a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

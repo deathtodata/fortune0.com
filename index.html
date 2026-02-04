@@ -252,6 +252,64 @@
       filter: blur(40px);
     }
 
+    /* Header */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .logo:hover { opacity: 0.8; }
+    .logo span { color: var(--gold); }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: #fff; }
+
+    .nav-btn {
+      padding: 0.65rem 1.25rem;
+      background: var(--gold);
+      color: #000;
+      border: none;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(var(--gold-rgb), 0.4);
+    }
+
     @media (max-width: 640px) {
       .email-form {
         flex-direction: column;
@@ -269,10 +327,21 @@
         gap: 1rem;
         align-items: center;
       }
+      header { padding: 1rem 1.5rem; }
+      .nav-links a:not(.nav-btn) { display: none; }
     }
   </style>
 </head>
 <body>
+  <header>
+    <a href="/" class="logo">fortune<span>0</span></a>
+    <nav class="nav-links">
+      <a href="/ideas.html">Domains</a>
+      <a href="/projects.html">Launched</a>
+      <a href="/why.html">Why</a>
+      <a href="/ideas.html" class="nav-btn">Browse Ideas</a>
+    </nav>
+  </header>
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
   <div class="orb orb-3"></div>
@@ -481,11 +550,30 @@
     });
 
     // Form
-    document.getElementById('form').addEventListener('submit', (e) => {
+    document.getElementById('form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = e.target.querySelector('input').value;
-      alert('Thanks! We\'ll reach out to ' + email);
-      e.target.reset();
+      const btn = e.target.querySelector('button');
+      btn.textContent = 'Submitting...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('https://fortune0-forms.mattmauersp.workers.dev', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, source: 'homepage', domain: 'fortune0.com' })
+        });
+        if (res.ok) {
+          btn.textContent = 'You\'re in!';
+          e.target.reset();
+        } else {
+          throw new Error('Failed');
+        }
+      } catch (err) {
+        btn.textContent = 'Get early access';
+        btn.disabled = false;
+        alert('Something went wrong. Try again?');
+      }
     });
   </script>
 </body>
