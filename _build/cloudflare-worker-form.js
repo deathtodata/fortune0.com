@@ -20,6 +20,26 @@ export default {
       });
     }
 
+    // GET = list all submissions (protected by secret)
+    if (request.method === 'GET') {
+      const url = new URL(request.url);
+      const adminKey = url.searchParams.get('key');
+
+      // Requires ?key=YOUR_ADMIN_KEY to access
+      if (!env.ADMIN_KEY || adminKey !== env.ADMIN_KEY) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+
+      const list = await env.SUBMISSIONS.list();
+      const all = {};
+      for (const entry of list.keys) {
+        all[entry.name] = await env.SUBMISSIONS.get(entry.name);
+      }
+      return new Response(JSON.stringify(all, null, 2), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     if (request.method !== 'POST') {
       return new Response('Method not allowed', { status: 405 });
     }
@@ -27,6 +47,8 @@ export default {
     try {
       const data = await request.json();
       const { email, domain, source } = data;
+
+      console.log('Received submission:', { email, domain, source });
 
       if (!email) {
         return new Response(JSON.stringify({ error: 'Email required' }), {
@@ -43,8 +65,12 @@ export default {
         timestamp: new Date().toISOString(),
       };
 
+      console.log('Writing to KV:', submission);
+
       // env.SUBMISSIONS is a KV namespace you create in Cloudflare dashboard
       await env.SUBMISSIONS.put(email, JSON.stringify(submission));
+
+      console.log('KV write complete');
 
       // Optional: Also append to a list for easy export
       const list = await env.SUBMISSIONS.get('_all_emails') || '[]';
