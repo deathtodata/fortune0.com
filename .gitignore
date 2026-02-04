@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Wrangler local state
+.wrangler/
+_build/.wrangler/
+_build/node_modules/
+
+# OS files
+.DS_Store
+*.DS_Store
+
+# Private data (never commit)
+fortune0-private/
+*.env
+!.env.example
+
+# Build artifacts
+*.log

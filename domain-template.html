@@ -215,11 +215,11 @@
         <button type="submit">Notify Me</button>
       </form>
 
-      <div class="or-divider">— or enter access code —</div>
+      <div class="or-divider">— or check subscriber access —</div>
 
       <div class="code-section">
-        <input type="text" id="code" placeholder="CODE" maxlength="10">
-        <button type="button" class="code-btn" onclick="checkCode()">Enter</button>
+        <input type="email" id="access-email" placeholder="your@email.com">
+        <button type="button" class="code-btn" onclick="checkAccess()">Check</button>
       </div>
 
       <div class="success" id="success">✓ You're in! Check your email.</div>
@@ -286,23 +286,52 @@
       }
     });
 
-    // Access code check
-    const VALID_CODES = ['FORTUNE1', 'F0LAUNCH', 'D2D2026'];
+    // Access check via subscriber email
+    async function checkAccess() {
+      const email = document.getElementById('access-email').value.trim();
+      if (!email) {
+        alert('Enter your subscriber email');
+        return;
+      }
 
-    function checkCode() {
-      const code = document.getElementById('code').value.toUpperCase().trim();
-      if (VALID_CODES.includes(code)) {
-        localStorage.setItem('f0_access', code);
-        window.location.href = `https://fortune0.com/ideas.html`;
-      } else {
-        alert('Invalid code. Subscribe at death2data.com for access.');
+      const btn = document.querySelector('.code-btn');
+      btn.textContent = 'Checking...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('https://fortune0-forms.mattmauersp.workers.dev', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'check-access', email })
+        });
+        const data = await res.json();
+
+        if (data.access) {
+          localStorage.setItem('f0_email', email);
+          localStorage.setItem('f0_tier', data.tier);
+          window.location.href = `https://fortune0.com/ideas.html`;
+        } else {
+          btn.textContent = 'Check';
+          btn.disabled = false;
+          alert('Not found. Subscribe at death2data.com for $1 access.');
+        }
+      } catch (err) {
+        btn.textContent = 'Check';
+        btn.disabled = false;
+        alert('Error checking access. Try again.');
       }
     }
 
-    // Enter key for code
-    document.getElementById('code').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') checkCode();
+    // Enter key for email
+    document.getElementById('access-email').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') checkAccess();
     });
+
+    // Auto-check if they've logged in before
+    const savedEmail = localStorage.getItem('f0_email');
+    if (savedEmail) {
+      document.getElementById('access-email').value = savedEmail;
+    }
   </script>
 </body>
 </html>

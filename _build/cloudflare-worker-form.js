@@ -46,7 +46,44 @@ export default {
 
     try {
       const data = await request.json();
-      const { email, domain, source } = data;
+      const { email, domain, source, action } = data;
+
+      // ACCESS CHECK - returns only true/false, no data leaked
+      if (action === 'check-access') {
+        if (!email) {
+          return new Response(JSON.stringify({ access: false }), {
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+          });
+        }
+        const subscriber = await env.SUBMISSIONS.get(`subscriber:${email.toLowerCase()}`);
+        return new Response(JSON.stringify({
+          access: !!subscriber,
+          tier: subscriber ? JSON.parse(subscriber).tier : null
+        }), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        });
+      }
+
+      // ADMIN: Sync subscriber from Stripe (protected)
+      if (action === 'sync-subscriber') {
+        const adminKey = data.key;
+        if (!env.ADMIN_KEY || adminKey !== env.ADMIN_KEY) {
+          return new Response('Unauthorized', { status: 401 });
+        }
+        const { tier, status } = data;
+        if (status === 'active') {
+          await env.SUBMISSIONS.put(`subscriber:${email.toLowerCase()}`, JSON.stringify({
+            email: email.toLowerCase(),
+            tier: tier || 'd2d',
+            synced: new Date().toISOString()
+          }));
+        } else {
+          await env.SUBMISSIONS.delete(`subscriber:${email.toLowerCase()}`);
+        }
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
 
       console.log('Received submission:', { email, domain, source });
 
