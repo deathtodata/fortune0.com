@@ -309,6 +309,7 @@
         if (data.access) {
           localStorage.setItem('f0_email', email);
           localStorage.setItem('f0_tier', data.tier);
+          localStorage.setItem('fortune0_email', email); // For search logging
           window.location.href = `https://fortune0.com/ideas.html`;
         } else {
           btn.textContent = 'Check';

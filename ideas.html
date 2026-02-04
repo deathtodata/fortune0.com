@@ -993,10 +993,44 @@
       });
     });
 
-    // Search
+    // Search with logging
+    let searchTimeout;
+    const WORKER_URL = 'https://fortune0-forms.mattmauersp.workers.dev';
+
+    async function logSearch(query) {
+      if (query.length < 3) return; // Don't log tiny queries
+
+      const email = localStorage.getItem('fortune0_email') || localStorage.getItem('f0_email') || 'anonymous';
+
+      try {
+        const res = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'log-search', email, query })
+        });
+        const data = await res.json();
+
+        // If they hit free limit, show upgrade nudge
+        if (data.allowed === false) {
+          console.log('Search limit reached:', data.reason);
+          // Could show a toast here
+        }
+      } catch (err) {
+        console.error('Search log failed:', err);
+      }
+    }
+
     document.getElementById('search-input').addEventListener('input', (e) => {
       searchTerm = e.target.value;
       renderDomains(filterDomains());
+
+      // Debounced search logging
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        if (searchTerm.trim()) {
+          logSearch(searchTerm.trim());
+        }
+      }, 500);
     });
 
     // Modal
@@ -1019,6 +1053,9 @@
       const domain = document.getElementById('pitch-domain').value;
       const idea = document.getElementById('pitch-idea').value;
       const why = document.getElementById('pitch-why').value;
+
+      // Save email for search attribution
+      localStorage.setItem('fortune0_email', email);
 
       const subject = encodeURIComponent(`[fortune0] Application to build: ${domain}`);
       const body = encodeURIComponent(

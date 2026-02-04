@@ -377,22 +377,9 @@
   </div>
 
   <div class="concept">
-    <span><span class="dot"></span><a href="https://death2data.com" style="color: inherit; text-decoration: none;">death2data.com</a> — LIVE</span>
-    <span><span class="dot"></span><span id="sub-count">—</span> subscribers</span>
-    <span><span class="dot"></span>230+ domains ready</span>
+    <span><span class="dot"></span><a href="https://death2data.com" style="color: inherit; text-decoration: none;">death2data.com</a></span>
+    <span><span class="dot"></span><a href="/projects.html" style="color: inherit; text-decoration: none;">projects</a></span>
   </div>
-
-  <script>
-    // Load live stats
-    fetch('https://fortune0-forms.mattmauersp.workers.dev', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'get-stats' })
-    })
-    .then(r => r.json())
-    .then(s => { document.getElementById('sub-count').textContent = s.totalSubscribers; })
-    .catch(() => {});
-  </script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
@@ -584,6 +571,7 @@
           body: JSON.stringify({ email, source: 'homepage', domain: 'fortune0.com' })
         });
         if (res.ok) {
+          localStorage.setItem('fortune0_email', email);
           btn.textContent = 'You\'re in!';
           e.target.reset();
         } else {

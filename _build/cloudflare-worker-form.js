@@ -108,6 +108,8 @@ export default {
           await env.SUBMISSIONS.put(`subscriber:${email.toLowerCase()}`, JSON.stringify({
             email: email.toLowerCase(),
             tier: tier || 'd2d',
+            credits: 100, // starting credits
+            searches: 0,
             synced: new Date().toISOString()
           }));
         } else {
@@ -115,6 +117,109 @@ export default {
         }
         return new Response(JSON.stringify({ success: true }), {
           headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      // SEARCH LOG - tracks queries, checks credits, updates usage
+      if (action === 'log-search') {
+        const { query } = data;
+        if (!email || !query) {
+          return new Response(JSON.stringify({ error: 'Email and query required' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+          });
+        }
+
+        // Check subscriber status
+        const subKey = `subscriber:${email.toLowerCase()}`;
+        const subData = await env.SUBMISSIONS.get(subKey);
+
+        if (!subData) {
+          // Not a subscriber - allow 3 free searches per day
+          const freeKey = `free:${email.toLowerCase()}:${new Date().toISOString().slice(0,10)}`;
+          const freeCount = parseInt(await env.SUBMISSIONS.get(freeKey) || '0');
+
+          if (freeCount >= 3) {
+            return new Response(JSON.stringify({
+              allowed: false,
+              reason: 'Free limit reached (3/day)',
+              upgrade: 'https://buy.stripe.com/cNieVd5Vjb6N2ZY6Fq4wM00'
+            }), {
+              headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+            });
+          }
+
+          await env.SUBMISSIONS.put(freeKey, String(freeCount + 1), { expirationTtl: 86400 });
+
+          // Log anonymous query
+          const logKey = `search:${Date.now()}`;
+          await env.SUBMISSIONS.put(logKey, JSON.stringify({
+            query,
+            tier: 'free',
+            timestamp: new Date().toISOString()
+          }), { expirationTtl: 604800 }); // 7 days
+
+          return new Response(JSON.stringify({
+            allowed: true,
+            tier: 'free',
+            remaining: 2 - freeCount,
+            message: `${2 - freeCount} free searches left today`
+          }), {
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+          });
+        }
+
+        // Subscriber - update usage and log
+        const sub = JSON.parse(subData);
+        sub.searches = (sub.searches || 0) + 1;
+        sub.lastSearch = new Date().toISOString();
+        await env.SUBMISSIONS.put(subKey, JSON.stringify(sub));
+
+        // Log query with tier info
+        const logKey = `search:${Date.now()}`;
+        await env.SUBMISSIONS.put(logKey, JSON.stringify({
+          query,
+          tier: sub.tier,
+          timestamp: new Date().toISOString()
+        }), { expirationTtl: 604800 }); // 7 days
+
+        return new Response(JSON.stringify({
+          allowed: true,
+          tier: sub.tier,
+          totalSearches: sub.searches,
+          credits: sub.credits
+        }), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        });
+      }
+
+      // GET SEARCH TRENDS (public, anonymized)
+      if (action === 'get-trends') {
+        const list = await env.SUBMISSIONS.list({ prefix: 'search:' });
+        const queryCount = {};
+
+        for (const entry of list.keys.slice(0, 100)) { // last 100 searches
+          const val = await env.SUBMISSIONS.get(entry.name);
+          if (val) {
+            const { query } = JSON.parse(val);
+            // Extract keywords (simple split)
+            const words = query.toLowerCase().split(/\s+/);
+            for (const word of words) {
+              if (word.length > 3) {
+                queryCount[word] = (queryCount[word] || 0) + 1;
+              }
+            }
+          }
+        }
+
+        // Sort by count, return top 10
+        const trending = Object.entries(queryCount)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([word, count]) => ({ word, count }));
+
+        return new Response(JSON.stringify({ trending }), {
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         });
       }
 
