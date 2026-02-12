@@ -11,3 +11,15 @@ services:
       - ./data:/app/data
       - .:/app
     restart: unless-stopped
+
+  # Optional: expose via Cloudflare Tunnel
+  # Uncomment and add your tunnel token from:
+  #   cloudflared tunnel create fortune0-platform
+  #   cloudflared tunnel token fortune0-platform
+  #
+  # tunnel:
+  #   image: cloudflare/cloudflared:latest
+  #   command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+  #   depends_on:
+  #     - fortune0
+  #   restart: unless-stopped

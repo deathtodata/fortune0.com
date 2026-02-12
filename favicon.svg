@@ -1,9 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="12" fill="#0A0A0A"/>
+  <defs>
+    <linearGradient id="gold-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F0D25A"/>
+      <stop offset="35%" stop-color="#D4AF37"/>
+      <stop offset="60%" stop-color="#A07814"/>
+      <stop offset="80%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#8A5C0A"/>
+    </linearGradient>
+    <linearGradient id="bg-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#141414"/>
+      <stop offset="100%" stop-color="#080808"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="1.5" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+  <rect width="100" height="100" rx="12" fill="url(#bg-grad)"/>
+  <rect x="1" y="1" width="98" height="98" rx="11" fill="none" stroke="#D4AF37" stroke-opacity="0.12" stroke-width="1"/>
+  <text x="50" y="75"
+        font-family="system-ui, -apple-system, sans-serif"
+        font-size="72"
+        font-weight="800"
+        fill="url(#gold-grad)"
+        text-anchor="middle"
+        filter="url(#shadow)">0</text>
   <text x="50" y="75"
         font-family="system-ui, -apple-system, sans-serif"
         font-size="72"
         font-weight="800"
         fill="#D4AF37"
-        text-anchor="middle">0</text>
+        fill-opacity="0.15"
+        text-anchor="middle"
+        filter="url(#glow)">0</text>
 </svg>
