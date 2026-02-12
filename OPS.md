@@ -4,6 +4,42 @@ Every command you need, in order, for every situation.
 
 ---
 
+## MCP: Let AI Apps Use fortune0 (No Hosting Needed)
+
+This is the easiest way to demo fortune0. No website, no server, no hosting. People just talk to Claude and Claude talks to fortune0.
+
+```bash
+# One-time install
+pip install fastmcp
+
+# Test it works
+python3 ~/code/fortune0-site/mcp_server.py
+```
+
+Then add to Claude Desktop config (`~/.claude/claude_desktop_config.json`):
+
+```json
+{
+    "mcpServers": {
+        "fortune0": {
+            "command": "python3",
+            "args": ["/Users/matthewmauer/code/fortune0-site/mcp_server.py"]
+        }
+    }
+}
+```
+
+Restart Claude Desktop. Now you (or anyone) can say:
+- "Sign me up for fortune0 with my email"
+- "Show my dashboard stats"
+- "Add a contact named John at john@example.com"
+- "What's my referral code?"
+- "Join the affiliate program"
+
+The database is the same one server.py uses. Everything stays local.
+
+---
+
 ## Daily: Push Changes to GitHub
 
 ```bash

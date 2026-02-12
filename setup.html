@@ -96,6 +96,10 @@ footer a { color: rgba(255,255,255,0.3); }
                 <div class="opt-title">My own server (Docker)</div>
                 <div class="opt-desc">I have a VPS or server I want to use</div>
             </div>
+            <div class="opt" onclick="choose('host','mcp')">
+                <div class="opt-title">Through AI (Claude, etc.)</div>
+                <div class="opt-desc">MCP — talk to Claude and it runs fortune0 for you. No website needed.</div>
+            </div>
             <div class="opt" onclick="choose('host','local')">
                 <div class="opt-title">Just test locally first</div>
                 <div class="opt-desc">Run on my machine, no public URL needed yet</div>
@@ -246,6 +250,30 @@ cd fortune0.com</pre></li>
                 </ol>
                 <p style="margin-top:16px; color: rgba(255,255,255,0.4);">
                     Server runs on port 8080. Point your domain at the server's IP. The database persists in <code>data/</code> via volume mount. To update: <code>git pull && docker compose up -d --build</code>
+                </p>
+            </div>`,
+
+        'host-mcp': `
+            <div class="result">
+                <h3>Run Through AI (MCP) — 3 Steps</h3>
+                <ol>
+                    <li>Install the MCP library:<pre>pip install fastmcp</pre></li>
+                    <li>Add fortune0 to your Claude Desktop config (<code>~/.claude/claude_desktop_config.json</code>):<pre>{
+  "mcpServers": {
+    "fortune0": {
+      "command": "python3",
+      "args": ["/path/to/fortune0-site/mcp_server.py"]
+    }
+  }
+}</pre></li>
+                    <li>Restart Claude Desktop. Now just talk to Claude:<br>
+                        <span style="color:var(--gold);">"Sign me up for fortune0"</span><br>
+                        <span style="color:var(--gold);">"Show my dashboard stats"</span><br>
+                        <span style="color:var(--gold);">"Add a contact named John"</span><br>
+                        <span style="color:var(--gold);">"Join the affiliate program"</span></li>
+                </ol>
+                <p style="margin-top:16px; color: rgba(255,255,255,0.4);">
+                    No website, no hosting, no server. Claude talks directly to fortune0's database on your machine. Same data as the web dashboard.
                 </p>
             </div>`,
 
