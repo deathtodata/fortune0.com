@@ -6,30 +6,28 @@
 <title>fortune0 — Join &amp; earn</title>
 <meta name="description" content="Get your referral code and QR. Share it. Earn commission. No followers needed.">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-    --bg:#08080F;--surface:#111120;--surface2:#1A1A2E;--surface3:#222238;
-    --border:#1E1E36;--border-l:#2A2A44;
-    --mint:#00FFAA;--cyan:#00D4FF;--blue:#0066FF;
-    --yellow:#FFD166;--red:#EF476F;--purple:#B388FF;--orange:#FF8C42;
-    --white:#F0F0F8;--text:#A0A0BE;--dim:#5A5A78;
-    --font:'Inter',-apple-system,sans-serif;
-    --mono:'JetBrains Mono',monospace;
+    --bg:#000000;--surface:#0A0A0A;--surface2:#141414;--surface3:#1E1E1E;
+    --border:#1A1A1A;--border-l:#2A2A2A;
+    --mint:#D4AF37;--cyan:#D4AF37;--blue:#D4AF37;
+    --yellow:#D4AF37;--red:#EF476F;--purple:#B388FF;--orange:#FF8C42;
+    --white:#FFFFFF;--text:rgba(255,255,255,0.6);--dim:rgba(255,255,255,0.3);
+    --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+    --mono:'SF Mono','Menlo',monospace;
+    --gold:#D4AF37;--gold-rgb:212,175,55;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;}
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh;}
-a{color:var(--mint);text-decoration:none;}
+a{color:var(--gold);text-decoration:none;}
 a:hover{opacity:0.8;}
-::selection{background:rgba(0,255,170,0.2);}
+::selection{background:rgba(212,175,55,0.2);}
 
 /* Nav */
 nav{
     position:sticky;top:0;z-index:100;
-    background:rgba(8,8,15,0.92);backdrop-filter:blur(20px);
+    background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);
     border-bottom:1px solid var(--border);
     padding:0 20px;height:56px;
     display:flex;align-items:center;justify-content:space-between;
@@ -47,7 +45,7 @@ nav{
 /* Hero */
 .hero{text-align:center;margin-bottom:48px;}
 .hero h1{font-size:36px;font-weight:800;color:var(--white);line-height:1.2;margin-bottom:12px;}
-.hero h1 span{background:linear-gradient(135deg,var(--mint),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 span{background:linear-gradient(135deg,#fff,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .hero p{font-size:16px;color:var(--text);max-width:480px;margin:0 auto;}
 
 /* Join card */
@@ -70,8 +68,8 @@ nav{
     padding:14px 28px;border-radius:10px;font-size:15px;font-weight:700;
     border:none;cursor:pointer;transition:all 0.2s;font-family:var(--font);
 }
-.btn-mint{background:var(--mint);color:var(--bg);}
-.btn-mint:hover{background:var(--white);}
+.btn-mint{background:var(--gold);color:#000;font-weight:600;}
+.btn-mint:hover{box-shadow:0 0 30px rgba(212,175,55,0.5);transform:scale(1.02);}
 .btn-mint:disabled{opacity:0.4;cursor:not-allowed;}
 .btn-ghost{background:none;border:1px solid var(--border);color:var(--text);padding:10px 16px;font-size:13px;}
 .btn-ghost:hover{border-color:var(--mint);color:var(--mint);}
@@ -162,11 +160,12 @@ footer a{color:var(--dim);}
 
 <nav>
     <a class="logo" href="index.html">
-        <svg viewBox="0 0 512 512" fill="none"><rect width="512" height="512" rx="96" fill="#08080F"/><circle cx="256" cy="256" r="140" stroke="url(#g1)" stroke-width="36" opacity=".95"/><circle cx="360" cy="152" r="16" fill="#00FFAA" opacity=".9"/><circle cx="360" cy="152" r="8" fill="#fff" opacity=".7"/><defs><linearGradient id="g1" x1="116" y1="116" x2="396" y2="396"><stop stop-color="#00FFAA"/><stop offset="1" stop-color="#0066FF"/></linearGradient></defs></svg>
+        <svg viewBox="0 0 512 512" fill="none"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="256" r="140" stroke="url(#g1)" stroke-width="36" opacity=".95"/><circle cx="360" cy="152" r="16" fill="#D4AF37" opacity=".9"/><circle cx="360" cy="152" r="8" fill="#fff" opacity=".7"/><defs><linearGradient id="g1" x1="116" y1="116" x2="396" y2="396"><stop stop-color="#D4AF37"/><stop offset="1" stop-color="#B8962E"/></linearGradient></defs></svg>
         fortune0
     </a>
     <div class="nav-links">
         <a href="index.html">Home</a>
+        <a href="ideas.html">Ideas</a>
         <a href="app.html">Dashboard</a>
     </div>
 </nav>
@@ -278,7 +277,7 @@ footer a{color:var(--dim);}
 </div>
 
 <footer>
-    <p>fortune0 &middot; <a href="index.html">Home</a> &middot; <a href="app.html">Dashboard</a> &middot; <a href="storyboard.html">Storyboard</a></p>
+    <p>fortune0 &middot; <a href="index.html">Home</a> &middot; <a href="ideas.html">Ideas</a> &middot; <a href="app.html">Dashboard</a> &middot; <a href="why.html">Why</a></p>
 </footer>
 
 <script>
@@ -548,22 +547,22 @@ const QR = (() => {
         canvas.height = canvas.width;
 
         // Background
-        ctx.fillStyle = opts.bg || '#08080F';
+        ctx.fillStyle = opts.bg || '#000000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // Border glow
         if (opts.glow !== false) {
             const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            grad.addColorStop(0, '#00FFAA');
-            grad.addColorStop(1, '#0066FF');
+            grad.addColorStop(0, '#D4AF37');
+            grad.addColorStop(1, '#B8962E');
             ctx.strokeStyle = grad;
             ctx.lineWidth = 3;
             ctx.strokeRect(1.5, 1.5, canvas.width - 3, canvas.height - 3);
         }
 
         // Modules
-        const fg = opts.fg || '#F0F0F8';
-        const accent = opts.accent || '#00FFAA';
+        const fg = opts.fg || '#FFFFFF';
+        const accent = opts.accent || '#D4AF37';
         for (let r = 0; r < grid.length; r++) {
             for (let c = 0; c < grid[r].length; c++) {
                 if (grid[r][c]) {

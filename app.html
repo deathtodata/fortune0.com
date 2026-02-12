@@ -534,6 +534,12 @@ async function api(method, path, body = null) {
     const t0 = performance.now();
     try {
         const resp = await fetch(path, opts);
+        const ct = resp.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) {
+            // Server returned HTML instead of JSON — no API server running
+            log('ERR', path, resp.status, 'No API server — got HTML instead of JSON');
+            return { ok: false, status: resp.status, data: { error: 'API server not running. Run: python3 server.py' } };
+        }
         const data = await resp.json();
         const ms = Math.round(performance.now() - t0);
         if (resp.ok) {
@@ -993,6 +999,8 @@ async function runAllTests() {
 async function checkHealth() {
     try {
         const resp = await fetch('/health');
+        const ct = resp.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) throw new Error('No API server');
         const data = await resp.json();
         if (data.status === 'ok') {
             log('SYS', '/health', 200, `Server: ${data.service} v${data.version} — ${data.db}`);
@@ -1000,9 +1008,14 @@ async function checkHealth() {
             document.getElementById('footer-api-status').parentElement.querySelector('.dot').style.background = 'var(--mint)';
         }
     } catch (e) {
-        log('ERR', '/health', 0, 'Server not reachable — running in offline mode');
+        log('ERR', '/health', 0, 'No API server — to use the dashboard run: python3 server.py');
         document.getElementById('footer-api-status').textContent = 'API offline';
         document.getElementById('footer-api-status').parentElement.querySelector('.dot').style.background = 'var(--red)';
+        // Show offline banner
+        const banner = document.createElement('div');
+        banner.style.cssText = 'background:#1a1000;border-bottom:1px solid #D4AF37;padding:12px 20px;text-align:center;font-size:13px;color:#D4AF37;';
+        banner.innerHTML = 'This dashboard requires the API server. On your Mac run: <code style="background:#000;padding:2px 8px;border-radius:4px;font-family:monospace;">python3 server.py</code> then open <a href="http://localhost:8080/app" style="color:#fff;">localhost:8080/app</a>';
+        document.body.insertBefore(banner, document.body.firstChild);
     }
 }
 
