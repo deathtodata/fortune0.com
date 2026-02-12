@@ -5,32 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>fortune0 — Platform Console</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-    --bg:#08080F;--surface:#111120;--surface2:#1A1A2E;--surface3:#222238;
-    --border:#1E1E36;--border-l:#2A2A44;
-    --mint:#00FFAA;--cyan:#00D4FF;--blue:#0066FF;
-    --yellow:#FFD166;--red:#EF476F;--purple:#B388FF;--orange:#FF8C42;
-    --white:#F0F0F8;--text:#A0A0BE;--dim:#5A5A78;
-    --font:'Inter',-apple-system,sans-serif;
-    --mono:'JetBrains Mono',monospace;
+    --bg:#000000;--surface:#0A0A0A;--surface2:#141414;--surface3:#1E1E1E;
+    --border:#1A1A1A;--border-l:#2A2A2A;
+    --mint:#D4AF37;--cyan:#D4AF37;--blue:#D4AF37;
+    --yellow:#D4AF37;--red:#EF476F;--purple:#B388FF;--orange:#FF8C42;
+    --white:#FFFFFF;--text:rgba(255,255,255,0.6);--dim:rgba(255,255,255,0.3);
+    --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+    --mono:'SF Mono','Menlo',monospace;
+    --gold:#D4AF37;--gold-rgb:212,175,55;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;}
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;display:flex;flex-direction:column;min-height:100vh;}
-a{color:var(--mint);text-decoration:none;}
+a{color:var(--gold);text-decoration:none;}
 a:hover{opacity:0.8;}
-::selection{background:rgba(0,255,170,0.2);}
+::selection{background:rgba(212,175,55,0.2);}
 button{font-family:var(--font);cursor:pointer;}
 input,select{font-family:var(--font);}
 
 /* ═══ HEADER ═══ */
 header{
     position:sticky;top:0;z-index:100;
-    background:rgba(8,8,15,0.92);backdrop-filter:blur(20px);
+    background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);
     border-bottom:1px solid var(--border);
 }
 .header-main{
@@ -46,11 +44,11 @@ header{
     transition:all 0.15s;
 }
 .nav-btn:hover{color:var(--text);background:var(--surface);}
-.nav-btn.active{color:var(--mint);background:rgba(0,255,170,0.06);border-color:rgba(0,255,170,0.15);}
+.nav-btn.active{color:var(--gold);background:rgba(212,175,55,0.06);border-color:rgba(212,175,55,0.15);}
 .nav-right{display:flex;align-items:center;gap:12px;}
 .auth-state{display:flex;align-items:center;gap:8px;font-size:12px;font-family:var(--mono);}
 .auth-dot{width:8px;height:8px;border-radius:50%;}
-.auth-dot.on{background:var(--mint);box-shadow:0 0 8px rgba(0,255,170,0.4);}
+.auth-dot.on{background:var(--gold);box-shadow:0 0 8px rgba(212,175,55,0.4);}
 .auth-dot.off{background:var(--red);box-shadow:0 0 8px rgba(239,71,111,0.3);}
 .ssl-badge{
     display:flex;align-items:center;gap:4px;
@@ -162,8 +160,8 @@ header{
     padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;
     border:none;transition:all 0.2s;
 }
-.btn-mint{background:var(--mint);color:var(--bg);}
-.btn-mint:hover{background:var(--white);}
+.btn-mint{background:var(--gold);color:#000;font-weight:600;}
+.btn-mint:hover{box-shadow:0 0 30px rgba(212,175,55,0.5);transform:scale(1.02);}
 .btn-ghost{background:none;border:1px solid var(--border);color:var(--text);}
 .btn-ghost:hover{border-color:var(--mint);color:var(--mint);}
 .btn-orange{background:var(--orange);color:var(--bg);}
@@ -177,7 +175,7 @@ td.mono{font-family:var(--mono);}
 td.mint{color:var(--mint);font-weight:600;}
 td.yellow{color:var(--yellow);}
 .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
-.badge.green{background:rgba(0,255,170,0.1);color:var(--mint);}
+.badge.green{background:rgba(212,175,55,0.1);color:var(--mint);}
 .badge.yellow{background:rgba(255,209,102,0.1);color:var(--yellow);}
 .badge.red{background:rgba(239,71,111,0.1);color:var(--red);}
 .badge.blue{background:rgba(0,212,255,0.1);color:var(--cyan);}
@@ -209,7 +207,7 @@ td.yellow{color:var(--yellow);}
     width:40px;height:40px;min-width:40px;border-radius:10px;
     display:flex;align-items:center;justify-content:center;font-size:18px;
 }
-.sec-icon.ok{background:rgba(0,255,170,0.1);color:var(--mint);}
+.sec-icon.ok{background:rgba(212,175,55,0.1);color:var(--mint);}
 .sec-icon.warn{background:rgba(255,209,102,0.1);color:var(--yellow);}
 .sec-icon.info{background:rgba(0,212,255,0.1);color:var(--cyan);}
 .sec-item h4{color:var(--white);font-size:14px;margin-bottom:4px;}
@@ -252,7 +250,7 @@ footer{
 <header>
     <div class="header-main">
         <div class="logo" onclick="navigate('home')">
-            <svg viewBox="0 0 512 512" fill="none"><rect width="512" height="512" rx="96" fill="#08080F"/><circle cx="256" cy="256" r="140" stroke="url(#g1)" stroke-width="36" opacity=".95"/><circle cx="360" cy="152" r="16" fill="#00FFAA" opacity=".9"/><circle cx="360" cy="152" r="8" fill="#fff" opacity=".7"/><defs><linearGradient id="g1" x1="116" y1="116" x2="396" y2="396"><stop stop-color="#00FFAA"/><stop offset="1" stop-color="#0066FF"/></linearGradient></defs></svg>
+            <svg viewBox="0 0 512 512" fill="none"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="256" r="140" stroke="url(#g1)" stroke-width="36" opacity=".95"/><circle cx="360" cy="152" r="16" fill="#D4AF37" opacity=".9"/><circle cx="360" cy="152" r="8" fill="#fff" opacity=".7"/><defs><linearGradient id="g1" x1="116" y1="116" x2="396" y2="396"><stop stop-color="#D4AF37"/><stop offset="1" stop-color="#B8962E"/></linearGradient></defs></svg>
             fortune0
         </div>
         <div class="nav-center">
@@ -445,11 +443,11 @@ footer{
             <div class="footer-status"><div class="dot"></div> <span id="footer-api-status">System ready</span></div>
         </div>
         <div class="footer-links">
-            <a href="#" onclick="navigate('home')">Dashboard</a>
-            <a href="#" onclick="navigate('security')">Security</a>
-            <a href="#" onclick="navigate('tests')">Tests</a>
-            <a href="index.html">Marketing site</a>
-            <a href="storyboard.html">Storyboard</a>
+            <a href="index.html">Home</a>
+            <a href="ideas.html">Ideas</a>
+            <a href="join.html">Earn</a>
+            <a href="why.html">Why</a>
+            <a href="projects.html">Projects</a>
         </div>
     </div>
 </footer>
@@ -554,26 +552,42 @@ async function api(method, path, body = null) {
 // AUTH — real server calls
 // ═══════════════════════════════════════════
 async function doLogin() {
+    const btn = document.querySelector('#login-card .btn-mint');
     const email = document.getElementById('login-email').value.trim().toLowerCase();
-    if (!email) { log('ERR', '/api/signup', 400, 'Email required'); return; }
+    if (!email) { log('ERR', '/api/signup', 400, 'Email required'); alert('Enter an email address'); return; }
 
+    btn.textContent = 'Connecting...';
+    btn.disabled = true;
     log('SEC', '/crypto/hmac', 200, 'Server generating HMAC-signed license key...');
-    const { ok, data } = await api('POST', '/api/signup', { email });
-    if (!ok) return;
 
-    state.token = data.token;
-    state.user = { email: data.email, refCode: data.referral_code, tier: data.tier };
+    try {
+        const { ok, data } = await api('POST', '/api/signup', { email });
+        if (!ok) {
+            btn.textContent = 'Sign in / Create account';
+            btn.disabled = false;
+            alert('Server error: ' + (data.error || 'Could not connect. Is the server running?'));
+            return;
+        }
 
-    log('SEC', '/auth/session', 200, `Token issued: ${data.token.slice(0, 12)}...`);
-    if (data.new) {
-        log('SYS', '/db/init', 200, `New account created for ${email}`);
-    } else {
-        log('SYS', '/auth', 200, `Returning user: ${email}`);
+        state.token = data.token;
+        state.user = { email: data.email, refCode: data.referral_code, tier: data.tier };
+
+        log('SEC', '/auth/session', 200, `Token issued: ${data.token.slice(0, 12)}...`);
+        if (data.new) {
+            log('SYS', '/db/init', 200, `New account created for ${email}`);
+        } else {
+            log('SYS', '/auth', 200, `Returning user: ${email}`);
+        }
+
+        updateAuthUI();
+        await refreshData();
+        navigate('home');
+    } catch (err) {
+        btn.textContent = 'Sign in / Create account';
+        btn.disabled = false;
+        log('ERR', '/api/signup', 0, err.message);
+        alert('Connection failed: ' + err.message);
     }
-
-    updateAuthUI();
-    await refreshData();
-    navigate('home');
 }
 
 function doLogout() {
@@ -773,7 +787,7 @@ function navigate(view) {
 // ═══════════════════════════════════════════
 function renderSecurity() {
     const checks = [
-        { icon: '🔒', cls: 'ok', title: 'HTTPS / TLS', desc: 'All traffic encrypted in transit. Most hosts auto-provision TLS certificates via Let\\'s Encrypt. No configuration needed.' },
+        { icon: '🔒', cls: 'ok', title: 'HTTPS / TLS', desc: 'All traffic encrypted in transit. Most hosts auto-provision TLS certificates via Let\'s Encrypt. No configuration needed.' },
         { icon: '🔑', cls: 'ok', title: 'HMAC-signed license keys', desc: 'Keys are cryptographically signed with SHA-256. Cannot be forged or tampered with. Bound to email + expiry.' },
         { icon: '🗄️', cls: 'ok', title: 'Per-user database isolation', desc: 'Every user gets their own SQLite file. No cross-user data leakage possible at the database level.' },
         { icon: '🛡️', cls: 'ok', title: 'SQL injection protection', desc: 'All queries use parameterized statements. No string concatenation in SQL. Built into the ORM layer.' },

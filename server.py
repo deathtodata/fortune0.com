@@ -239,7 +239,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", len(content))
-        self.send_header("Cache-Control", "public, max-age=3600")
+        # No caching in dev so edits show up instantly
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.end_headers()
         self.wfile.write(content)
 
@@ -614,19 +615,21 @@ if __name__ == "__main__":
     conn = get_db()
     conn.close()
 
+    G = "\033[38;2;0;255;170m"  # green
+    Y = "\033[33m"              # yellow
+    D = "\033[90m"              # dim
+    R = "\033[0m"               # reset
     print()
-    print(f"  \033[38;2;0;255;170m┌──────────────────────────────────────────┐\033[0m")
-    print(f"  \033[38;2;0;255;170m│\033[0m  fortune0 platform v1.0                   \033[38;2;0;255;170m│\033[0m")
-    print(f"  \033[38;2;0;255;170m│\033[0m                                            \033[38;2;0;255;170m│\033[0m")
-    print(f"  \033[38;2;0;255;170m│\033[0m  Landing:    \033[33mhttp://localhost:{PORT}\033[0m         \033[38;2;0;255;170m│\033[0m")
-    print(f"  \033[38;2;0;255;170m│\033[0m  App:        \033[33mhttp://localhost:{PORT}/app\033[0m     \033[38;2;0;255;170m│\033[0m")
-    print(f"  \033[38;2;0;255;170m│\033[0m  Storyboard: \033[33mhttp://localhost:{PORT}/storyboard\033[0m\033[38;2;0;255;170m│\033[0m")
-    print(f"  \033[38;2;0;255;170m│\033[0m  API:        \033[33mhttp://localhost:{PORT}/api\033[0m     \033[38;2;0;255;170m│\033[0m")
-    print(f"  \033[38;2;0;255;170m│\033[0m  Health:     \033[33mhttp://localhost:{PORT}/health\033[0m  \033[38;2;0;255;170m│\033[0m")
-    print(f"  \033[38;2;0;255;170m│\033[0m                                            \033[38;2;0;255;170m│\033[0m")
-    print(f"  \033[38;2;0;255;170m│\033[0m  \033[90mData: {DATA_DIR}\033[0m")
-    print(f"  \033[38;2;0;255;170m│\033[0m  \033[90mCtrl+C to stop\033[0m                           \033[38;2;0;255;170m│\033[0m")
-    print(f"  \033[38;2;0;255;170m└──────────────────────────────────────────┘\033[0m")
+    print(f"  {G}fortune0 platform v1.0{R}")
+    print()
+    print(f"  Landing:    {Y}http://localhost:{PORT}{R}")
+    print(f"  App:        {Y}http://localhost:{PORT}/app{R}")
+    print(f"  Storyboard: {Y}http://localhost:{PORT}/storyboard{R}")
+    print(f"  Join:       {Y}http://localhost:{PORT}/join{R}")
+    print(f"  Health:     {Y}http://localhost:{PORT}/health{R}")
+    print()
+    print(f"  {D}Data: {DATA_DIR}{R}")
+    print(f"  {D}Ctrl+C to stop{R}")
     print()
 
     server = HTTPServer(("0.0.0.0", PORT), Handler)
