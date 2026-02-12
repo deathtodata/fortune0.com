@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 — Setup Guide</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+:root { --gold: #D4AF37; --gold-rgb: 212,175,55; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #000; color: rgba(255,255,255,0.8); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif; min-height: 100vh; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 40px 20px; }
+h1 { color: #fff; font-size: 28px; margin-bottom: 8px; }
+.sub { color: rgba(255,255,255,0.4); margin-bottom: 40px; font-size: 14px; }
+.step { display: none; animation: fadeIn 0.3s ease; }
+.step.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.question { color: #fff; font-size: 20px; margin-bottom: 24px; line-height: 1.4; }
+.options { display: flex; flex-direction: column; gap: 12px; }
+.opt {
+    background: #0A0A0A; border: 1px solid #1A1A1A; border-radius: 12px;
+    padding: 16px 20px; cursor: pointer; transition: all 0.2s;
+}
+.opt:hover { border-color: var(--gold); background: #111; }
+.opt-title { color: #fff; font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.opt-desc { font-size: 13px; color: rgba(255,255,255,0.4); }
+.result {
+    background: #0A0A0A; border: 1px solid #1A1A1A; border-radius: 12px;
+    padding: 24px; margin-top: 20px;
+}
+.result h3 { color: var(--gold); font-size: 16px; margin-bottom: 16px; }
+.result ol { padding-left: 20px; }
+.result li { margin-bottom: 12px; line-height: 1.6; }
+.result code {
+    background: #1A1A1A; padding: 2px 8px; border-radius: 4px;
+    font-family: 'SF Mono', Menlo, monospace; font-size: 13px; color: var(--gold);
+}
+.result pre {
+    background: #0F0F0F; border: 1px solid #1A1A1A; border-radius: 8px;
+    padding: 12px 16px; margin: 8px 0; overflow-x: auto;
+    font-family: 'SF Mono', Menlo, monospace; font-size: 13px; color: #ccc;
+}
+.result a { color: var(--gold); }
+.back { color: rgba(255,255,255,0.3); font-size: 13px; cursor: pointer; margin-top: 24px; display: inline-block; }
+.back:hover { color: var(--gold); }
+.progress { display: flex; gap: 6px; margin-bottom: 32px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #1A1A1A; transition: background 0.3s; }
+.dot.done { background: var(--gold); }
+.dot.current { background: var(--gold); box-shadow: 0 0 8px rgba(212,175,55,0.4); }
+footer { text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.2); font-size: 12px; }
+footer a { color: rgba(255,255,255,0.3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <h1>Setup Guide</h1>
+    <p class="sub">Answer a few questions. Get exact instructions.</p>
+    <div class="progress" id="progress"></div>
+
+    <!-- Step 1: Who are you? -->
+    <div class="step active" id="step-1">
+        <div class="question">What do you want to do?</div>
+        <div class="options">
+            <div class="opt" onclick="choose('role','operator')">
+                <div class="opt-title">Run my own fortune0 platform</div>
+                <div class="opt-desc">Deploy the backend, manage users, host domains</div>
+            </div>
+            <div class="opt" onclick="choose('role','affiliate')">
+                <div class="opt-title">Become an affiliate</div>
+                <div class="opt-desc">Get a referral link, earn commissions, share with people</div>
+            </div>
+            <div class="opt" onclick="choose('role','user')">
+                <div class="opt-title">Just sign up and use it</div>
+                <div class="opt-desc">Get a dashboard, manage contacts, track my stuff</div>
+            </div>
+            <div class="opt" onclick="choose('role','dev')">
+                <div class="opt-title">Contribute / fork the code</div>
+                <div class="opt-desc">I'm a developer and want to build on this</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2a: Operator - where to host? -->
+    <div class="step" id="step-host">
+        <div class="question">Where do you want to run it?</div>
+        <div class="options">
+            <div class="opt" onclick="choose('host','render')">
+                <div class="opt-title">Cloud (free, always on)</div>
+                <div class="opt-desc">Render.com — auto-deploys from GitHub, free tier, no maintenance</div>
+            </div>
+            <div class="opt" onclick="choose('host','mac')">
+                <div class="opt-title">My Mac (free, runs when Mac is on)</div>
+                <div class="opt-desc">Cloudflare Tunnel — your Mac becomes the server</div>
+            </div>
+            <div class="opt" onclick="choose('host','docker')">
+                <div class="opt-title">My own server (Docker)</div>
+                <div class="opt-desc">I have a VPS or server I want to use</div>
+            </div>
+            <div class="opt" onclick="choose('host','local')">
+                <div class="opt-title">Just test locally first</div>
+                <div class="opt-desc">Run on my machine, no public URL needed yet</div>
+            </div>
+        </div>
+        <span class="back" onclick="goBack()">&larr; Back</span>
+    </div>
+
+    <!-- Results -->
+    <div class="step" id="step-result"></div>
+</div>
+
+<footer>
+    <a href="/">fortune0.com</a>
+</footer>
+
+<script>
+const answers = {};
+const steps = ['step-1'];
+
+function choose(key, value) {
+    answers[key] = value;
+
+    if (key === 'role') {
+        if (value === 'affiliate') return showResult('affiliate');
+        if (value === 'user') return showResult('user');
+        if (value === 'dev') return showResult('dev');
+        if (value === 'operator') return goTo('step-host');
+    }
+    if (key === 'host') {
+        return showResult('host-' + value);
+    }
+}
+
+function goTo(id) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    steps.push(id);
+    updateProgress();
+}
+
+function goBack() {
+    if (steps.length > 1) {
+        steps.pop();
+        const prev = steps[steps.length - 1];
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById(prev).classList.add('active');
+        updateProgress();
+    }
+}
+
+function updateProgress() {
+    // Simple progress dots
+}
+
+function showResult(type) {
+    const el = document.getElementById('step-result');
+    const results = {
+        'affiliate': `
+            <div class="result">
+                <h3>Become an Affiliate — 3 Steps</h3>
+                <ol>
+                    <li>Go to <a href="/join">/join</a> and enter your email</li>
+                    <li>You'll get a <strong>referral code</strong> (like IK-A1B2C3D4) and a <strong>QR code</strong> you can screenshot or print</li>
+                    <li>Share your link: <code>fortune0.com/r/YOUR-CODE</code><br>
+                        Anyone who clicks it and signs up is tracked to you. When they buy something, you earn 3-5% commission automatically.</li>
+                </ol>
+            </div>
+            <div class="result" style="margin-top:16px;">
+                <h3>Track Your Earnings</h3>
+                <ol>
+                    <li>Go to <a href="/app">/app</a> and sign in with the same email</li>
+                    <li>Your dashboard shows: referral clicks, sign-ups, commissions earned</li>
+                    <li>Commission rates: 5% (under $10K), 4% ($10-50K), 3.5% ($50-250K), 3% ($250K+)</li>
+                </ol>
+            </div>`,
+
+        'user': `
+            <div class="result">
+                <h3>Sign Up — 2 Steps</h3>
+                <ol>
+                    <li>Go to <a href="/app">/app</a></li>
+                    <li>Enter your email and click "Sign in / Create account"</li>
+                </ol>
+                <p style="margin-top:16px; color: rgba(255,255,255,0.4);">
+                    You'll get a license key and access to the dashboard where you can manage contacts, track activity, and see your referral stats.
+                </p>
+            </div>`,
+
+        'dev': `
+            <div class="result">
+                <h3>Developer Setup — 4 Steps</h3>
+                <ol>
+                    <li>Fork or clone the repo:<pre>git clone https://github.com/deathtodata/fortune0.com.git
+cd fortune0.com</pre></li>
+                    <li>Run it:<pre>python3 server.py</pre></li>
+                    <li>Open <a href="http://localhost:8080">http://localhost:8080</a> — everything works locally</li>
+                    <li>Run tests:<pre>python3 run_tests.py       # 58 checks
+python3 test_referral.py   # 30 checks</pre></li>
+                </ol>
+                <p style="margin-top:16px; color: rgba(255,255,255,0.4);">
+                    Zero dependencies. Pure Python stdlib. SQLite database auto-creates in <code>data/</code>. Read the README and OPS.md for full docs.
+                </p>
+            </div>`,
+
+        'host-render': `
+            <div class="result">
+                <h3>Deploy to Render.com — 5 Steps</h3>
+                <ol>
+                    <li>Go to <a href="https://render.com" target="_blank">render.com</a> and sign in with GitHub</li>
+                    <li>Click <strong>New</strong> &rarr; <strong>Web Service</strong></li>
+                    <li>Find <code>deathtodata/fortune0.com</code> and click <strong>Connect</strong></li>
+                    <li>It reads the config file automatically — click <strong>Create Web Service</strong></li>
+                    <li>Wait 2-3 minutes. Your site is live at the URL Render gives you.</li>
+                </ol>
+            </div>
+            <div class="result" style="margin-top:16px;">
+                <h3>Point Your Domain</h3>
+                <ol>
+                    <li>In Render: Settings &rarr; Custom Domains &rarr; add <code>fortune0.com</code></li>
+                    <li>In Cloudflare: DNS &rarr; change the CNAME from <code>deathtodata.github.io</code> to your Render URL</li>
+                    <li>Wait 5-10 minutes. Done — fortune0.com now serves everything including the API.</li>
+                </ol>
+            </div>`,
+
+        'host-mac': `
+            <div class="result">
+                <h3>Run from Your Mac — 3 Steps</h3>
+                <ol>
+                    <li>One-time setup — double-click <code>tunnel-setup.command</code> in your fortune0-site folder<br>
+                        <span style="color:rgba(255,255,255,0.4);">This creates a permanent Cloudflare Tunnel. A browser window opens to authorize it.</span></li>
+                    <li>To go live — double-click <code>start.command</code><br>
+                        <span style="color:rgba(255,255,255,0.4);">This starts the server AND the tunnel. Platform is at platform.fortune0.com.</span></li>
+                    <li>To stop — press Ctrl+C in the terminal window, or just close it.</li>
+                </ol>
+                <p style="margin-top:16px; color: rgba(255,255,255,0.4);">
+                    Your Mac needs to be on and the terminal running for the site to be live. Good for testing and demos. For 24/7 hosting, use Render instead.
+                </p>
+            </div>`,
+
+        'host-docker': `
+            <div class="result">
+                <h3>Deploy with Docker — 2 Steps</h3>
+                <ol>
+                    <li>Clone the repo on your server:<pre>git clone https://github.com/deathtodata/fortune0.com.git
+cd fortune0.com</pre></li>
+                    <li>Start it:<pre>docker compose up -d</pre></li>
+                </ol>
+                <p style="margin-top:16px; color: rgba(255,255,255,0.4);">
+                    Server runs on port 8080. Point your domain at the server's IP. The database persists in <code>data/</code> via volume mount. To update: <code>git pull && docker compose up -d --build</code>
+                </p>
+            </div>`,
+
+        'host-local': `
+            <div class="result">
+                <h3>Test Locally — 1 Step</h3>
+                <ol>
+                    <li>In your terminal:<pre>cd ~/code/fortune0-site
+python3 server.py</pre></li>
+                </ol>
+                <p style="margin-top:16px; color: rgba(255,255,255,0.4);">
+                    Open <a href="http://localhost:8080">http://localhost:8080</a>. Everything works — landing page, dashboard, API, database. Only you can access it (not public). When you're ready to go live, come back here and pick a hosting option.
+                </p>
+            </div>`,
+    };
+
+    el.innerHTML = results[type] + '<br><span class="back" onclick="goBack()">&larr; Back</span>';
+    goTo('step-result');
+}
+</script>
+</body>
+</html>
