@@ -39,7 +39,7 @@ from pathlib import Path
 #  CONFIG
 # ═══════════════════════════════════════════
 
-PORT = int(os.environ.get("F0_PORT", 8080))
+PORT = int(os.environ.get("PORT", os.environ.get("F0_PORT", 8080)))
 SITE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(SITE_DIR, "data")
 LICENSE_SECRET = os.environ.get("F0_LICENSE_SECRET", "fortune0-dev-secret-2026")
@@ -394,21 +394,26 @@ class Handler(BaseHTTPRequestHandler):
         # ── Static files ──
         elif path == "/":
             self.send_file(os.path.join(SITE_DIR, "index.html"))
-        elif path == "/app":
-            self.send_file(os.path.join(SITE_DIR, "app.html"))
-        elif path == "/join":
-            self.send_file(os.path.join(SITE_DIR, "join.html"))
-        elif path == "/storyboard":
-            self.send_file(os.path.join(SITE_DIR, "storyboard.html"))
         else:
-            # Try serving a static file
+            # Try serving: exact file, then clean URL (.html), then 404
             safe_path = path.lstrip("/")
             filepath = os.path.join(SITE_DIR, safe_path)
+            html_path = os.path.join(SITE_DIR, safe_path + ".html")
+
             # Prevent directory traversal
-            if os.path.commonpath([filepath, SITE_DIR]) == SITE_DIR and os.path.isfile(filepath):
-                self.send_file(filepath)
-            else:
+            if os.path.commonpath([filepath, SITE_DIR]) != SITE_DIR:
                 self.send_json({"error": "Not found", "path": path}, 404)
+            elif os.path.isfile(filepath):
+                self.send_file(filepath)
+            elif os.path.isfile(html_path):
+                self.send_file(html_path)
+            else:
+                # Serve custom 404 page if it exists
+                page_404 = os.path.join(SITE_DIR, "404.html")
+                if os.path.isfile(page_404):
+                    self.send_file(page_404)
+                else:
+                    self.send_json({"error": "Not found", "path": path}, 404)
 
     # ─── POST ───
     def do_POST(self):

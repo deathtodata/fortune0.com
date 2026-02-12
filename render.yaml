@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: fortune0
+    runtime: python
+    buildCommand: mkdir -p data
+    startCommand: python3 server.py
+    envVars:
+      - key: F0_LICENSE_SECRET
+        generateValue: true
+    disk:
+      name: fortune0-data
+      mountPath: /app/data
+      sizeGB: 1
