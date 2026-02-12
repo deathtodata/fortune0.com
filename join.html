@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 — Join &amp; earn</title>
+<meta name="description" content="Get your referral code and QR. Share it. Earn commission. No followers needed.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg:#08080F;--surface:#111120;--surface2:#1A1A2E;--surface3:#222238;
+    --border:#1E1E36;--border-l:#2A2A44;
+    --mint:#00FFAA;--cyan:#00D4FF;--blue:#0066FF;
+    --yellow:#FFD166;--red:#EF476F;--purple:#B388FF;--orange:#FF8C42;
+    --white:#F0F0F8;--text:#A0A0BE;--dim:#5A5A78;
+    --font:'Inter',-apple-system,sans-serif;
+    --mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh;}
+a{color:var(--mint);text-decoration:none;}
+a:hover{opacity:0.8;}
+::selection{background:rgba(0,255,170,0.2);}
+
+/* Nav */
+nav{
+    position:sticky;top:0;z-index:100;
+    background:rgba(8,8,15,0.92);backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
+    padding:0 20px;height:56px;
+    display:flex;align-items:center;justify-content:space-between;
+    max-width:100%;
+}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-weight:700;font-size:16px;color:var(--white);}
+.logo svg{width:24px;height:24px;}
+.nav-links{display:flex;gap:16px;font-size:13px;}
+.nav-links a{color:var(--dim);}
+.nav-links a:hover{color:var(--text);}
+
+/* Main */
+.wrap{max-width:720px;margin:0 auto;padding:40px 20px 80px;}
+
+/* Hero */
+.hero{text-align:center;margin-bottom:48px;}
+.hero h1{font-size:36px;font-weight:800;color:var(--white);line-height:1.2;margin-bottom:12px;}
+.hero h1 span{background:linear-gradient(135deg,var(--mint),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero p{font-size:16px;color:var(--text);max-width:480px;margin:0 auto;}
+
+/* Join card */
+.join-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:32px;margin-bottom:32px;
+}
+.join-card h2{color:var(--white);font-size:20px;margin-bottom:8px;}
+.join-card .sub{color:var(--dim);font-size:13px;margin-bottom:20px;}
+.form-row{display:flex;gap:12px;margin-bottom:16px;}
+.form-row input{
+    flex:1;background:var(--bg);border:1px solid var(--border);
+    color:var(--white);padding:14px 16px;border-radius:10px;font-size:15px;
+    font-family:var(--font);transition:border-color 0.2s;
+}
+.form-row input:focus{border-color:var(--mint);outline:none;}
+.form-row input::placeholder{color:var(--dim);}
+.btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px 28px;border-radius:10px;font-size:15px;font-weight:700;
+    border:none;cursor:pointer;transition:all 0.2s;font-family:var(--font);
+}
+.btn-mint{background:var(--mint);color:var(--bg);}
+.btn-mint:hover{background:var(--white);}
+.btn-mint:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-ghost{background:none;border:1px solid var(--border);color:var(--text);padding:10px 16px;font-size:13px;}
+.btn-ghost:hover{border-color:var(--mint);color:var(--mint);}
+.error-msg{color:var(--red);font-size:13px;margin-top:8px;display:none;}
+
+/* Result panel */
+.result{display:none;margin-top:24px;}
+.result.show{display:block;}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
+@media(max-width:600px){.result-grid{grid-template-columns:1fr;}}
+
+.qr-panel{
+    background:var(--bg);border:1px solid var(--border);border-radius:12px;
+    padding:24px;display:flex;flex-direction:column;align-items:center;
+}
+.qr-panel canvas{border-radius:8px;margin-bottom:16px;}
+.qr-label{font-family:var(--mono);font-size:12px;color:var(--dim);margin-bottom:12px;}
+
+.info-panel{
+    background:var(--bg);border:1px solid var(--border);border-radius:12px;
+    padding:24px;display:flex;flex-direction:column;gap:16px;
+}
+.info-row{display:flex;flex-direction:column;gap:4px;}
+.info-row label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;}
+.info-row .val{
+    font-family:var(--mono);font-size:16px;color:var(--mint);font-weight:600;
+    word-break:break-all;
+}
+.info-row .val.white{color:var(--white);}
+.copy-btn{
+    background:var(--surface2);border:1px solid var(--border);color:var(--text);
+    padding:6px 12px;border-radius:6px;font-size:12px;font-family:var(--mono);
+    cursor:pointer;margin-top:4px;display:inline-block;width:fit-content;
+    transition:all 0.2s;
+}
+.copy-btn:hover{border-color:var(--mint);color:var(--mint);}
+.copy-btn.copied{border-color:var(--mint);color:var(--mint);}
+
+/* Stats strip */
+.stats-strip{
+    display:flex;gap:12px;margin-bottom:24px;
+}
+.stat-chip{
+    flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;
+    padding:12px 16px;text-align:center;
+}
+.stat-chip .num{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--white);}
+.stat-chip .lab{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;}
+.stat-chip .num.mint{color:var(--mint);}
+
+/* How it works */
+.how{margin-top:48px;}
+.how h2{color:var(--white);font-size:22px;margin-bottom:24px;text-align:center;}
+.steps{display:flex;flex-direction:column;gap:0;}
+.step{
+    display:flex;gap:20px;padding:24px 0;
+    border-bottom:1px solid var(--border);
+}
+.step:last-child{border-bottom:none;}
+.step-num{
+    width:40px;height:40px;min-width:40px;
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-weight:700;font-size:16px;color:var(--mint);
+}
+.step-body h3{color:var(--white);font-size:15px;margin-bottom:4px;}
+.step-body p{font-size:13px;color:var(--dim);line-height:1.6;}
+
+/* Privacy note */
+.privacy{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:20px 24px;margin-top:32px;
+    display:flex;gap:16px;align-items:flex-start;
+}
+.privacy-icon{font-size:24px;flex-shrink:0;}
+.privacy h3{color:var(--white);font-size:14px;margin-bottom:4px;}
+.privacy p{font-size:13px;color:var(--dim);line-height:1.6;}
+
+/* Footer */
+footer{
+    border-top:1px solid var(--border);padding:16px 20px;margin-top:48px;
+    text-align:center;font-size:12px;color:var(--dim);
+}
+footer a{color:var(--dim);}
+</style>
+</head>
+<body>
+
+<nav>
+    <a class="logo" href="index.html">
+        <svg viewBox="0 0 512 512" fill="none"><rect width="512" height="512" rx="96" fill="#08080F"/><circle cx="256" cy="256" r="140" stroke="url(#g1)" stroke-width="36" opacity=".95"/><circle cx="360" cy="152" r="16" fill="#00FFAA" opacity=".9"/><circle cx="360" cy="152" r="8" fill="#fff" opacity=".7"/><defs><linearGradient id="g1" x1="116" y1="116" x2="396" y2="396"><stop stop-color="#00FFAA"/><stop offset="1" stop-color="#0066FF"/></linearGradient></defs></svg>
+        fortune0
+    </a>
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="app.html">Dashboard</a>
+    </div>
+</nav>
+
+<div class="wrap">
+
+    <!-- HERO -->
+    <div class="hero">
+        <h1>Get your code. <span>Earn money.</span></h1>
+        <p>Enter your email. Get a referral code and QR instantly. Share it however you want — text, sticker, business card, shout it from a rooftop. When someone uses it, you earn commission. No followers required.</p>
+    </div>
+
+    <!-- JOIN CARD -->
+    <div class="join-card">
+        <h2>Join the affiliate program</h2>
+        <p class="sub">One field. That's it. Your email stays private — the public only sees your code.</p>
+        <div class="form-row">
+            <input type="email" id="join-email" placeholder="you@example.com" autofocus>
+            <button class="btn btn-mint" id="join-btn" onclick="doJoin()">Get my code</button>
+        </div>
+        <div class="error-msg" id="join-error"></div>
+
+        <!-- RESULT -->
+        <div class="result" id="result">
+            <div class="result-grid">
+                <div class="qr-panel">
+                    <canvas id="qr-canvas" width="200" height="200"></canvas>
+                    <div class="qr-label" id="qr-label">IK-XXXXXXXX</div>
+                    <button class="btn-ghost" onclick="downloadQR()">Download QR (PNG)</button>
+                </div>
+                <div class="info-panel">
+                    <div class="info-row">
+                        <label>Your referral code</label>
+                        <div class="val" id="r-code">—</div>
+                        <button class="copy-btn" onclick="copyText('r-code', this)">Copy code</button>
+                    </div>
+                    <div class="info-row">
+                        <label>Your short URL</label>
+                        <div class="val" id="r-url">—</div>
+                        <button class="copy-btn" onclick="copyText('r-url', this)">Copy URL</button>
+                    </div>
+                    <div class="info-row">
+                        <label>Commission rate</label>
+                        <div class="val white" id="r-rate">10%</div>
+                    </div>
+                    <div class="info-row">
+                        <label>Status</label>
+                        <div class="val white" id="r-status">Active</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-strip" id="stats-strip">
+                <div class="stat-chip"><div class="num" id="s-clicks">0</div><div class="lab">QR scans</div></div>
+                <div class="stat-chip"><div class="num" id="s-refs">0</div><div class="lab">Referrals</div></div>
+                <div class="stat-chip"><div class="num mint" id="s-earned">$0</div><div class="lab">Earned</div></div>
+            </div>
+
+            <div style="text-align:center;">
+                <a href="app.html" class="btn btn-mint">Open your dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="how">
+        <h2>How it works</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <h3>Enter your email above</h3>
+                    <p>That's the only thing we need. The system hashes your email into a unique referral code (IK-XXXXXXXX) and generates a QR code that encodes your personal referral URL. Your email is never shown publicly.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <h3>Share your code or QR — anywhere</h3>
+                    <p>Print the QR on a business card. Text the code to a friend. Put a sticker on your laptop. Post it on social. Say it out loud at an event. It works the same way every time — someone enters it or scans it, and the system knows it came from you.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <h3>Earn commission when they buy</h3>
+                    <p>When someone signs up through your code and later makes a purchase, the system attributes that sale to you automatically. You earn 10% commission. It's tracked in your dashboard in real-time. The buyer never sees your identity.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                    <h3>Works on every fortune0 domain</h3>
+                    <p>Your code works on fortune0.com, installkernel.com, death2data.com — every domain in the network points to the same system. Same code, same tracking, same payouts. Share any domain, the attribution still finds you.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRIVACY NOTE -->
+    <div class="privacy">
+        <div class="privacy-icon">🔒</div>
+        <div>
+            <h3>Built for privacy</h3>
+            <p>Your email is only used to generate your code and pay you. It's never shared with the people you refer. Visitor clicks are anonymized via one-way hashing — we track that a scan happened, not who scanned it. All data lives in our own database. No third-party analytics. No tracking pixels. No cookies on the referral page.</p>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    <p>fortune0 &middot; <a href="index.html">Home</a> &middot; <a href="app.html">Dashboard</a> &middot; <a href="storyboard.html">Storyboard</a></p>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════
+// QR CODE GENERATOR — pure client-side, no dependencies
+// Minimal QR encoder (supports alphanumeric, version 2-6, ECC-L)
+// ═══════════════════════════════════════════
+
+// We use a lightweight approach: render QR via canvas using a
+// small embedded QR matrix generator. For URLs up to ~80 chars
+// this handles version 1-4 which is plenty for our short URLs.
+
+const QR = (() => {
+    // Galois field math for Reed-Solomon
+    const EXP = new Uint8Array(256);
+    const LOG = new Uint8Array(256);
+    let x = 1;
+    for (let i = 0; i < 255; i++) {
+        EXP[i] = x;
+        LOG[x] = i;
+        x = x * 2;
+        if (x >= 256) x ^= 0x11d;
+    }
+    EXP[255] = EXP[0];
+
+    function gfMul(a, b) { return a === 0 || b === 0 ? 0 : EXP[(LOG[a] + LOG[b]) % 255]; }
+
+    function polyMul(a, b) {
+        const r = new Uint8Array(a.length + b.length - 1);
+        for (let i = 0; i < a.length; i++)
+            for (let j = 0; j < b.length; j++)
+                r[i + j] ^= gfMul(a[i], b[j]);
+        return r;
+    }
+
+    function rsEncode(data, ecLen) {
+        let gen = new Uint8Array([1]);
+        for (let i = 0; i < ecLen; i++)
+            gen = polyMul(gen, new Uint8Array([1, EXP[i]]));
+        const msg = new Uint8Array(data.length + ecLen);
+        msg.set(data);
+        for (let i = 0; i < data.length; i++) {
+            const coef = msg[i];
+            if (coef !== 0)
+                for (let j = 0; j < gen.length; j++)
+                    msg[i + j] ^= gfMul(gen[j], coef);
+        }
+        return msg.slice(data.length);
+    }
+
+    // QR version configs: [version, size, dataCodewords, ecCodewords, numBlocks]
+    const VERSIONS = [
+        [1, 21, 19, 7, 1],
+        [2, 25, 34, 10, 1],
+        [3, 29, 55, 15, 1],
+        [4, 33, 80, 20, 1],
+        [5, 37, 108, 26, 1],
+        [6, 41, 136, 18, 2],
+    ];
+
+    function chooseVersion(byteLen) {
+        for (const v of VERSIONS) {
+            if (byteLen <= v[2]) return v;
+        }
+        return VERSIONS[VERSIONS.length - 1];
+    }
+
+    function encodeData(text) {
+        const bytes = new TextEncoder().encode(text);
+        const [ver, size, dataCW, ecCW, numBlocks] = chooseVersion(bytes.length);
+        // Byte mode indicator: 0100, then length (8 bits for v1-9)
+        const bits = [];
+        function pushBits(val, len) { for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1); }
+        pushBits(0b0100, 4); // byte mode
+        pushBits(bytes.length, ver <= 9 ? 8 : 16);
+        for (const b of bytes) pushBits(b, 8);
+        pushBits(0, 4); // terminator
+        while (bits.length % 8 !== 0) bits.push(0);
+        const dataBytes = new Uint8Array(dataCW);
+        for (let i = 0; i < dataCW; i++) {
+            if (i < bits.length / 8) {
+                let byte = 0;
+                for (let b = 0; b < 8; b++) byte = (byte << 1) | (bits[i * 8 + b] || 0);
+                dataBytes[i] = byte;
+            } else {
+                dataBytes[i] = i % 2 === 0 ? 0xEC : 0x11; // padding
+            }
+        }
+        // EC encoding (simplified: single block for most versions)
+        const ecPerBlock = ecCW / numBlocks;
+        const datPerBlock = Math.floor(dataCW / numBlocks);
+        const allData = [];
+        const allEC = [];
+        for (let b = 0; b < numBlocks; b++) {
+            const blockData = dataBytes.slice(b * datPerBlock, (b + 1) * datPerBlock);
+            allData.push(blockData);
+            allEC.push(rsEncode(blockData, ecPerBlock));
+        }
+        // Interleave
+        const final = [];
+        const maxDat = Math.max(...allData.map(d => d.length));
+        for (let i = 0; i < maxDat; i++)
+            for (const d of allData) if (i < d.length) final.push(d[i]);
+        const maxEC = Math.max(...allEC.map(e => e.length));
+        for (let i = 0; i < maxEC; i++)
+            for (const e of allEC) if (i < e.length) final.push(e[i]);
+
+        return { ver, size, codewords: new Uint8Array(final) };
+    }
+
+    function createMatrix(size) {
+        const m = [];
+        for (let i = 0; i < size; i++) m.push(new Int8Array(size)); // 0=unset, 1=black, -1=white
+        return m;
+    }
+
+    function addFinderPattern(m, r, c) {
+        for (let dr = -1; dr <= 7; dr++) {
+            for (let dc = -1; dc <= 7; dc++) {
+                const rr = r + dr, cc = c + dc;
+                if (rr < 0 || rr >= m.length || cc < 0 || cc >= m.length) continue;
+                if (dr >= 0 && dr <= 6 && dc >= 0 && dc <= 6) {
+                    const ring = Math.max(Math.abs(dr - 3), Math.abs(dc - 3));
+                    m[rr][cc] = (ring === 1) ? -1 : 1;
+                } else {
+                    m[rr][cc] = -1; // separator
+                }
+            }
+        }
+    }
+
+    function addAlignmentPattern(m, r, c) {
+        for (let dr = -2; dr <= 2; dr++) {
+            for (let dc = -2; dc <= 2; dc++) {
+                const ring = Math.max(Math.abs(dr), Math.abs(dc));
+                m[r + dr][c + dc] = (ring === 1) ? -1 : 1;
+            }
+        }
+    }
+
+    const ALIGNMENT_POS = [[], [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34]];
+
+    function addTimingPatterns(m) {
+        const n = m.length;
+        for (let i = 8; i < n - 8; i++) {
+            if (m[6][i] === 0) m[6][i] = (i % 2 === 0) ? 1 : -1;
+            if (m[i][6] === 0) m[i][6] = (i % 2 === 0) ? 1 : -1;
+        }
+    }
+
+    function reserveFormatInfo(m) {
+        const n = m.length;
+        for (let i = 0; i < 8; i++) {
+            if (m[8][i] === 0) m[8][i] = -1;
+            if (m[i][8] === 0) m[i][8] = -1;
+            if (m[8][n - 1 - i] === 0) m[8][n - 1 - i] = -1;
+            if (m[n - 1 - i][8] === 0) m[n - 1 - i][8] = -1;
+        }
+        if (m[8][8] === 0) m[8][8] = -1;
+        m[n - 8][8] = 1; // dark module
+    }
+
+    function placeData(m, codewords) {
+        const n = m.length;
+        const bits = [];
+        for (const cw of codewords) for (let i = 7; i >= 0; i--) bits.push((cw >> i) & 1);
+        let bi = 0;
+        let upward = true;
+        for (let col = n - 1; col > 0; col -= 2) {
+            if (col === 6) col = 5;
+            const rows = upward ? Array.from({ length: n }, (_, i) => n - 1 - i) : Array.from({ length: n }, (_, i) => i);
+            for (const row of rows) {
+                for (let dc = 0; dc >= -1; dc--) {
+                    const c = col + dc;
+                    if (m[row][c] === 0) {
+                        m[row][c] = (bi < bits.length && bits[bi]) ? 1 : -1;
+                        bi++;
+                    }
+                }
+            }
+            upward = !upward;
+        }
+    }
+
+    function applyMask(m, maskFn) {
+        const n = m.length;
+        for (let r = 0; r < n; r++)
+            for (let c = 0; c < n; c++)
+                if (m[r][c] !== 0 && isDataModule(m, r, c, n))
+                    if (maskFn(r, c)) m[r][c] = m[r][c] === 1 ? -1 : 1;
+    }
+
+    function isDataModule(m, r, c, n) {
+        // Check if a module is a data module (not finder/timing/alignment/format)
+        if (r <= 8 && c <= 8) return false; // top-left
+        if (r <= 8 && c >= n - 8) return false; // top-right
+        if (r >= n - 8 && c <= 8) return false; // bottom-left
+        if (r === 6 || c === 6) return false; // timing
+        return true;
+    }
+
+    function addFormatInfo(m, mask) {
+        // ECC level L = 01, mask pattern
+        const n = m.length;
+        const formatInfo = FORMAT_BITS[(1 << 3) | mask]; // L = 01
+        for (let i = 0; i < 15; i++) {
+            const bit = (formatInfo >> (14 - i)) & 1 ? 1 : -1;
+            // Around top-left
+            if (i < 6) m[8][i] = bit;
+            else if (i === 6) m[8][7] = bit;
+            else if (i === 7) m[8][8] = bit;
+            else if (i === 8) m[7][8] = bit;
+            else m[14 - i][8] = bit;
+            // Opposite sides
+            if (i < 8) m[n - 1 - i][8] = bit;
+            else m[8][n - 15 + i] = bit;
+        }
+    }
+
+    const FORMAT_BITS = [
+        0x77c4, 0x72f3, 0x7daa, 0x789d, 0x662f, 0x6318, 0x6c41, 0x6976,
+        0x5412, 0x5125, 0x5e7c, 0x5b4b, 0x45f9, 0x40ce, 0x4f97, 0x4aa0,
+        0x355f, 0x3068, 0x3f31, 0x3a06, 0x24b4, 0x2183, 0x2eda, 0x2bed,
+        0x1689, 0x13be, 0x1ce7, 0x19d0, 0x0762, 0x0255, 0x0d0c, 0x083b,
+    ];
+
+    function generate(text) {
+        const { ver, size, codewords } = encodeData(text);
+        const m = createMatrix(size);
+
+        addFinderPattern(m, 0, 0);
+        addFinderPattern(m, 0, size - 7);
+        addFinderPattern(m, size - 7, 0);
+
+        if (ver >= 2) {
+            const pos = ALIGNMENT_POS[ver];
+            for (const r of pos)
+                for (const c of pos) {
+                    if ((r < 9 && c < 9) || (r < 9 && c > size - 9) || (r > size - 9 && c < 9)) continue;
+                    addAlignmentPattern(m, r, c);
+                }
+        }
+
+        addTimingPatterns(m);
+        reserveFormatInfo(m);
+        placeData(m, codewords);
+
+        // Use mask 0: (row + col) % 2 == 0
+        applyMask(m, (r, c) => (r + c) % 2 === 0);
+        addFormatInfo(m, 0);
+
+        // Convert to boolean grid (true = dark)
+        const grid = [];
+        for (let r = 0; r < size; r++) {
+            const row = [];
+            for (let c = 0; c < size; c++) row.push(m[r][c] === 1);
+            grid.push(row);
+        }
+        return grid;
+    }
+
+    function renderCanvas(canvas, grid, opts = {}) {
+        const scale = opts.scale || Math.floor(canvas.width / (grid.length + 8));
+        const padding = Math.floor((canvas.width - grid.length * scale) / 2);
+        const ctx = canvas.getContext('2d');
+        canvas.width = grid.length * scale + padding * 2;
+        canvas.height = canvas.width;
+
+        // Background
+        ctx.fillStyle = opts.bg || '#08080F';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Border glow
+        if (opts.glow !== false) {
+            const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            grad.addColorStop(0, '#00FFAA');
+            grad.addColorStop(1, '#0066FF');
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 3;
+            ctx.strokeRect(1.5, 1.5, canvas.width - 3, canvas.height - 3);
+        }
+
+        // Modules
+        const fg = opts.fg || '#F0F0F8';
+        const accent = opts.accent || '#00FFAA';
+        for (let r = 0; r < grid.length; r++) {
+            for (let c = 0; c < grid[r].length; c++) {
+                if (grid[r][c]) {
+                    // Finder pattern eyes get accent color
+                    const inFinder = (r < 7 && c < 7) || (r < 7 && c >= grid.length - 7) || (r >= grid.length - 7 && c < 7);
+                    const inCenter = inFinder && (
+                        (Math.abs(r % (grid.length - 7 > r ? 0 : grid.length - 7) - 3) <= 1 &&
+                         Math.abs(c % (grid.length - 7 > c ? 0 : grid.length - 7) - 3) <= 1)
+                    );
+                    ctx.fillStyle = inFinder ? accent : fg;
+                    ctx.fillRect(padding + c * scale, padding + r * scale, scale, scale);
+                }
+            }
+        }
+    }
+
+    return { generate, renderCanvas };
+})();
+
+// ═══════════════════════════════════════════
+// JOIN FLOW
+// ═══════════════════════════════════════════
+async function doJoin() {
+    const email = document.getElementById('join-email').value.trim().toLowerCase();
+    const errorEl = document.getElementById('join-error');
+    const btn = document.getElementById('join-btn');
+
+    errorEl.style.display = 'none';
+    if (!email || !email.includes('@')) {
+        errorEl.textContent = 'Enter a valid email address.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+
+    try {
+        const resp = await fetch('/api/join', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+            errorEl.textContent = data.error || 'Something went wrong.';
+            errorEl.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Get my code';
+            return;
+        }
+
+        // Build the full referral URL using current domain
+        const baseUrl = window.location.origin;
+        const shortUrl = `${baseUrl}/r/${data.referral_code}`;
+
+        // Fill in the info
+        document.getElementById('r-code').textContent = data.referral_code;
+        document.getElementById('r-url').textContent = shortUrl;
+        document.getElementById('r-rate').textContent = `${(data.commission_rate * 100).toFixed(0)}%`;
+        document.getElementById('r-status').textContent = data.returning ? 'Active (returning)' : 'Active (new)';
+        document.getElementById('qr-label').textContent = data.referral_code;
+
+        // Stats
+        document.getElementById('s-clicks').textContent = data.clicks || 0;
+        document.getElementById('s-refs').textContent = data.total_referrals || 0;
+        document.getElementById('s-earned').textContent = `$${Number(data.total_earned || 0).toFixed(2)}`;
+
+        // Generate QR code
+        const canvas = document.getElementById('qr-canvas');
+        const grid = QR.generate(shortUrl);
+        QR.renderCanvas(canvas, grid, { scale: 6 });
+
+        // Show result
+        document.getElementById('result').classList.add('show');
+        btn.textContent = 'Update';
+        btn.disabled = false;
+
+    } catch (err) {
+        errorEl.textContent = 'Could not reach server. Is it running?';
+        errorEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Get my code';
+    }
+}
+
+function downloadQR() {
+    const canvas = document.getElementById('qr-canvas');
+    const code = document.getElementById('r-code').textContent;
+    const link = document.createElement('a');
+    link.download = `fortune0-${code}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
+function copyText(elemId, btn) {
+    const text = document.getElementById(elemId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = btn.textContent === 'Copied!' ? (elemId.includes('url') ? 'Copy URL' : 'Copy code') : btn.textContent; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+// Check for ?ref= in URL and pre-fill if present
+const params = new URLSearchParams(window.location.search);
+const ref = params.get('ref');
+if (ref) {
+    // This is someone arriving via a referral link
+    // The ref code is shown so they know who referred them
+    document.querySelector('.hero h1').innerHTML = 'You were invited. <span>Join free.</span>';
+    document.querySelector('.hero p').textContent = `Someone shared their fortune0 code with you. Enter your email below to create your free account — and get your own referral code to share.`;
+}
+
+// Allow Enter key
+document.getElementById('join-email').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doJoin();
+});
+</script>
+</body>
+</html>

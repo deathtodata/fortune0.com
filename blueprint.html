@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 — Platform Blueprint</title>
+<style>
+:root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a25;
+    --border: #1e1e30;
+    --green: #00cc33;
+    --green-dim: rgba(0,204,51,0.1);
+    --blue: #61afef;
+    --blue-dim: rgba(97,175,239,0.1);
+    --yellow: #e5c07b;
+    --yellow-dim: rgba(229,192,123,0.1);
+    --red: #e06c75;
+    --red-dim: rgba(224,108,117,0.1);
+    --purple: #c678dd;
+    --purple-dim: rgba(198,120,221,0.1);
+    --white: #e8e8e8;
+    --text: #a0a0b8;
+    --text-dim: #505068;
+    --font: 'SF Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.7; }
+
+/* Navigation */
+.nav { position: fixed; top: 0; left: 0; right: 0; background: var(--bg2); border-bottom: 1px solid var(--border); z-index: 100; padding: 12px 0; }
+.nav .inner { max-width: 900px; margin: 0 auto; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; }
+.nav .logo { color: var(--green); font-size: 16px; font-weight: bold; }
+.nav .logo span { color: var(--text-dim); font-weight: normal; font-size: 12px; }
+.nav .tabs { display: flex; gap: 4px; }
+.nav .tab { background: none; border: 1px solid var(--border); color: var(--text-dim); padding: 6px 14px; cursor: pointer; font-family: var(--font); font-size: 12px; transition: all 0.2s; }
+.nav .tab:hover { color: var(--text); border-color: var(--text-dim); }
+.nav .tab.active { color: var(--green); border-color: var(--green); background: var(--green-dim); }
+
+/* Content */
+.page { max-width: 900px; margin: 0 auto; padding: 80px 24px 60px; }
+.section { display: none; }
+.section.active { display: block; }
+
+h1 { color: var(--white); font-size: 28px; margin-bottom: 8px; }
+h2 { color: var(--green); font-size: 18px; margin: 40px 0 16px; text-transform: uppercase; letter-spacing: 2px; }
+h3 { color: var(--white); font-size: 15px; margin: 24px 0 12px; }
+p { margin-bottom: 16px; }
+.subtitle { color: var(--text-dim); font-size: 14px; margin-bottom: 32px; }
+
+/* Simple explanation boxes */
+.simple-box { background: var(--bg2); border: 1px solid var(--border); padding: 24px; margin: 16px 0; }
+.simple-box .emoji { font-size: 24px; margin-bottom: 8px; }
+.simple-box .headline { color: var(--white); font-size: 16px; margin-bottom: 8px; }
+
+/* Analogy blocks */
+.analogy { background: var(--blue-dim); border-left: 3px solid var(--blue); padding: 20px 24px; margin: 20px 0; }
+.analogy .label { color: var(--blue); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+
+/* Technical blocks */
+.tech { background: var(--bg3); border: 1px solid var(--border); padding: 20px 24px; margin: 20px 0; font-size: 13px; }
+.tech .label { color: var(--purple); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+.tech code { color: var(--yellow); }
+.tech pre { color: var(--text); overflow-x: auto; white-space: pre; }
+
+/* Flow diagram */
+.flow { display: flex; flex-direction: column; gap: 2px; margin: 20px 0; }
+.flow-step { display: flex; align-items: stretch; gap: 0; }
+.flow-num { background: var(--green); color: var(--bg); width: 36px; min-width: 36px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; }
+.flow-content { background: var(--bg2); border: 1px solid var(--border); border-left: none; padding: 16px 20px; flex: 1; }
+.flow-content .title { color: var(--white); margin-bottom: 4px; }
+.flow-content .desc { color: var(--text-dim); font-size: 12px; }
+.flow-arrow { text-align: center; color: var(--green); font-size: 18px; padding: 2px 0; margin-left: 18px; }
+
+/* Grid */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+@media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* Domain cards */
+.domain-card { background: var(--bg2); border: 1px solid var(--border); padding: 20px; }
+.domain-card .domain { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
+.domain-card .domain.green { color: var(--green); }
+.domain-card .domain.blue { color: var(--blue); }
+.domain-card .domain.yellow { color: var(--yellow); }
+.domain-card .domain.purple { color: var(--purple); }
+.domain-card .domain.red { color: var(--red); }
+.domain-card .who { color: var(--text-dim); font-size: 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+.domain-card .what { color: var(--text); font-size: 13px; }
+
+/* Status */
+.status { display: inline-block; padding: 2px 8px; font-size: 11px; border: 1px solid; margin-left: 8px; vertical-align: middle; }
+.status.built { color: var(--green); border-color: var(--green); }
+.status.partial { color: var(--yellow); border-color: var(--yellow); }
+.status.planned { color: var(--text-dim); border-color: var(--text-dim); }
+
+/* Warning/note boxes */
+.warning { background: var(--yellow-dim); border-left: 3px solid var(--yellow); padding: 16px 20px; margin: 20px 0; }
+.warning .label { color: var(--yellow); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+
+.success { background: var(--green-dim); border-left: 3px solid var(--green); padding: 16px 20px; margin: 20px 0; }
+.success .label { color: var(--green); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+
+/* The big picture diagram */
+.architecture { background: var(--bg2); border: 1px solid var(--border); padding: 32px; margin: 24px 0; text-align: center; }
+.arch-layer { margin: 8px 0; }
+.arch-box { display: inline-block; padding: 10px 20px; margin: 4px; border: 1px solid; font-size: 13px; }
+.arch-box.user { color: var(--white); border-color: var(--white); background: rgba(255,255,255,0.05); }
+.arch-box.door { border-color: var(--blue); color: var(--blue); background: var(--blue-dim); }
+.arch-box.kernel { border-color: var(--green); color: var(--green); background: var(--green-dim); min-width: 400px; }
+.arch-box.data { border-color: var(--purple); color: var(--purple); background: var(--purple-dim); }
+.arch-arrow { color: var(--text-dim); font-size: 20px; margin: 4px 0; }
+.arch-label { color: var(--text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin: 12px 0 4px; }
+
+/* Checklist */
+.checklist { margin: 16px 0; }
+.check-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.check-item .num { color: var(--green); font-weight: bold; min-width: 24px; }
+.check-item .task { color: var(--white); }
+.check-item .detail { color: var(--text-dim); font-size: 12px; margin-top: 4px; }
+.check-item .effort { color: var(--yellow); font-size: 11px; margin-top: 4px; }
+
+/* Separator */
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+/* Print */
+@media print {
+    .nav { display: none; }
+    .section { display: block !important; page-break-inside: avoid; }
+    body { background: white; color: #333; }
+    h1, h2, h3 { color: #111; }
+    .simple-box, .tech, .analogy, .architecture, .domain-card { border-color: #ccc; background: #f9f9f9; }
+}
+</style>
+</head>
+<body>
+
+<div class="nav">
+    <div class="inner">
+        <div class="logo">fortune0 <span>blueprint v1.0</span></div>
+        <div class="tabs">
+            <button class="tab active" onclick="show('simple')">Simple</button>
+            <button class="tab" onclick="show('technical')">Technical</button>
+            <button class="tab" onclick="show('build')">Build It</button>
+        </div>
+    </div>
+</div>
+
+<div class="page">
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SECTION 1: THE SIMPLE VERSION              -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="simple" class="section active">
+
+<h1>What is fortune0?</h1>
+<p class="subtitle">Explained so anyone can understand it. Then explained again so engineers can build it.</p>
+
+<div class="analogy">
+    <div class="label">The 5-year-old version</div>
+    <p style="color:var(--white); font-size: 15px;">Imagine a mall. The mall has one parking lot, one power system, one security desk. But it has lots of stores inside — a shoe store, a food court, a barber shop. Each store has its own name, its own sign, its own customers. But they all share the building.</p>
+    <p style="margin-top:12px;"><strong style="color:var(--green);">fortune0 is the mall. The stores are your products.</strong></p>
+</div>
+
+<h2>How it works</h2>
+
+<div class="flow">
+    <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-content">
+            <div class="title">Someone finds you</div>
+            <div class="desc">They see fortune0.com on a business card, a billboard, a tweet. They type it in.</div>
+        </div>
+    </div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-content">
+            <div class="title">They sign up for free</div>
+            <div class="desc">Just an email. That's it. Now they have an account in your universe.</div>
+        </div>
+    </div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-content">
+            <div class="title">They explore</div>
+            <div class="desc">Real estate tools? Privacy tools? Want to earn money as an affiliate? It's all there. They pick what interests them.</div>
+        </div>
+    </div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-content">
+            <div class="title">Free gets them hooked</div>
+            <div class="desc">Free accounts can do real things — add contacts, browse data, see how it works. Not a demo. Actual tools.</div>
+        </div>
+    </div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-content">
+            <div class="title">$1/month unlocks everything</div>
+            <div class="desc">Full access to all tools across all verticals. Commission-based revenue on top for affiliate features. That's the business model.</div>
+        </div>
+    </div>
+</div>
+
+<h2>The doors</h2>
+<p>You own multiple domain names. Each one is a different door into the same building. Different people find different doors based on what they care about.</p>
+
+<div class="grid-2">
+    <div class="domain-card">
+        <div class="domain green">fortune0.com</div>
+        <div class="who">The front door</div>
+        <div class="what">Everyone starts here. "Check us out." It's the main entrance — clean, simple, shows everything available. This is what goes on the business card.</div>
+    </div>
+    <div class="domain-card">
+        <div class="domain blue">death2data.com</div>
+        <div class="who">Privacy people</div>
+        <div class="what">People who care about owning their data, local-first tools, not being the product. They Google "data privacy tools" and land here.</div>
+    </div>
+    <div class="domain-card">
+        <div class="domain yellow">installkernel.com</div>
+        <div class="who">Real estate agents</div>
+        <div class="what">Agents who want a CRM, market data, sphere-of-influence tracking. They find this through real estate SEO.</div>
+    </div>
+    <div class="domain-card">
+        <div class="domain purple">bootstrapprotocol.com</div>
+        <div class="who">Builders & developers</div>
+        <div class="what">People who want to launch their own thing. Open-source framework, documentation, "here's how to build it yourself."</div>
+    </div>
+</div>
+
+<div class="success">
+    <div class="label">The key insight</div>
+    <p>These aren't separate products. They're separate <strong style="color:var(--green);">marketing channels</strong> for the same platform. One account works everywhere. One server runs everything. The domains are just SEO and branding.</p>
+</div>
+
+<h2>The 404 insight</h2>
+
+<div class="simple-box">
+    <p style="color:var(--white); font-size: 15px;">A 404 error means: <em>"this could exist, but nobody built it yet."</em></p>
+    <p style="margin-top: 12px;">That's literally the problem fortune0 solves. Someone has an idea — a real estate business, an affiliate program, a privacy tool — and right now they hit a 404. It doesn't exist yet. There's no easy way to go from idea to running business.</p>
+    <p style="margin-top: 12px;"><strong style="color:var(--green);">fortune0 turns 404s into 200s.</strong> You show up, you pick what you want to build, and the platform gives you the tools to make it real. No code required. Just sign up and go.</p>
+</div>
+
+<h2>The money</h2>
+
+<div class="grid-2">
+    <div class="simple-box">
+        <div class="headline" style="color:var(--green);">$1/month per member</div>
+        <p>Unlimited access to everything. Lower than every competitor. The price is so low it's a non-decision.</p>
+    </div>
+    <div class="simple-box">
+        <div class="headline" style="color:var(--yellow);">Commission on attributed sales</div>
+        <p>When someone uses the affiliate tools and makes money, the platform takes a small %. Tiered from 5% down to 3% based on volume. Aligned incentives — we only win when you win.</p>
+    </div>
+</div>
+
+<hr>
+
+<p style="color:var(--text-dim); text-align: center;">This is the simple version. Click "Technical" above for the architecture, or "Build It" for the step-by-step implementation plan.</p>
+
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SECTION 2: THE TECHNICAL VERSION           -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="technical" class="section">
+
+<h1>Architecture</h1>
+<p class="subtitle">For engineers, CTOs, and technical co-founders. How this actually works under the hood.</p>
+
+<h2>System diagram</h2>
+
+<div class="architecture">
+    <div class="arch-label">Users arrive via any domain</div>
+    <div class="arch-layer">
+        <div class="arch-box door">fortune0.com</div>
+        <div class="arch-box door">death2data.com</div>
+        <div class="arch-box door">installkernel.com</div>
+        <div class="arch-box door">bootstrapprotocol.com</div>
+    </div>
+    <div class="arch-arrow">↓ DNS (CNAME or A record) ↓</div>
+
+    <div class="arch-label">Reverse proxy checks the Host header</div>
+    <div class="arch-layer">
+        <div class="arch-box user" style="min-width:400px;">Any host (VPS, PaaS, or local)<br><span style="color:var(--text-dim); font-size:11px;">Routes based on domain → serves correct branding</span></div>
+    </div>
+    <div class="arch-arrow">↓</div>
+
+    <div class="arch-label">One server handles everything</div>
+    <div class="arch-layer">
+        <div class="arch-box kernel">Flask API (main.py)<br><span style="font-size:11px;">Auth · CRM · Affiliates · Standards · MCP · Webhooks</span></div>
+    </div>
+    <div class="arch-arrow">↓</div>
+
+    <div class="arch-label">Per-user data isolation</div>
+    <div class="arch-layer">
+        <div class="arch-box data">SQLite (per user)</div>
+        <div class="arch-box data">Central DB (referrals, licenses)</div>
+        <div class="arch-box data">Stripe Connect (payments)</div>
+    </div>
+</div>
+
+<h2>How multi-domain routing works</h2>
+
+<div class="tech">
+    <div class="label">DNS Configuration (do this once per domain)</div>
+<pre>
+# In your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.)
+
+fortune0.com          CNAME  →  your-server.example.com
+death2data.com        CNAME  →  your-server.example.com
+installkernel.com     CNAME  →  your-server.example.com
+bootstrapprotocol.com CNAME  →  your-server.example.com
+
+# All four domains now point to the same server.
+# The server figures out which one the person typed.
+</pre>
+</div>
+
+<div class="tech">
+    <div class="label">Server-side routing (Python / Flask)</div>
+<pre>
+@app.route('/')
+def homepage():
+    # The server checks which domain the browser sent
+    host = request.headers.get('Host', '')
+
+    if 'death2data' in host:
+        return render_template('landing_d2d.html')
+    elif 'installkernel' in host:
+        return render_template('landing_ik.html')
+    elif 'bootstrapprotocol' in host:
+        return render_template('landing_bp.html')
+    else:
+        # fortune0.com or anything else → main landing
+        return render_template('landing_fortune0.html')
+
+# BUT — every domain shares the same API:
+# /api/activate  → same endpoint regardless of domain
+# /api/contacts  → same endpoint
+# /api/affiliates → same endpoint
+# The branding changes. The backend doesn't.
+</pre>
+</div>
+
+<h2>Authentication flow</h2>
+
+<div class="tech">
+    <div class="label">One account, all domains</div>
+<pre>
+1. User visits fortune0.com/start
+2. Enters email → receives magic link (or enters email + password)
+3. Server creates:
+   - User record in central DB
+   - Per-user SQLite database
+   - Referral code (IK-XXXXXXXX)
+   - Free tier flag (no payment yet)
+4. User gets session token (cookie)
+5. Cookie works across all domains (if using fortune0.com as auth domain)
+   OR each domain validates the same session token via API
+
+FREE TIER:
+- Can use CRM (limited contacts)
+- Can browse standards
+- Can see affiliate program (can't withdraw)
+- Sees upgrade prompts
+
+PAID TIER ($1/mo via Stripe):
+- Unlimited everything
+- Affiliate payouts enabled
+- Full API access
+- MCP server access
+</pre>
+</div>
+
+<h2>URL structure</h2>
+
+<div class="tech">
+    <div class="label">Business-card friendly URLs</div>
+<pre>
+fortune0.com                 → main landing page
+fortune0.com/start           → signup
+fortune0.com/login           → login
+fortune0.com/dashboard       → user dashboard (after login)
+fortune0.com/re              → real estate vertical landing
+fortune0.com/privacy         → privacy vertical landing
+fortune0.com/build           → builder/developer landing
+fortune0.com/earn            → affiliate program landing
+fortune0.com/pricing         → $1/month pitch
+
+# API (same server, /api prefix)
+fortune0.com/api/contacts    → CRM
+fortune0.com/api/affiliates  → affiliate engine
+fortune0.com/api/stats       → dashboard data
+fortune0.com/api/standards/* → RESO, FHIR, FIX
+fortune0.com/health          → uptime check
+</pre>
+</div>
+
+<h2>What "hardened" means for this system</h2>
+
+<div class="grid-2">
+    <div class="simple-box">
+        <h3 style="color:var(--green); margin-top:0;">Authentication</h3>
+        <p>HMAC-signed license keys. Session tokens with 7-day expiry. Per-user database isolation — one user can never see another's data. Already built in main.py.</p>
+    </div>
+    <div class="simple-box">
+        <h3 style="color:var(--green); margin-top:0;">HTTPS everywhere</h3>
+        <p>Most hosting platforms auto-provision TLS certificates via Let's Encrypt. Every domain gets the lock icon. No configuration needed.</p>
+    </div>
+    <div class="simple-box">
+        <h3 style="color:var(--green); margin-top:0;">Rate limiting</h3>
+        <p>100 requests per minute per IP. Prevents abuse. Built as middleware in the Flask app.</p>
+    </div>
+    <div class="simple-box">
+        <h3 style="color:var(--green); margin-top:0;">SQL injection protection</h3>
+        <p>All database queries use parameterized statements. No string concatenation. Already done in main.py.</p>
+    </div>
+    <div class="simple-box">
+        <h3 style="color:var(--green); margin-top:0;">Webhook verification</h3>
+        <p>Shopify webhooks are HMAC-verified — the server cryptographically proves the webhook came from Shopify, not an attacker.</p>
+    </div>
+    <div class="simple-box">
+        <h3 style="color:var(--green); margin-top:0;">Data sovereignty</h3>
+        <p>Per-user SQLite files. User data never mixes. Can export or delete any user's data instantly. GDPR-friendly by architecture.</p>
+    </div>
+</div>
+
+<h2>Tech stack (final)</h2>
+
+<div class="tech">
+    <div class="label">The entire stack</div>
+<pre>
+BACKEND:      Python 3.11 + Flask
+DATABASE:     SQLite (per-user) + central SQLite
+AUTH:         HMAC license keys + session tokens
+PAYMENTS:     Stripe ($1/mo) + Stripe Connect (affiliate payouts)
+HOSTING:      Any VPS ($5/mo), any PaaS, or your own machine
+DNS:          Cloudflare (free) — manages all 4+ domains
+HTTPS:        Auto-provisioned by host or Cloudflare
+MCP:          Built-in /mcp endpoint for Claude Desktop
+MONITORING:   /health endpoint + whatever your host provides
+
+WHAT YOU DON'T NEED:
+- No React frontend (server-rendered HTML is fine for now)
+- No Postgres (SQLite handles thousands of users)
+- No Redis (in-memory sessions are fine for MVP)
+- No Kubernetes (one process, scale when you need to)
+- No microservices (one Python server does everything)
+</pre>
+</div>
+
+<hr>
+<p style="color:var(--text-dim); text-align: center;">Click "Build It" above for the exact step-by-step implementation checklist.</p>
+
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SECTION 3: BUILD IT                        -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="build" class="section">
+
+<h1>Build checklist</h1>
+<p class="subtitle">Exactly what to do, in order. No decisions to make — just follow the steps.</p>
+
+<h2>Phase 1 — Get it online (weekend)</h2>
+<p>Goal: fortune0.com is live on the internet and you can show it to someone.</p>
+
+<div class="checklist">
+    <div class="check-item">
+        <div class="num">1</div>
+        <div>
+            <div class="task">Move your DNS to Cloudflare (all domains)</div>
+            <div class="detail">Go to cloudflare.com, create free account, add each domain. Change nameservers at your registrar. Cloudflare gives you free HTTPS, DDoS protection, and easy DNS management for all domains in one place.</div>
+            <div class="effort">Effort: 30 min · Cost: Free</div>
+        </div>
+    </div>
+    <div class="check-item">
+        <div class="num">2</div>
+        <div>
+            <div class="task">Deploy server.py to your host</div>
+            <div class="detail">Upload the fortune0-site folder to any server with Python 3.8+. Run <code style="color:var(--yellow)">F0_LICENSE_SECRET=your-secret python3 server.py</code>. Works on any VPS ($5/mo DigitalOcean, Linode, Hetzner), any PaaS (Railway, Fly, Render), or even your own Mac with a tunnel.</div>
+            <div class="effort">Effort: 15 min · Cost: $5/mo (or free locally)</div>
+        </div>
+    </div>
+    <div class="check-item">
+        <div class="num">3</div>
+        <div>
+            <div class="task">Point fortune0.com at your server</div>
+            <div class="detail">In Cloudflare, add an A record (for a VPS IP) or CNAME record (for a PaaS hostname) pointing fortune0.com → your server. Wait 5 min for DNS propagation.</div>
+            <div class="effort">Effort: 10 min · Cost: Free</div>
+        </div>
+    </div>
+    <div class="check-item">
+        <div class="num">4</div>
+        <div>
+            <div class="task">Add a landing page route to main.py</div>
+            <div class="detail">Right now main.py only serves JSON APIs. Add a <code style="color:var(--yellow)">@app.route('/')</code> that returns HTML — a simple landing page with: logo, one-liner, email signup form, and links to /re, /privacy, /earn.</div>
+            <div class="effort">Effort: 1 hour · Cost: Free</div>
+        </div>
+    </div>
+    <div class="check-item">
+        <div class="num">5</div>
+        <div>
+            <div class="task">Test it</div>
+            <div class="detail">Open fortune0.com in your browser. You should see the landing page with HTTPS (lock icon). Hit fortune0.com/health — you should see {"status": "ok"}. Hand your phone to someone and ask them to try it.</div>
+            <div class="effort">Effort: 5 min</div>
+        </div>
+    </div>
+</div>
+
+<div class="success">
+    <div class="label">After Phase 1</div>
+    <p>You have a live website at fortune0.com with HTTPS, an API, and a landing page. You can put fortune0.com on a business card. It works. It's real.</p>
+</div>
+
+<h2>Phase 2 — Accounts & login (1 week)</h2>
+<p>Goal: People can sign up and log in. Free tier works.</p>
+
+<div class="checklist">
+    <div class="check-item">
+        <div class="num">6</div>
+        <div>
+            <div class="task">Add email signup to main.py</div>
+            <div class="detail">POST /api/signup — takes email, creates user record, generates license key, sends welcome email (or just shows the key on screen for now). User gets a session token.</div>
+            <div class="effort">Effort: 2 hours</div>
+        </div>
+    </div>
+    <div class="check-item">
+        <div class="num">7</div>
+        <div>
+            <div class="task">Add a dashboard page</div>
+            <div class="detail">GET /dashboard — returns HTML (server-rendered, not React). Shows: your referral code, your contacts, your stats. Uses the session token from login. This is the installkernel dashboard rewritten as part of main.py.</div>
+            <div class="effort">Effort: 4 hours (port from existing web.py)</div>
+        </div>
+    </div>
+    <div class="check-item">
+        <div class="num">8</div>
+        <div>
+            <div class="task">Point remaining domains at your server</div>
+            <div class="detail">Same as step 3, but for death2data.com, installkernel.com, bootstrapprotocol.com. All point to same server. Add domain-based branding in the homepage route.</div>
+            <div class="effort">Effort: 30 min</div>
+        </div>
+    </div>
+</div>
+
+<h2>Phase 3 — Payments (1 week)</h2>
+<p>Goal: People can pay $1/month. Affiliate commissions are tracked.</p>
+
+<div class="checklist">
+    <div class="check-item">
+        <div class="num">9</div>
+        <div>
+            <div class="task">Create Stripe account + Stripe Connect</div>
+            <div class="detail">Go to stripe.com, sign up. Enable Connect (for routing affiliate payouts). Get your API keys. Set IK_STRIPE_SECRET as an environment variable on your server.</div>
+            <div class="effort">Effort: 1 hour · Cost: Free (Stripe takes % of transactions)</div>
+        </div>
+    </div>
+    <div class="check-item">
+        <div class="num">10</div>
+        <div>
+            <div class="task">Add Stripe checkout to main.py</div>
+            <div class="detail">POST /api/subscribe — creates Stripe checkout session for $1/month. On success, flips user from free to paid in the database. Stripe handles the billing, you never touch credit card numbers.</div>
+            <div class="effort">Effort: 3 hours</div>
+        </div>
+    </div>
+    <div class="check-item">
+        <div class="num">11</div>
+        <div>
+            <div class="task">Merge affiliate engine into main.py</div>
+            <div class="detail">Take the affiliate tables, commission logic, and API endpoints from run.py and add them to main.py. About 200 lines of code. Now the same server handles CRM + affiliates + payments.</div>
+            <div class="effort">Effort: 2 hours</div>
+        </div>
+    </div>
+</div>
+
+<h2>Phase 4 — Shopify app (2 weeks)</h2>
+<p>Goal: Merchants can install your app from the Shopify App Store.</p>
+
+<div class="checklist">
+    <div class="check-item">
+        <div class="num">12</div>
+        <div>
+            <div class="task">Create Shopify Partner account</div>
+            <div class="detail">Go to partners.shopify.com. Free account. This lets you create and list Shopify apps.</div>
+            <div class="effort">Effort: 15 min · Cost: Free</div>
+        </div>
+    </div>
+    <div class="check-item">
+        <div class="num">13</div>
+        <div>
+            <div class="task">Create the Shopify app</div>
+            <div class="detail">In Partner dashboard, create app. Set webhook URL to fortune0.com/api/webhooks/shopify/order. When a merchant installs your app, Shopify sends order data to your server automatically.</div>
+            <div class="effort">Effort: 1 week</div>
+        </div>
+    </div>
+    <div class="check-item">
+        <div class="num">14</div>
+        <div>
+            <div class="task">Build the embeddable widget</div>
+            <div class="detail">A tiny JavaScript snippet (~50 lines) that merchants paste into their store theme. It reads ?ref=CODE from the URL, sets a cookie, and when the customer checks out, the discount code is auto-applied. This enables URL-based attribution (not just discount codes).</div>
+            <div class="effort">Effort: 3 days</div>
+        </div>
+    </div>
+</div>
+
+<div class="warning">
+    <div class="label">Important</div>
+    <p>Do not start Phase 4 until Phases 1-3 are deployed and working with real users. Ship the simple version first. The Shopify app is an expansion, not a prerequisite.</p>
+</div>
+
+<h2>What already exists vs what's left</h2>
+
+<div class="grid-2">
+    <div class="simple-box" style="border-color: var(--green);">
+        <h3 style="color:var(--green); margin-top:0;">Built & working</h3>
+        <p>Flask API server (main.py) <span class="status built">DONE</span></p>
+        <p>License key system (HMAC) <span class="status built">DONE</span></p>
+        <p>Per-user SQLite databases <span class="status built">DONE</span></p>
+        <p>Contact/Listing CRUD <span class="status built">DONE</span></p>
+        <p>MCP endpoint <span class="status built">DONE</span></p>
+        <p>RESO/FHIR/FIX standards <span class="status built">DONE</span></p>
+        <p>Affiliate commission engine <span class="status built">DONE</span></p>
+        <p>Referral code system <span class="status built">DONE</span></p>
+        <p>Platform-agnostic deployment <span class="status built">DONE</span></p>
+    </div>
+    <div class="simple-box" style="border-color: var(--yellow);">
+        <h3 style="color:var(--yellow); margin-top:0;">Still need to build</h3>
+        <p>Landing page HTML <span class="status partial">~1 hour</span></p>
+        <p>Email signup flow <span class="status partial">~2 hours</span></p>
+        <p>Dashboard HTML <span class="status partial">~4 hours</span></p>
+        <p>Stripe checkout <span class="status partial">~3 hours</span></p>
+        <p>Merge affiliate into main.py <span class="status partial">~2 hours</span></p>
+        <p>Domain DNS setup <span class="status partial">~1 hour</span></p>
+        <p>Shopify app <span class="status planned">~1 week</span></p>
+        <p>Embeddable widget <span class="status planned">~3 days</span></p>
+    </div>
+</div>
+
+<div class="success">
+    <div class="label">Total estimate to launch</div>
+    <p><strong style="color:var(--green);">~13 hours of coding + 1 hour of config</strong> gets you to a live platform at fortune0.com where people can sign up, pay $1/month, and use all the tools. The Shopify integration adds ~2 weeks on top of that.</p>
+    <p style="margin-top:8px; color:var(--text-dim);">Monthly cost: ~$10-15 (any $5/mo host + domain renewals). Revenue starts at first subscriber.</p>
+</div>
+
+<hr>
+
+<div class="analogy">
+    <div class="label">For the CTO reading this</div>
+    <p>The architecture is intentionally simple. One Python process, SQLite for storage, runs on any host. This supports thousands of users before you need to think about Postgres, Redis, or horizontal scaling. The per-user SQLite pattern gives you data isolation, easy backup/restore, and GDPR compliance by default. When you outgrow it, the migration path is straightforward: swap SQLite for Postgres, add Redis for sessions, containerize with Docker. But don't do any of that until you have paying customers.</p>
+</div>
+
+<div class="analogy">
+    <div class="label">For Matt reading this</div>
+    <p>Everything you described makes sense. The "internet for implementing ideas" is real — it's a platform where someone shows up, picks a vertical, and gets working tools immediately. The 404 analogy is the entire pitch: "every idea that doesn't exist yet is a fortune waiting to happen. We turn 404s into products." The hard part isn't the code — most of it is already built. The hard part is shipping one thing before building the next. Deploy server.py. Point fortune0.com at it. Then iterate.</p>
+</div>
+
+</div>
+
+</div>
+
+<script>
+function show(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo(0, 0);
+}
+</script>
+
+</body>
+</html>

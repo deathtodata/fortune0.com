@@ -17,3 +17,11 @@ fortune0-private/
 
 # Build artifacts
 *.log
+
+# Database (created at runtime)
+data/fortune0.db
+data/*.db
+
+# Python
+__pycache__/
+*.pyc
