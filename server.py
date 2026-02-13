@@ -485,7 +485,7 @@ class Handler(BaseHTTPRequestHandler):
                 total_revenue = total_credits = credits_spent = credits_imported = 0
             conn.close()
             self.send_json({
-                "status": "ok", "service": "fortune0", "version": "1.2.0",
+                "status": "ok", "service": "fortune0", "version": "1.3.0",
                 "db": db_type,
                 "stripe_webhook": "configured" if stripe_configured else "not set",
                 "stripe_payment_link": "configured" if payment_link_set else "not set",
@@ -499,14 +499,25 @@ class Handler(BaseHTTPRequestHandler):
                 "credits_from_stripe": credits_imported,
             })
 
-        # ── Search (SearXNG proxy) ──
+        # ── Search (SearXNG proxy — paid tier only) ──
         elif path == "/api/search":
             q = parse_qs(urlparse(self.path).query).get("q", [""])[0].strip()
             if not q:
                 self.send_json({"error": "Query required"}, 400); return
 
-            # Check if user is authed — free users get 3 searches per session, paid get unlimited
+            # PAYWALL: Must be authenticated
             sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "auth_required", "message": "Sign in to search"}, 401); return
+
+            # PAYWALL: Must have active (paid) tier
+            conn = get_db()
+            user = conn.execute("SELECT tier FROM users WHERE email=?", [sess["email"]]).fetchone()
+            user_tier = user["tier"] if user else "free"
+            if user_tier != "active":
+                conn.close()
+                self.send_json({"error": "activation_required", "message": "Activate your account to search", "tier": user_tier}, 403); return
+
             # SearXNG instances (public, privacy-respecting)
             searx_instances = [
                 "https://searx.be",
@@ -537,19 +548,17 @@ class Handler(BaseHTTPRequestHandler):
                     sys.stderr.write(f"  SearXNG {instance} failed: {e}\n")
                     continue
 
-            # Log search if authed
-            if sess:
-                conn = get_db()
-                log_activity(conn, sess["email"], "search", q[:100])
-                conn.commit()
-                conn.close()
+            # Log search
+            log_activity(conn, sess["email"], "search", q[:100])
+            conn.commit()
+            conn.close()
 
             self.send_json({
                 "query": q,
                 "results": results,
                 "count": len(results),
-                "authed": sess is not None,
-                "tier": sess.get("tier", "free") if sess else "free",
+                "authed": True,
+                "tier": user_tier,
             })
 
         elif path == "/api/stats":

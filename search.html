@@ -62,8 +62,13 @@ a:hover{opacity:0.8;}
 }
 .user-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
 
-/* Counter */
-.counter{font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:8px;}
+/* Status badge */
+.status-line{
+    font-family:var(--mono);font-size:11px;margin-bottom:8px;
+}
+.status-active{color:var(--accent);}
+.status-locked{color:var(--red);}
+.status-free{color:var(--dim);}
 
 /* Search bar */
 .search-box{width:100%;max-width:600px;position:relative;margin-bottom:20px;}
@@ -99,16 +104,10 @@ a:hover{opacity:0.8;}
 .result-snippet{font-size:13px;color:var(--text);line-height:1.5;}
 .result-snippet mark{background:var(--accent-dim);color:var(--accent);padding:0 2px;border-radius:2px;}
 
-/* Locked results */
-.result.locked{position:relative;pointer-events:none;}
-.result.locked .result-title,
-.result.locked .result-snippet{filter:blur(6px);user-select:none;}
-.result.locked .result-url{filter:blur(4px);user-select:none;}
-
 /* No results */
 .no-results{text-align:center;padding:40px 0;color:var(--dim);}
 
-/* Gate */
+/* Gate (paywall) */
 .gate{
     display:none;width:100%;max-width:600px;
     background:var(--surface);border:1px solid rgba(80,200,120,0.2);
@@ -133,8 +132,23 @@ a:hover{opacity:0.8;}
     border:none;cursor:pointer;transition:all 0.2s;text-decoration:none;
 }
 .gate-btn:hover{box-shadow:0 0 30px rgba(80,200,120,0.4);transform:scale(1.02);color:#000;}
-.gate-skip{display:block;margin-top:12px;font-size:12px;color:var(--dim);cursor:pointer;}
-.gate-skip:hover{color:var(--text);}
+.gate-sub{display:block;margin-top:12px;font-size:12px;color:var(--dim);}
+
+/* Verify bar */
+.verify-bar{
+    display:none;width:100%;max-width:600px;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;padding:14px 16px;margin-top:8px;
+    text-align:center;
+}
+.verify-bar.show{display:block;}
+.verify-bar p{color:var(--text);font-size:13px;margin-bottom:10px;}
+.verify-btn{
+    background:none;border:1px solid var(--accent);color:var(--accent);
+    padding:8px 20px;border-radius:8px;font-size:13px;cursor:pointer;
+    font-family:var(--font);transition:all 0.2s;
+}
+.verify-btn:hover{background:var(--accent);color:#000;}
 
 /* Footer */
 .foot{
@@ -161,11 +175,11 @@ a:hover{opacity:0.8;}
     <div class="tagline">search without surveillance</div>
 
     <div class="auth-bar" id="auth-bar">
-        <input type="email" id="auth-email" placeholder="have an account? sign in" onkeydown="if(event.key==='Enter')signIn()">
+        <input type="email" id="auth-email" placeholder="sign in with your email" onkeydown="if(event.key==='Enter')signIn()">
         <button onclick="signIn()">Sign in</button>
     </div>
 
-    <div class="counter" id="counter"></div>
+    <div class="status-line" id="status"></div>
 
     <div class="search-box">
         <input type="text" class="search-input" id="q" placeholder="search anything..." autocomplete="off" onkeydown="if(event.key==='Enter')doSearch()">
@@ -176,9 +190,11 @@ a:hover{opacity:0.8;}
 
     <div class="loading" id="loading">searching...</div>
     <div class="results" id="results"></div>
+
+    <!-- Paywall gate -->
     <div class="gate" id="gate">
-        <h2>You've used your free searches</h2>
-        <p>Death2data doesn't track you, sell your data, or build a profile. That's the product. $1/month keeps it that way.</p>
+        <h2 id="gate-title">Private search. $1/month.</h2>
+        <p id="gate-desc">Death2data doesn't track you, sell your data, or build a profile on you. That's the product. Your $1 keeps it running.</p>
         <div class="gate-grid">
             <div class="gate-item"><div class="gate-item-label">No tracking</div><div class="gate-item-desc">Zero cookies, fingerprints, or profiles</div></div>
             <div class="gate-item"><div class="gate-item-label">Unlimited search</div><div class="gate-item-desc">No caps or throttling</div></div>
@@ -186,7 +202,13 @@ a:hover{opacity:0.8;}
             <div class="gate-item"><div class="gate-item-label">Credits</div><div class="gate-item-desc">Earn across the fortune0 network</div></div>
         </div>
         <a class="gate-btn" id="gate-btn" href="/onboard?from=d2d">Get access — $1/mo</a>
-        <span class="gate-skip" onclick="dismissGate()">maybe later</span>
+        <span class="gate-sub">cancel anytime. no contracts.</span>
+    </div>
+
+    <!-- Verify payment for users who already paid but show as free -->
+    <div class="verify-bar" id="verify-bar">
+        <p>Already paid? Payment verification can take a moment.</p>
+        <button class="verify-btn" onclick="verifyPayment()">Check my payment status</button>
     </div>
 </div>
 
@@ -197,23 +219,30 @@ a:hover{opacity:0.8;}
 </div>
 
 <script>
-const S = { searches: 0, maxFree: 3, user: null, token: null, ref: '' };
+const S = { user: null, token: null, tier: null, ref: '' };
 
 // Grab ref from URL
 const params = new URLSearchParams(location.search);
 S.ref = params.get('ref') || '';
 
-// Restore session
-const saved = sessionStorage.getItem('f0_token');
-const savedEmail = sessionStorage.getItem('f0_email');
-if (saved && savedEmail) {
-    S.token = saved;
-    S.user = { email: savedEmail };
-    S.maxFree = Infinity;
-    showAuthed();
-}
-updateCounter();
-document.getElementById('q').focus();
+// ═══ INIT ═══
+(async function init() {
+    // Restore session
+    const saved = sessionStorage.getItem('f0_token');
+    const savedEmail = sessionStorage.getItem('f0_email');
+    if (saved && savedEmail) {
+        S.token = saved;
+        S.user = { email: savedEmail };
+        showAuthed();
+        // Verify tier from server
+        await checkTier();
+    } else {
+        // Not signed in — show the gate immediately
+        updateStatus();
+        showGate('sign-in');
+    }
+    document.getElementById('q').focus();
+})();
 
 // ═══ AUTH ═══
 async function signIn() {
@@ -229,18 +258,53 @@ async function signIn() {
         });
         const data = await resp.json();
         if (data.token) {
-            S.user = { email: data.email, code: data.referral_code, tier: data.tier };
+            S.user = { email: data.email, code: data.referral_code };
             S.token = data.token;
-            S.maxFree = Infinity;
+            S.tier = data.tier;
             sessionStorage.setItem('f0_token', data.token);
             sessionStorage.setItem('f0_email', data.email);
             showAuthed();
-            document.getElementById('gate').classList.remove('show');
-            updateCounter();
+
+            if (S.tier === 'active') {
+                // Paid user — unlock search
+                document.getElementById('gate').classList.remove('show');
+                document.getElementById('verify-bar').classList.remove('show');
+                updateStatus();
+            } else {
+                // Free tier — show activation gate
+                showGate('activate');
+            }
         }
     } catch (e) {
-        S.maxFree = Infinity; // Offline fallback
+        console.error('Sign in error:', e);
     }
+}
+
+async function checkTier() {
+    try {
+        const resp = await fetch('/api/me', {
+            headers: { 'Authorization': 'Bearer ' + S.token },
+        });
+        if (resp.ok) {
+            const data = await resp.json();
+            S.tier = data.tier;
+            S.user.code = data.referral_code;
+            if (S.tier === 'active') {
+                document.getElementById('gate').classList.remove('show');
+                document.getElementById('verify-bar').classList.remove('show');
+            } else {
+                showGate('activate');
+            }
+        } else {
+            // Token expired
+            signOut();
+            showGate('sign-in');
+        }
+    } catch (e) {
+        // Offline — assume they're good if they have a token
+        S.tier = 'active';
+    }
+    updateStatus();
 }
 
 function showAuthed() {
@@ -252,17 +316,18 @@ function showAuthed() {
 }
 
 function signOut() {
-    S.user = null; S.token = null; S.maxFree = 3; S.searches = 0;
+    S.user = null; S.token = null; S.tier = null;
     sessionStorage.removeItem('f0_token');
     sessionStorage.removeItem('f0_email');
     document.getElementById('auth-bar').innerHTML = `
-        <input type="email" id="auth-email" placeholder="have an account? sign in" onkeydown="if(event.key==='Enter')signIn()">
+        <input type="email" id="auth-email" placeholder="sign in with your email" onkeydown="if(event.key==='Enter')signIn()">
         <button onclick="signIn()">Sign in</button>
     `;
     document.getElementById('results').innerHTML = '';
-    document.getElementById('gate').classList.remove('show');
     document.getElementById('wrap').classList.remove('has-results');
-    updateCounter();
+    document.getElementById('verify-bar').classList.remove('show');
+    updateStatus();
+    showGate('sign-in');
 }
 
 // ═══ SEARCH ═══
@@ -270,23 +335,40 @@ async function doSearch() {
     const q = document.getElementById('q').value.trim();
     if (!q) return;
 
-    if (S.searches >= S.maxFree && !S.user) {
-        showGate();
+    // Client-side gate: must be signed in + active tier
+    if (!S.user || !S.token) {
+        showGate('sign-in');
+        return;
+    }
+    if (S.tier !== 'active') {
+        showGate('activate');
         return;
     }
 
-    S.searches++;
-    updateCounter();
     document.getElementById('wrap').classList.add('has-results');
     document.getElementById('loading').classList.add('show');
     document.getElementById('results').innerHTML = '';
+    document.getElementById('gate').classList.remove('show');
 
     try {
-        const headers = {};
-        if (S.token) headers['Authorization'] = 'Bearer ' + S.token;
-        const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { headers });
+        const resp = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
+            headers: { 'Authorization': 'Bearer ' + S.token },
+        });
         const data = await resp.json();
         document.getElementById('loading').classList.remove('show');
+
+        if (resp.status === 401) {
+            // Token expired
+            signOut();
+            showGate('sign-in');
+            return;
+        }
+        if (resp.status === 403) {
+            // Not active tier — server rejected
+            S.tier = data.tier || 'free';
+            showGate('activate');
+            return;
+        }
 
         if (data.results && data.results.length > 0) {
             renderResults(data.results, q);
@@ -297,26 +379,20 @@ async function doSearch() {
         document.getElementById('loading').classList.remove('show');
         document.getElementById('results').innerHTML = '<div class="no-results">Search unavailable. Try again in a moment.</div>';
     }
-
-    if (S.searches >= S.maxFree && !S.user) {
-        setTimeout(() => showGate(), 800);
-    }
 }
 
 function renderResults(results, q) {
     const el = document.getElementById('results');
     const words = q.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-    const atLimit = S.searches >= S.maxFree && !S.user;
 
-    el.innerHTML = results.map((r, i) => {
-        const locked = atLimit && i >= 3;
+    el.innerHTML = results.map(r => {
         let snippet = esc(r.snippet || '');
         words.forEach(w => {
             const re = new RegExp(`(${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
             snippet = snippet.replace(re, '<mark>$1</mark>');
         });
-        return `<div class="result ${locked ? 'locked' : ''}">
-            <a href="${locked ? '#' : esc(r.url)}" ${locked ? '' : 'target="_blank" rel="noopener"'}>
+        return `<div class="result">
+            <a href="${esc(r.url)}" target="_blank" rel="noopener">
                 <div class="result-url">${esc(r.url)}</div>
                 <div class="result-title">${esc(r.title)}</div>
             </a>
@@ -326,32 +402,78 @@ function renderResults(results, q) {
 }
 
 // ═══ GATE ═══
-function showGate() {
+function showGate(mode) {
     const gate = document.getElementById('gate');
-    gate.classList.add('show');
+    const title = document.getElementById('gate-title');
+    const desc = document.getElementById('gate-desc');
+    const btn = document.getElementById('gate-btn');
+    const verify = document.getElementById('verify-bar');
+
     let url = '/onboard?from=d2d';
     if (S.ref) url += '&ref=' + S.ref;
-    document.getElementById('gate-btn').href = url;
+    if (S.user && S.user.code) url += '&ref=' + S.user.code;
+
+    if (mode === 'sign-in') {
+        title.textContent = 'Private search. $1/month.';
+        desc.textContent = "Death2data doesn't track you, sell your data, or build a profile on you. That's the product. Sign in or create an account to get started.";
+        btn.href = url;
+        btn.textContent = 'Get access — $1/mo';
+        verify.classList.remove('show');
+    } else if (mode === 'activate') {
+        title.textContent = 'Activate your account';
+        desc.textContent = "You're signed in but your account isn't active yet. Activate for $1/month to unlock unlimited private search.";
+        btn.href = url;
+        btn.textContent = 'Activate — $1/mo';
+        verify.classList.add('show');
+    }
+
+    gate.classList.add('show');
+    updateStatus();
 }
 
-function dismissGate() {
-    document.getElementById('gate').classList.remove('show');
-    S.maxFree = S.searches + 1;
-    updateCounter();
+// ═══ VERIFY PAYMENT ═══
+async function verifyPayment() {
+    if (!S.token) return;
+    const btn = document.querySelector('.verify-btn');
+    btn.textContent = 'Checking...';
+    btn.disabled = true;
+
+    try {
+        const resp = await fetch('/api/me', {
+            headers: { 'Authorization': 'Bearer ' + S.token },
+        });
+        if (resp.ok) {
+            const data = await resp.json();
+            S.tier = data.tier;
+            if (S.tier === 'active') {
+                document.getElementById('gate').classList.remove('show');
+                document.getElementById('verify-bar').classList.remove('show');
+                updateStatus();
+                // Auto-search if they had something typed
+                const q = document.getElementById('q').value.trim();
+                if (q) doSearch();
+                return;
+            }
+        }
+    } catch (e) {}
+
+    btn.textContent = 'Not yet — try again in a moment';
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = 'Check my payment status'; }, 3000);
 }
 
 // ═══ HELPERS ═══
-function updateCounter() {
-    const el = document.getElementById('counter');
-    if (S.user) {
-        el.textContent = 'unlimited searches';
-        el.style.color = 'var(--accent)';
-    } else if (S.searches === 0) {
-        el.textContent = S.maxFree + ' free searches';
+function updateStatus() {
+    const el = document.getElementById('status');
+    if (!S.user) {
+        el.textContent = 'sign in to search';
+        el.className = 'status-line status-locked';
+    } else if (S.tier === 'active') {
+        el.textContent = 'unlimited private search';
+        el.className = 'status-line status-active';
     } else {
-        const r = Math.max(0, S.maxFree - S.searches);
-        el.textContent = r > 0 ? r + ' free search' + (r === 1 ? '' : 'es') + ' remaining' : 'free searches used';
-        el.style.color = r <= 1 ? 'var(--red)' : '';
+        el.textContent = 'account inactive — activate to search';
+        el.className = 'status-line status-free';
     }
 }
 
