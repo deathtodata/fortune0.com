@@ -61,6 +61,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL", "")  # Set for PostgreSQL (Render,
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")  # whsec_... from Stripe dashboard
 STRIPE_PAYMENT_LINK = os.environ.get("STRIPE_PAYMENT_LINK", "")  # https://buy.stripe.com/xxxxx
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")  # sk_live_... or sk_test_... for API calls
+BRAVE_SEARCH_KEY = os.environ.get("BRAVE_SEARCH_KEY", "")  # From https://api.search.brave.com/app/keys
 ADMIN_EMAIL = os.environ.get("F0_ADMIN_EMAIL", "lolztex@gmail.com")  # Admin operations
 
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -472,6 +473,7 @@ class Handler(BaseHTTPRequestHandler):
             payment_link_set = bool(STRIPE_PAYMENT_LINK)
             conn = get_db()
             stripe_api_set = bool(STRIPE_SECRET_KEY)
+            brave_api_set = bool(BRAVE_SEARCH_KEY)
             try:
                 user_count = conn.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]
                 affiliate_count = conn.execute("SELECT COUNT(*) c FROM affiliates").fetchone()["c"]
@@ -490,6 +492,7 @@ class Handler(BaseHTTPRequestHandler):
                 "stripe_webhook": "configured" if stripe_configured else "not set",
                 "stripe_payment_link": "configured" if payment_link_set else "not set",
                 "stripe_api": "configured" if stripe_api_set else "not set",
+                "brave_search": "configured" if brave_api_set else "not set (search will use SearXNG fallback)",
                 "users": user_count,
                 "active_users": active_users,
                 "affiliates": affiliate_count,
@@ -518,35 +521,69 @@ class Handler(BaseHTTPRequestHandler):
                 conn.close()
                 self.send_json({"error": "activation_required", "message": "Activate your account to search", "tier": user_tier}, 403); return
 
-            # SearXNG instances (public, privacy-respecting)
-            searx_instances = [
-                "https://searx.be",
-                "https://search.sapti.me",
-                "https://search.bus-hit.me",
-            ]
-
+            # ── Search backends (try in order: Brave API → SearXNG fallbacks) ──
             results = []
-            for instance in searx_instances:
+            search_source = "none"
+
+            # 1. Brave Search API (primary — reliable, privacy-respecting, free tier)
+            if BRAVE_SEARCH_KEY and not results:
                 try:
-                    search_url = f"{instance}/search?q={urllib.parse.quote(q)}&format=json&categories=general"
-                    req = urllib.request.Request(search_url, headers={
-                        "User-Agent": "death2data/1.0 (privacy search)",
+                    brave_url = f"https://api.search.brave.com/res/v1/web/search?q={urllib.parse.quote(q)}&count=10"
+                    req = urllib.request.Request(brave_url, headers={
                         "Accept": "application/json",
+                        "Accept-Encoding": "gzip",
+                        "X-Subscription-Token": BRAVE_SEARCH_KEY,
                     })
-                    with urllib.request.urlopen(req, timeout=8) as resp:
-                        data = json.loads(resp.read().decode())
-                        raw = data.get("results", [])
-                        for r in raw[:10]:
+                    with urllib.request.urlopen(req, timeout=10) as resp:
+                        raw_data = resp.read()
+                        # Handle gzip
+                        if resp.headers.get("Content-Encoding") == "gzip":
+                            import gzip
+                            raw_data = gzip.decompress(raw_data)
+                        data = json.loads(raw_data.decode())
+                        web = data.get("web", {}).get("results", [])
+                        for r in web[:10]:
                             results.append({
                                 "title": r.get("title", ""),
                                 "url": r.get("url", ""),
-                                "snippet": r.get("content", ""),
-                                "engine": r.get("engine", ""),
+                                "snippet": r.get("description", ""),
+                                "engine": "brave",
                             })
-                        break  # Got results, stop trying other instances
+                        search_source = "brave"
                 except Exception as e:
-                    sys.stderr.write(f"  SearXNG {instance} failed: {e}\n")
-                    continue
+                    sys.stderr.write(f"  Brave Search API failed: {e}\n")
+
+            # 2. SearXNG fallback (public instances — less reliable)
+            if not results:
+                searx_instances = [
+                    "https://searx.be",
+                    "https://search.sapti.me",
+                    "https://search.bus-hit.me",
+                    "https://search.ononoki.org",
+                    "https://opnxng.com",
+                ]
+                for instance in searx_instances:
+                    try:
+                        search_url = f"{instance}/search?q={urllib.parse.quote(q)}&format=json&categories=general"
+                        req = urllib.request.Request(search_url, headers={
+                            "User-Agent": "death2data/1.0 (privacy search)",
+                            "Accept": "application/json",
+                        })
+                        with urllib.request.urlopen(req, timeout=8) as resp:
+                            data = json.loads(resp.read().decode())
+                            raw = data.get("results", [])
+                            for r in raw[:10]:
+                                results.append({
+                                    "title": r.get("title", ""),
+                                    "url": r.get("url", ""),
+                                    "snippet": r.get("content", ""),
+                                    "engine": r.get("engine", ""),
+                                })
+                            search_source = instance
+                            break
+                    except Exception as e:
+                        sys.stderr.write(f"  SearXNG {instance} failed: {e}\n")
+                        continue
 
             # Log search
             log_activity(conn, sess["email"], "search", q[:100])
@@ -557,6 +594,7 @@ class Handler(BaseHTTPRequestHandler):
                 "query": q,
                 "results": results,
                 "count": len(results),
+                "source": search_source,
                 "authed": True,
                 "tier": user_tier,
             })

@@ -101,6 +101,22 @@ a:hover{text-decoration:underline;}
     </div>
 </div>
 
+<div class="section">
+    <div class="section-title">Search</div>
+    <div class="row">
+        <span class="row-label">Brave Search API (BRAVE_SEARCH_KEY)</span>
+        <span class="row-value" id="s-brave"><span class="loading">—</span></span>
+    </div>
+    <div class="row">
+        <span class="row-label">SearXNG fallback</span>
+        <span class="row-value val-dim" style="font-size:11px;">5 public instances (used if Brave unavailable)</span>
+    </div>
+    <div class="row">
+        <span class="row-label">Search paywall</span>
+        <span class="row-value val-ok" style="font-size:11px;">Active tier required (v1.3.0)</span>
+    </div>
+</div>
+
 <!-- Users -->
 <div class="section">
     <div class="section-title">Accounts</div>
@@ -229,6 +245,10 @@ async function load() {
         document.getElementById('s-stripe-pl').innerHTML = `<span class="dot ${plOk ? 'green' : 'red'}"></span> <span class="${plOk ? 'val-ok' : 'val-bad'}">${d.stripe_payment_link}</span>`;
         document.getElementById('s-stripe-sk').innerHTML = `<span class="dot ${skOk ? 'green' : 'yellow'}"></span> <span class="${skOk ? 'val-ok' : 'val-warn'}">${d.stripe_api || 'not set'}</span>`;
 
+        // Search
+        const braveOk = d.brave_search && d.brave_search.startsWith('configured');
+        document.getElementById('s-brave').innerHTML = `<span class="dot ${braveOk ? 'green' : 'red'}"></span> <span class="${braveOk ? 'val-ok' : 'val-bad'}">${d.brave_search || 'not set'}</span>`;
+
         // Users
         document.getElementById('s-users').textContent = d.users;
         document.getElementById('s-active').textContent = d.active_users;
@@ -271,6 +291,13 @@ async function load() {
                 priority: 'next',
                 title: 'Set STRIPE_SECRET_KEY on Render',
                 desc: 'Needed for Stripe sync (pulling existing customer payments into credits). Stripe dashboard → Developers → API keys → Secret key. Add as <code>STRIPE_SECRET_KEY</code> on Render. Use <code>sk_live_...</code> for real data or <code>sk_test_...</code> for testing.'
+            });
+        }
+        if (!braveOk) {
+            actions.push({
+                priority: 'critical',
+                title: 'Set BRAVE_SEARCH_KEY on Render',
+                desc: 'Search won\'t work reliably without this. Go to <a href="https://api.search.brave.com/app/keys" target="_blank">api.search.brave.com/app/keys</a>, create a free account, copy your API key, and add as <code>BRAVE_SEARCH_KEY</code> on Render. Free tier = 2,000 searches/month.'
             });
         }
 
