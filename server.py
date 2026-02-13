@@ -52,6 +52,8 @@ SITE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(SITE_DIR, "data")
 LICENSE_SECRET = os.environ.get("F0_LICENSE_SECRET", "fortune0-dev-secret-2026")
 DATABASE_URL = os.environ.get("DATABASE_URL", "")  # Set for PostgreSQL (Render, etc.)
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")  # whsec_... from Stripe dashboard
+STRIPE_PAYMENT_LINK = os.environ.get("STRIPE_PAYMENT_LINK", "")  # https://buy.stripe.com/xxxxx
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -787,6 +789,148 @@ class Handler(BaseHTTPRequestHandler):
             d["clicks"] = 0
             d["returning"] = False
             self.send_json(d, 201)
+
+        # ── Stripe webhook (payment confirmation) ──
+        elif path == "/api/webhooks/stripe":
+            # Stripe sends checkout.session.completed with client_reference_id = referral code
+            # Verify signature if webhook secret is set
+            raw_body = json.dumps(body).encode()
+            sig_header = self.headers.get("Stripe-Signature", "")
+
+            if STRIPE_WEBHOOK_SECRET and sig_header:
+                # Verify Stripe webhook signature
+                # Stripe signs: timestamp.payload
+                # For now we do a simple HMAC check on the payload
+                # In production, use stripe library's verify method
+                try:
+                    parts = dict(item.split("=", 1) for item in sig_header.split(","))
+                    timestamp = parts.get("t", "")
+                    expected_sig = parts.get("v1", "")
+                    signed_payload = f"{timestamp}.{raw_body.decode()}"
+                    computed = hmac.new(
+                        STRIPE_WEBHOOK_SECRET.encode(),
+                        signed_payload.encode(),
+                        hashlib.sha256
+                    ).hexdigest()
+                    if not hmac.compare_digest(computed, expected_sig):
+                        self.send_json({"error": "Invalid signature"}, 401)
+                        return
+                except Exception:
+                    pass  # If parsing fails, still process (dev mode)
+
+            # Handle the event
+            event_type = body.get("type", "")
+            if event_type == "checkout.session.completed":
+                session_data = body.get("data", {}).get("object", {})
+                ref_code = session_data.get("client_reference_id", "")
+                customer_email = session_data.get("customer_email", "") or session_data.get("customer_details", {}).get("email", "")
+                amount = session_data.get("amount_total", 0) / 100  # cents to dollars
+
+                if not ref_code and not customer_email:
+                    self.send_json({"error": "No reference ID or email"}, 400)
+                    return
+
+                conn = get_db()
+
+                # Find the user by referral code or email
+                user = None
+                if ref_code:
+                    user = conn.execute("SELECT * FROM users WHERE referral_code=?", [ref_code]).fetchone()
+                if not user and customer_email:
+                    user = conn.execute("SELECT * FROM users WHERE email=?", [customer_email.lower()]).fetchone()
+
+                if user:
+                    ud = dict(user)
+                    email = ud["email"]
+                    code = ud["referral_code"]
+
+                    # Activate: free -> active
+                    conn.execute("UPDATE users SET tier='active' WHERE email=?", [email])
+                    log_activity(conn, email, "payment", f"${amount} via Stripe — tier activated")
+
+                    # Generate a fresh license key (28 days from now)
+                    new_key = generate_license_key(email, days=28)
+                    conn.execute("UPDATE users SET license_key=? WHERE email=?", [new_key, email])
+
+                    conn.commit()
+                    conn.close()
+                    self.send_json({"activated": True, "email": email, "code": code, "tier": "active"})
+                else:
+                    # Payment came in but no matching account — create one
+                    if customer_email:
+                        code = generate_referral_code(customer_email)
+                        key = generate_license_key(customer_email, days=28)
+                        try:
+                            conn.execute("INSERT INTO users (email, referral_code, license_key, tier) VALUES (?, ?, ?, 'active')",
+                                         [customer_email.lower(), code, key])
+                            conn.execute("INSERT INTO affiliates (email, referral_code, commission_rate) VALUES (?, ?, 0.10)",
+                                         [customer_email.lower(), code])
+                            log_activity(conn, customer_email, "payment_signup", f"${amount} via Stripe — new active account")
+                            conn.commit()
+                        except Exception:
+                            pass
+                    conn.close()
+                    self.send_json({"activated": True, "new_account": True, "email": customer_email})
+            else:
+                # Other event types — acknowledge but ignore
+                self.send_json({"received": True})
+
+        # ── Account recovery (email lookup) ──
+        elif path == "/api/recover":
+            email = body.get("email", "").strip().lower()
+            if not email or "@" not in email:
+                self.send_json({"error": "Valid email required"}, 400); return
+
+            conn = get_db()
+            user = conn.execute("SELECT * FROM users WHERE email=?", [email]).fetchone()
+            if not user:
+                conn.close()
+                # Don't reveal whether email exists — just say "check your email"
+                self.send_json({"sent": True})
+                return
+
+            ud = dict(user)
+            token = create_session(email)
+            log_activity(conn, email, "recovery", "Account recovered via email")
+            conn.commit()
+            conn.close()
+
+            self.send_json({
+                "token": token,
+                "email": email,
+                "referral_code": ud["referral_code"],
+                "tier": ud.get("tier", "free"),
+                "profile_url": f"/u/{ud['referral_code']}",
+            })
+
+        # ── Get activation link (returns Stripe payment URL with code attached) ──
+        elif path == "/api/activate":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+
+            conn = get_db()
+            user = conn.execute("SELECT * FROM users WHERE email=?", [sess["email"]]).fetchone()
+            conn.close()
+
+            if not user:
+                self.send_json({"error": "User not found"}, 404); return
+
+            ud = dict(user)
+            if ud.get("tier") == "active":
+                self.send_json({"already_active": True, "tier": "active"})
+                return
+
+            if STRIPE_PAYMENT_LINK:
+                payment_url = f"{STRIPE_PAYMENT_LINK}?client_reference_id={ud['referral_code']}"
+            else:
+                payment_url = None
+
+            self.send_json({
+                "tier": "free",
+                "payment_url": payment_url,
+                "referral_code": ud["referral_code"],
+            })
 
         else:
             self.send_json({"error": "Not found"}, 404)

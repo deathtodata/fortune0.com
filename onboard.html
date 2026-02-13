@@ -159,7 +159,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
         <svg viewBox="0 0 512 512" fill="none"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="256" r="140" stroke="url(#g1)" stroke-width="36" opacity=".95"/><circle cx="360" cy="152" r="16" fill="#D4AF37" opacity=".9"/><defs><linearGradient id="g1" x1="116" y1="116" x2="396" y2="396"><stop stop-color="#D4AF37"/><stop offset="1" stop-color="#B8962E"/></linearGradient></defs></svg>
         fortune0
     </div>
-    <span class="ob-step-label" id="step-label">Step 1 of 6</span>
+    <span class="ob-step-label" id="step-label">Step 1 of 7</span>
     <button class="ob-skip" onclick="window.location='/app'">Skip to dashboard →</button>
 </div>
 
@@ -272,14 +272,53 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
             </div>
         </div>
         <div class="ob-actions">
-            <button class="ob-btn ob-btn-gold" onclick="goStep(2)">Next: Your storefront →</button>
+            <button class="ob-btn ob-btn-gold" onclick="goStep(2)">Next: Activate your key →</button>
         </div>
     </div>
 </div>
 
-<!-- ═══ STEP 3: Your Profile Page ═══ -->
+<!-- ═══ STEP 3: Activate ($1) ═══ -->
 <div class="step" id="step-2">
     <div class="step-number">Step 3</div>
+    <h2>Activate your key</h2>
+    <div class="desc">Free accounts can browse. $1/month activates your key — gives you access to idea zones, attribution routing, and real commissions. Stripe handles everything.</div>
+
+    <div class="ob-card">
+        <div class="bp-row">
+            <div class="bp-label">Your code</div>
+            <div class="bp-value gold" id="activate-code">—</div>
+        </div>
+        <div class="bp-row">
+            <div class="bp-label">Current tier</div>
+            <div class="bp-value" id="activate-tier">Free</div>
+        </div>
+        <div class="bp-row">
+            <div class="bp-label">Activation</div>
+            <div class="bp-value gold">$1/mo</div>
+        </div>
+    </div>
+
+    <div class="highlight">
+        <div class="title">What $1 unlocks</div>
+        <div class="text">Zone access across all domains and ideas. Attribution routing so work is credited to your key. Commission payouts on referrals. 28-day rolling membership.</div>
+    </div>
+
+    <div class="ob-actions">
+        <a class="ob-btn ob-btn-gold" id="activate-btn" href="#" target="_blank" onclick="trackActivation()">Activate — $1 →</a>
+        <button class="ob-btn ob-btn-ghost" onclick="goStep(3)">Skip for now</button>
+    </div>
+
+    <div id="activate-result" style="display:none;margin-top:16px;">
+        <div class="check-anim show" style="opacity:1;transform:none;">✓ Key activated</div>
+        <div class="ob-actions" style="margin-top:12px;">
+            <button class="ob-btn ob-btn-gold" onclick="goStep(3)">Next: Your storefront →</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ STEP 4: Your Profile Page ═══ -->
+<div class="step" id="step-3">
+    <div class="step-number">Step 4</div>
     <h2>This is your storefront</h2>
     <div class="desc">Everyone who scans your QR code or clicks your link lands here. They see your stats, your projects, and a button to join through you.</div>
 
@@ -294,14 +333,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     </div>
 
     <div class="ob-actions">
-        <button class="ob-btn ob-btn-gold" onclick="goStep(3)">Next: Build your network →</button>
+        <button class="ob-btn ob-btn-gold" onclick="goStep(4)">Next: Build your network →</button>
         <a class="ob-btn ob-btn-ghost" id="view-profile-btn" href="#" target="_blank">View your page ↗</a>
     </div>
 </div>
 
-<!-- ═══ STEP 4: Add Contact ═══ -->
-<div class="step" id="step-3">
-    <div class="step-number">Step 4</div>
+<!-- ═══ STEP 5: Add Contact ═══ -->
+<div class="step" id="step-4">
+    <div class="step-number">Step 5</div>
     <h2>Start your network</h2>
     <div class="desc">
         Your blueprint says you need <strong style="color:var(--gold)" id="step4-referrals">—</strong> active referrals.
@@ -319,14 +358,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
     <div id="contact-preview"></div>
 
-    <div class="ob-actions" id="step3-actions" style="display:none;">
-        <button class="ob-btn ob-btn-gold" onclick="goStep(4)">Next: Your blueprint →</button>
+    <div class="ob-actions" id="step4-actions" style="display:none;">
+        <button class="ob-btn ob-btn-gold" onclick="goStep(5)">Next: Your blueprint →</button>
     </div>
 </div>
 
-<!-- ═══ STEP 5: Blueprint Recap ═══ -->
-<div class="step" id="step-4">
-    <div class="step-number">Step 5</div>
+<!-- ═══ STEP 6: Blueprint Recap ═══ -->
+<div class="step" id="step-5">
+    <div class="step-number">Step 6</div>
     <h2>Your plan to <span id="recap-target" style="color:var(--gold)">$0</span>/month</h2>
     <div class="desc">Here's where you are and what comes next.</div>
 
@@ -338,6 +377,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
         <div class="bp-row">
             <div class="bp-label"><span class="status-dot done"></span> Profile page live</div>
             <div class="bp-value gold">Done</div>
+        </div>
+        <div class="bp-row" id="recap-activation-row">
+            <div class="bp-label"><span class="status-dot pending" id="recap-activation-dot"></span> Key activated ($1/mo)</div>
+            <div class="bp-value" id="recap-activation">Pending</div>
         </div>
         <div class="bp-row">
             <div class="bp-label"><span class="status-dot done"></span> Contacts added</div>
@@ -363,12 +406,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     </div>
 
     <div class="ob-actions">
-        <button class="ob-btn ob-btn-gold" onclick="goStep(5)">Finish →</button>
+        <button class="ob-btn ob-btn-gold" onclick="goStep(6)">Finish →</button>
     </div>
 </div>
 
-<!-- ═══ STEP 6: Done ═══ -->
-<div class="step" id="step-5">
+<!-- ═══ STEP 7: Done ═══ -->
+<div class="step" id="step-6">
     <div class="completion-card">
         <h2 style="color:var(--white);">You're live</h2>
         <p style="color:var(--text);margin-bottom:8px;">Your code is active. Your page is shareable. Your blueprint is set.</p>
@@ -403,7 +446,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 <div class="toast" id="toast"></div>
 
 <script>
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 let currentStep = 0;
 let userData = null;
 let incomeGoal = 0;
@@ -411,14 +454,21 @@ let incomeGoal = 0;
 // ═══ Navigation ═══
 function goStep(n) {
     if (n >= 1 && !incomeGoal) { toast('Pick an income goal first'); return; }
-    if (n >= 3 && !userData) { toast('Create your account first'); return; }
+    if (n >= 2 && !userData) { toast('Create your account first'); return; }
 
-    // Update recap when entering step 4
-    if (n === 4) {
+    // Update recap when entering step 5
+    if (n === 5) {
         document.getElementById('recap-target').textContent = `$${incomeGoal.toLocaleString()}`;
         document.getElementById('recap-contacts').textContent = contactCount;
         document.getElementById('recap-referrals').textContent = document.getElementById('bp-referrals')?.textContent || '0';
         document.getElementById('recap-revenue2').textContent = document.getElementById('bp-revenue')?.textContent || '$0';
+        // Check activation status
+        const tierEl = document.getElementById('activate-tier');
+        if (tierEl && tierEl.textContent === 'Active') {
+            document.getElementById('recap-activation').textContent = 'Done';
+            document.getElementById('recap-activation').classList.add('gold');
+            document.getElementById('recap-activation-dot').className = 'status-dot done';
+        }
     }
 
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
@@ -552,9 +602,44 @@ async function doSignup() {
     document.getElementById('ob-qr').innerHTML = `<img src="${qrUrl}" alt="QR Code">`;
     document.getElementById('view-profile-btn').href = profileUrl;
 
+    // Activation step
+    document.getElementById('activate-code').textContent = data.referral_code;
+    document.getElementById('activate-tier').textContent = data.tier === 'active' ? 'Active' : 'Free';
+
+    // Build the Stripe payment link with the referral code attached
+    fetchActivationLink();
+
     // Completion step
     document.getElementById('final-code').textContent = data.referral_code;
     document.getElementById('final-profile').href = profileUrl;
+}
+
+async function fetchActivationLink() {
+    const { ok, data } = await api('POST', '/api/activate', {});
+    if (ok && data.payment_url) {
+        document.getElementById('activate-btn').href = data.payment_url;
+    } else if (ok && data.already_active) {
+        document.getElementById('activate-tier').textContent = 'Active';
+        document.getElementById('activate-btn').style.display = 'none';
+        document.getElementById('activate-result').style.display = 'block';
+    }
+}
+
+function trackActivation() {
+    // After they click the Stripe link, poll to check if payment went through
+    let checks = 0;
+    const poll = setInterval(async () => {
+        checks++;
+        if (checks > 60) { clearInterval(poll); return; } // stop after 5 min
+        const { ok, data } = await api('POST', '/api/activate', {});
+        if (ok && data.already_active) {
+            clearInterval(poll);
+            document.getElementById('activate-tier').textContent = 'Active';
+            document.getElementById('activate-btn').style.display = 'none';
+            document.getElementById('activate-result').style.display = 'block';
+            toast('Key activated');
+        }
+    }, 5000); // check every 5 seconds
 }
 
 function copyLink() {
@@ -602,7 +687,7 @@ async function doAddContact() {
     document.getElementById('ob-c-email').value = '';
     document.getElementById('ob-c-name').focus();
 
-    document.getElementById('step3-actions').style.display = 'flex';
+    document.getElementById('step4-actions').style.display = 'flex';
 }
 
 // ═══ Toast ═══
