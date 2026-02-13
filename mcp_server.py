@@ -156,7 +156,7 @@ def generate_license_key(email, days=28):
 
 mcp = FastMCP(
     "fortune0",
-    description="fortune0 open incubator — sign up, manage contacts, earn referral commissions, track everything locally"
+    instructions="fortune0 open incubator — sign up, manage contacts, earn referral commissions, track everything locally"
 )
 
 @mcp.tool()
