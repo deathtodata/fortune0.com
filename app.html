@@ -734,6 +734,7 @@ footer{
         </div>
         <div class="footer-links">
             <a href="/">Home</a>
+            <a href="/search">Search</a>
             <a href="/ideas">Ideas</a>
             <a href="/join">Earn</a>
             <a href="/onboard">Get Started</a>
@@ -1416,6 +1417,7 @@ function renderShareTools() {
 
     // Products/domains with affiliate links
     const products = [
+        { name: 'death2data search', url: `${host}/search?ref=${code}`, desc: 'Private search with your referral' },
         { name: 'Your profile', url: `${host}/u/${code}`, desc: 'Personal storefront' },
         { name: 'fortune0 signup', url: `${host}/onboard?ref=${code}`, desc: 'Onboarding with your code' },
         { name: 'fortune0 home', url: `${host}/?ref=${code}`, desc: 'Landing page with attribution' },

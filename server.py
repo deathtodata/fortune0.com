@@ -499,6 +499,59 @@ class Handler(BaseHTTPRequestHandler):
                 "credits_from_stripe": credits_imported,
             })
 
+        # ── Search (SearXNG proxy) ──
+        elif path == "/api/search":
+            q = parse_qs(urlparse(self.path).query).get("q", [""])[0].strip()
+            if not q:
+                self.send_json({"error": "Query required"}, 400); return
+
+            # Check if user is authed — free users get 3 searches per session, paid get unlimited
+            sess = self.get_user()
+            # SearXNG instances (public, privacy-respecting)
+            searx_instances = [
+                "https://searx.be",
+                "https://search.sapti.me",
+                "https://search.bus-hit.me",
+            ]
+
+            results = []
+            for instance in searx_instances:
+                try:
+                    search_url = f"{instance}/search?q={urllib.parse.quote(q)}&format=json&categories=general"
+                    req = urllib.request.Request(search_url, headers={
+                        "User-Agent": "death2data/1.0 (privacy search)",
+                        "Accept": "application/json",
+                    })
+                    with urllib.request.urlopen(req, timeout=8) as resp:
+                        data = json.loads(resp.read().decode())
+                        raw = data.get("results", [])
+                        for r in raw[:10]:
+                            results.append({
+                                "title": r.get("title", ""),
+                                "url": r.get("url", ""),
+                                "snippet": r.get("content", ""),
+                                "engine": r.get("engine", ""),
+                            })
+                        break  # Got results, stop trying other instances
+                except Exception as e:
+                    sys.stderr.write(f"  SearXNG {instance} failed: {e}\n")
+                    continue
+
+            # Log search if authed
+            if sess:
+                conn = get_db()
+                log_activity(conn, sess["email"], "search", q[:100])
+                conn.commit()
+                conn.close()
+
+            self.send_json({
+                "query": q,
+                "results": results,
+                "count": len(results),
+                "authed": sess is not None,
+                "tier": sess.get("tier", "free") if sess else "free",
+            })
+
         elif path == "/api/stats":
             sess = self.get_user()
             if not sess:
