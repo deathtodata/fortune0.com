@@ -1,5 +1,4 @@
 services:
-  # ── fortune0 platform (main server) ──
   - type: web
     name: fortune0
     runtime: python
@@ -8,19 +7,7 @@ services:
     envVars:
       - key: F0_LICENSE_SECRET
         generateValue: true
-      - key: SEARXNG_URL
-        value: https://d2d-search.onrender.com
     disk:
       name: fortune0-data
       mountPath: /app/data
       sizeGB: 1
-
-  # ── SearXNG (self-hosted search backend for death2data) ──
-  - type: web
-    name: d2d-search
-    runtime: docker
-    dockerfilePath: ./searxng/Dockerfile
-    dockerContext: ./searxng
-    envVars:
-      - key: SEARXNG_SECRET
-        generateValue: true

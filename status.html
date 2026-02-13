@@ -104,7 +104,11 @@ a:hover{text-decoration:underline;}
 <div class="section">
     <div class="section-title">Search</div>
     <div class="row">
-        <span class="row-label">SearXNG instance (SEARXNG_URL)</span>
+        <span class="row-label">Domain registry</span>
+        <span class="row-value val-ok" style="font-size:11px;">domains.json (always available)</span>
+    </div>
+    <div class="row">
+        <span class="row-label">Live web search (SEARXNG_URL)</span>
         <span class="row-value" id="s-searxng"><span class="loading">—</span></span>
     </div>
     <div class="row">
@@ -291,9 +295,9 @@ async function load() {
         }
         if (!searxOk) {
             actions.push({
-                priority: 'critical',
-                title: 'Deploy SearXNG and set SEARXNG_URL on Render',
-                desc: 'Search needs its own SearXNG instance. Create a new Web Service on Render from the <code>searxng/</code> directory in the repo. Then set <code>SEARXNG_URL</code> on the fortune0 service to the SearXNG service URL.'
+                priority: 'next',
+                title: 'Optional: Set SEARXNG_URL for live web search',
+                desc: 'Domain registry search works without this. To add live web results, set <code>SEARXNG_URL</code> to a SearXNG instance URL. This is optional — the network search works on its own.'
             });
         }
 

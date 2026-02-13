@@ -371,7 +371,7 @@ async function doSearch() {
         }
 
         if (data.results && data.results.length > 0) {
-            renderResults(data.results, q);
+            renderResults(data.results, q, data);
         } else {
             document.getElementById('results').innerHTML = '<div class="no-results">No results found. Try a different search.</div>';
         }
@@ -381,24 +381,40 @@ async function doSearch() {
     }
 }
 
-function renderResults(results, q) {
+function renderResults(results, q, meta) {
     const el = document.getElementById('results');
     const words = q.toLowerCase().split(/\s+/).filter(w => w.length > 2);
 
-    el.innerHTML = results.map(r => {
+    let html = '';
+
+    // Show source info
+    if (meta) {
+        const parts = [];
+        if (meta.registry_matches > 0) parts.push(`${meta.registry_matches} from network`);
+        if (meta.web_results > 0) parts.push(`${meta.web_results} from web`);
+        if (parts.length) {
+            html += `<div style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:12px;">${parts.join(' + ')} — ${meta.source || ''}</div>`;
+        }
+    }
+
+    html += results.map(r => {
+        const isRegistry = r.engine === 'registry';
         let snippet = esc(r.snippet || '');
         words.forEach(w => {
             const re = new RegExp(`(${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
             snippet = snippet.replace(re, '<mark>$1</mark>');
         });
-        return `<div class="result">
+        const tag = isRegistry ? '<span style="font-size:10px;color:var(--gold);border:1px solid var(--gold);padding:1px 6px;border-radius:4px;margin-left:8px;">network</span>' : '';
+        return `<div class="result" style="${isRegistry ? 'border-color:rgba(212,175,55,0.2);' : ''}">
             <a href="${esc(r.url)}" target="_blank" rel="noopener">
                 <div class="result-url">${esc(r.url)}</div>
-                <div class="result-title">${esc(r.title)}</div>
+                <div class="result-title">${esc(r.title)}${tag}</div>
             </a>
             <div class="result-snippet">${snippet}</div>
         </div>`;
     }).join('');
+
+    el.innerHTML = html;
 }
 
 // ═══ GATE ═══

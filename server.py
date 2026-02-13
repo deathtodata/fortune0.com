@@ -521,49 +521,75 @@ class Handler(BaseHTTPRequestHandler):
                 conn.close()
                 self.send_json({"error": "activation_required", "message": "Activate your account to search", "tier": user_tier}, 403); return
 
-            # ── Search backend: own SearXNG instance, then public fallbacks ──
+            # ── Search: domain registry first, then live web if configured ──
             results = []
             search_source = "none"
 
-            def _searxng_query(base_url, timeout=10):
-                """Query a SearXNG instance, return list of result dicts."""
-                out = []
-                search_url = f"{base_url.rstrip('/')}/search?q={urllib.parse.quote(q)}&format=json&categories=general"
-                req = urllib.request.Request(search_url, headers={
-                    "User-Agent": "death2data/1.0 (privacy search)",
-                    "Accept": "application/json",
-                })
-                with urllib.request.urlopen(req, timeout=timeout) as resp:
-                    data = json.loads(resp.read().decode())
-                    for r in data.get("results", [])[:10]:
-                        out.append({
-                            "title": r.get("title", ""),
-                            "url": r.get("url", ""),
-                            "snippet": r.get("content", ""),
-                            "engine": r.get("engine", ""),
-                        })
-                return out
+            # 1. Search the domain registry (domains.json — always available)
+            try:
+                domains_path = os.path.join(SITE_DIR, "domains.json")
+                if os.path.exists(domains_path):
+                    with open(domains_path) as f:
+                        domains = json.load(f)
+                    q_lower = q.lower()
+                    q_words = q_lower.split()
+                    for d in domains:
+                        name = d["domain"].replace(".com", "").replace(".io", "").replace(".ai", "").replace(".net", "").replace(".org", "").replace(".xyz", "")
+                        # Break domain name into words (camelCase and joined words)
+                        import re as _re
+                        domain_words = _re.sub(r'([a-z])([A-Z])', r'\1 \2', name).lower()
+                        domain_words = domain_words.replace("-", " ").replace(".", " ")
+                        # Match: any query word appears in domain name
+                        score = 0
+                        for w in q_words:
+                            if len(w) >= 2 and w in domain_words:
+                                score += 10
+                            elif len(w) >= 3 and w in name.lower():
+                                score += 5
+                        if score > 0:
+                            results.append({
+                                "title": d["domain"],
+                                "url": f"https://{d['domain']}",
+                                "snippet": f"Value: {d.get('value', 0)} | Status: {d.get('status', 'open')} | Expires: {d.get('expires', '?')}",
+                                "engine": "registry",
+                                "score": score + d.get("value", 0),
+                            })
+                    # Sort by match score + domain value
+                    results.sort(key=lambda r: r.get("score", 0), reverse=True)
+                    results = results[:10]
+                    if results:
+                        search_source = "registry"
+            except Exception as e:
+                sys.stderr.write(f"  Domain registry search failed: {e}\n")
 
-            # 1. Own SearXNG instance (primary — you control it)
+            # 2. Live web search via SearXNG (optional — only if SEARXNG_URL is set)
+            web_results = []
             if SEARXNG_URL:
                 try:
-                    results = _searxng_query(SEARXNG_URL, timeout=12)
-                    if results:
-                        search_source = "d2d-search"
+                    search_url = f"{SEARXNG_URL.rstrip('/')}/search?q={urllib.parse.quote(q)}&format=json&categories=general"
+                    req = urllib.request.Request(search_url, headers={
+                        "User-Agent": "death2data/1.0 (privacy search)",
+                        "Accept": "application/json",
+                    })
+                    with urllib.request.urlopen(req, timeout=12) as resp:
+                        data = json.loads(resp.read().decode())
+                        for r in data.get("results", [])[:10]:
+                            web_results.append({
+                                "title": r.get("title", ""),
+                                "url": r.get("url", ""),
+                                "snippet": r.get("content", ""),
+                                "engine": r.get("engine", ""),
+                            })
+                    if web_results:
+                        search_source = "d2d-search" if search_source == "none" else search_source + "+web"
                 except Exception as e:
-                    sys.stderr.write(f"  Own SearXNG ({SEARXNG_URL}) failed: {e}\n")
+                    sys.stderr.write(f"  SearXNG ({SEARXNG_URL}) failed: {e}\n")
 
-            # 2. Public SearXNG instances (fallback)
-            if not results:
-                for instance in ["https://searx.be", "https://search.sapti.me", "https://opnxng.com"]:
-                    try:
-                        results = _searxng_query(instance, timeout=8)
-                        if results:
-                            search_source = instance
-                            break
-                    except Exception as e:
-                        sys.stderr.write(f"  SearXNG {instance} failed: {e}\n")
-                        continue
+            # Merge: registry results first, then web results
+            # Remove score field before sending
+            for r in results:
+                r.pop("score", None)
+            all_results = results + web_results
 
             # Log search
             log_activity(conn, sess["email"], "search", q[:100])
@@ -572,9 +598,11 @@ class Handler(BaseHTTPRequestHandler):
 
             self.send_json({
                 "query": q,
-                "results": results,
-                "count": len(results),
+                "results": all_results,
+                "count": len(all_results),
                 "source": search_source,
+                "registry_matches": len(results),
+                "web_results": len(web_results),
                 "authed": True,
                 "tier": user_tier,
             })
