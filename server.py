@@ -29,6 +29,8 @@ import secrets
 import sqlite3
 import sys
 import base64
+import csv
+import io
 
 # Optional: PostgreSQL support (for Render/production)
 try:
@@ -338,6 +340,21 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def send_csv(self, filename, rows, fieldnames):
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction='ignore')
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+        body = output.getvalue().encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/csv")
+        self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+        self.send_header("Content-Length", len(body))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(body)
+
     def send_file(self, filepath):
         if not os.path.isfile(filepath):
             self.send_json({"error": "Not found"}, 404)
@@ -458,6 +475,64 @@ class Handler(BaseHTTPRequestHandler):
             rows = conn.execute("SELECT * FROM commissions ORDER BY created_at DESC LIMIT 100").fetchall()
             conn.close()
             self.send_json([dict(r) for r in rows])
+
+        # ── Data export (CSV) ──
+        elif path == "/api/export/contacts":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            conn = get_db()
+            rows = conn.execute("SELECT name, email, phone, company, notes, created_at FROM contacts WHERE user_email=? ORDER BY created_at DESC",
+                                [sess["email"]]).fetchall()
+            conn.close()
+            self.send_csv("contacts.csv", [dict(r) for r in rows],
+                         ["name", "email", "phone", "company", "notes", "created_at"])
+
+        elif path == "/api/export/commissions":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            conn = get_db()
+            rows = conn.execute("SELECT order_id, order_total, commission_amount, commission_rate, platform_fee, status, discount_code, created_at FROM commissions WHERE affiliate_email=? ORDER BY created_at DESC",
+                                [sess["email"]]).fetchall()
+            conn.close()
+            self.send_csv("commissions.csv", [dict(r) for r in rows],
+                         ["order_id", "order_total", "commission_amount", "commission_rate", "platform_fee", "status", "discount_code", "created_at"])
+
+        elif path == "/api/export/activity":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            conn = get_db()
+            rows = conn.execute("SELECT action, detail, created_at FROM activity WHERE user_email=? ORDER BY created_at DESC",
+                                [sess["email"]]).fetchall()
+            conn.close()
+            self.send_csv("activity.csv", [dict(r) for r in rows],
+                         ["action", "detail", "created_at"])
+
+        elif path == "/api/export/all":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            conn = get_db()
+            email = sess["email"]
+            user = conn.execute("SELECT * FROM users WHERE email=?", [email]).fetchone()
+            contacts = conn.execute("SELECT name, email, phone, company, notes, created_at FROM contacts WHERE user_email=?", [email]).fetchall()
+            comms = conn.execute("SELECT * FROM commissions WHERE affiliate_email=?", [email]).fetchall()
+            activity = conn.execute("SELECT action, detail, created_at FROM activity WHERE user_email=?", [email]).fetchall()
+            aff = conn.execute("SELECT * FROM affiliates WHERE email=?", [email]).fetchone()
+            conn.close()
+            ud = dict(user) if user else {}
+            ad = dict(aff) if aff else {}
+            self.send_json({
+                "user": {k: str(v) for k, v in ud.items() if k != "license_key"},
+                "affiliate": {k: str(v) for k, v in ad.items()},
+                "contacts": [dict(r) for r in contacts],
+                "commissions": [dict(r) for r in comms],
+                "activity": [dict(r) for r in activity],
+                "exported_at": datetime.now(timezone.utc).isoformat(),
+                "format_version": "1.0",
+            })
 
         elif path == "/api/me":
             sess = self.get_user()
