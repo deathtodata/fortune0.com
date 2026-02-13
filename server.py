@@ -516,7 +516,7 @@ class Handler(BaseHTTPRequestHandler):
                 total_revenue = total_credits = credits_spent = credits_imported = 0
             conn.close()
             self.send_json({
-                "status": "ok", "service": "fortune0", "version": "1.4.0",
+                "status": "ok", "service": "fortune0", "version": "1.5.0",
                 "db": db_type,
                 "stripe_webhook": "configured" if stripe_configured else "not set",
                 "stripe_payment_link": "configured" if payment_link_set else "not set",
@@ -525,7 +525,8 @@ class Handler(BaseHTTPRequestHandler):
                 "users": user_count,
                 "active_users": active_users,
                 "affiliates": affiliate_count,
-                "total_revenue": round(total_revenue, 2),
+                "real_revenue": active_users,  # $1/mo × active users = actual Stripe revenue
+                "commission_volume": round(total_revenue, 2),  # affiliate attribution demo data
                 "total_credits_issued": round(total_credits, 2),
                 "total_credits_spent": round(credits_spent, 2),
                 "credits_from_stripe": credits_imported,
@@ -910,6 +911,86 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(302)
             self.send_header("Location", f"/u/{code}")
             self.end_headers()
+
+        # ── Analytics: time-series platform data ──
+        elif path == "/api/analytics":
+            conn = get_db()
+            try:
+                # Signups per day (last 30 days)
+                if USE_PG:
+                    signups = conn.execute("""
+                        SELECT DATE(created_at) as day, COUNT(*) as count
+                        FROM users WHERE created_at > NOW() - INTERVAL '30 days'
+                        GROUP BY DATE(created_at) ORDER BY day
+                    """).fetchall()
+                    activations = conn.execute("""
+                        SELECT DATE(created_at) as day, COUNT(*) as count
+                        FROM activity WHERE action='payment' AND created_at > NOW() - INTERVAL '30 days'
+                        GROUP BY DATE(created_at) ORDER BY day
+                    """).fetchall()
+                    searches = conn.execute("""
+                        SELECT DATE(created_at) as day, COUNT(*) as count
+                        FROM activity WHERE action='search' AND created_at > NOW() - INTERVAL '30 days'
+                        GROUP BY DATE(created_at) ORDER BY day
+                    """).fetchall()
+                    all_activity = conn.execute("""
+                        SELECT DATE(created_at) as day, action, COUNT(*) as count
+                        FROM activity WHERE created_at > NOW() - INTERVAL '30 days'
+                        GROUP BY DATE(created_at), action ORDER BY day
+                    """).fetchall()
+                else:
+                    signups = conn.execute("""
+                        SELECT DATE(created_at) as day, COUNT(*) as count
+                        FROM users WHERE created_at > datetime('now', '-30 days')
+                        GROUP BY DATE(created_at) ORDER BY day
+                    """).fetchall()
+                    activations = conn.execute("""
+                        SELECT DATE(created_at) as day, COUNT(*) as count
+                        FROM activity WHERE action='payment' AND created_at > datetime('now', '-30 days')
+                        GROUP BY DATE(created_at) ORDER BY day
+                    """).fetchall()
+                    searches = conn.execute("""
+                        SELECT DATE(created_at) as day, COUNT(*) as count
+                        FROM activity WHERE action='search' AND created_at > datetime('now', '-30 days')
+                        GROUP BY DATE(created_at) ORDER BY day
+                    """).fetchall()
+                    all_activity = conn.execute("""
+                        SELECT DATE(created_at) as day, action, COUNT(*) as count
+                        FROM activity WHERE created_at > datetime('now', '-30 days')
+                        GROUP BY DATE(created_at), action ORDER BY day
+                    """).fetchall()
+
+                # Current totals
+                total_users = conn.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]
+                active_users = conn.execute("SELECT COUNT(*) c FROM users WHERE tier='active'").fetchone()["c"]
+                total_searches = conn.execute("SELECT COUNT(*) c FROM activity WHERE action='search'").fetchone()["c"]
+                total_signups_ever = conn.execute("SELECT COUNT(*) c FROM activity WHERE action='signup'").fetchone()["c"]
+                total_payments = conn.execute("SELECT COUNT(*) c FROM activity WHERE action='payment'").fetchone()["c"]
+
+                # Credits from actual Stripe payments
+                stripe_credits = conn.execute("SELECT COUNT(*) c, COALESCE(SUM(amount),0) s FROM credits WHERE source='stripe_import'").fetchone()
+            except Exception as e:
+                conn.close()
+                self.send_json({"error": f"Analytics query failed: {e}"}, 500)
+                return
+
+            conn.close()
+            self.send_json({
+                "signups_by_day": [dict(r) for r in signups],
+                "activations_by_day": [dict(r) for r in activations],
+                "searches_by_day": [dict(r) for r in searches],
+                "activity_by_day": [dict(r) for r in all_activity],
+                "totals": {
+                    "users": total_users,
+                    "active_users": active_users,
+                    "real_revenue": active_users,  # $1/mo × active
+                    "total_searches": total_searches,
+                    "total_signups": total_signups_ever,
+                    "total_payments": total_payments,
+                    "stripe_charges": stripe_credits["c"],
+                    "stripe_credits_total": round(stripe_credits["s"], 2),
+                },
+            })
 
         # ── Chart API: /api/chart/<type> ──
         elif path.startswith("/api/chart/"):
