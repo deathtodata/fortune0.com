@@ -95,6 +95,10 @@ a:hover{text-decoration:underline;}
         <span class="row-label">Webhook URL</span>
         <span class="row-value val-dim" style="font-size:11px;">/api/webhooks/stripe</span>
     </div>
+    <div class="row">
+        <span class="row-label">Secret key (STRIPE_SECRET_KEY)</span>
+        <span class="row-value" id="s-stripe-sk"><span class="loading">—</span></span>
+    </div>
 </div>
 
 <!-- Users -->
@@ -115,6 +119,27 @@ a:hover{text-decoration:underline;}
     <div class="row">
         <span class="row-label">Attributed revenue</span>
         <span class="row-value val-gold" id="s-revenue">—</span>
+    </div>
+</div>
+
+<!-- Credits -->
+<div class="section">
+    <div class="section-title">Credit system</div>
+    <div class="row">
+        <span class="row-label">Total credits issued</span>
+        <span class="row-value val-gold" id="s-credits-issued">—</span>
+    </div>
+    <div class="row">
+        <span class="row-label">Total credits spent</span>
+        <span class="row-value" id="s-credits-spent">—</span>
+    </div>
+    <div class="row">
+        <span class="row-label">Credits from Stripe import</span>
+        <span class="row-value" id="s-credits-stripe">—</span>
+    </div>
+    <div class="row">
+        <span class="row-label">Credit rate</span>
+        <span class="row-value val-dim" style="font-size:11px;">$1 = 100 credits + 10/month loyalty</span>
     </div>
 </div>
 
@@ -175,6 +200,10 @@ a:hover{text-decoration:underline;}
     <div class="row"><span class="row-label">GET /api/export/activity</span><span class="row-value val-dim">CSV export — activity log</span></div>
     <div class="row"><span class="row-label">GET /api/export/all</span><span class="row-value val-dim">Full JSON export — everything</span></div>
     <div class="row"><span class="row-label">GET /api/profile/CODE</span><span class="row-value val-dim">Public profile data</span></div>
+    <div class="row"><span class="row-label">GET /api/credits</span><span class="row-value val-dim">Credit balance + history</span></div>
+    <div class="row"><span class="row-label">POST /api/credits/spend</span><span class="row-value val-dim">Spend credits</span></div>
+    <div class="row"><span class="row-label">POST /api/admin/sync-stripe</span><span class="row-value val-dim">Import Stripe payment history as credits</span></div>
+    <div class="row"><span class="row-label">POST /api/admin/grant-credits</span><span class="row-value val-dim">Admin: manual credit grant</span></div>
     <div class="row"><span class="row-label">GET /r/CODE</span><span class="row-value val-dim">Referral redirect + click tracking</span></div>
     <div class="row"><span class="row-label">GET /u/CODE</span><span class="row-value val-dim">Personal storefront page</span></div>
 </div>
@@ -195,14 +224,21 @@ async function load() {
         // Stripe
         const whOk = d.stripe_webhook === 'configured';
         const plOk = d.stripe_payment_link === 'configured';
+        const skOk = d.stripe_api === 'configured';
         document.getElementById('s-stripe-wh').innerHTML = `<span class="dot ${whOk ? 'green' : 'red'}"></span> <span class="${whOk ? 'val-ok' : 'val-bad'}">${d.stripe_webhook}</span>`;
         document.getElementById('s-stripe-pl').innerHTML = `<span class="dot ${plOk ? 'green' : 'red'}"></span> <span class="${plOk ? 'val-ok' : 'val-bad'}">${d.stripe_payment_link}</span>`;
+        document.getElementById('s-stripe-sk').innerHTML = `<span class="dot ${skOk ? 'green' : 'yellow'}"></span> <span class="${skOk ? 'val-ok' : 'val-warn'}">${d.stripe_api || 'not set'}</span>`;
 
         // Users
         document.getElementById('s-users').textContent = d.users;
         document.getElementById('s-active').textContent = d.active_users;
         document.getElementById('s-affiliates').textContent = d.affiliates;
         document.getElementById('s-revenue').textContent = `$${d.total_revenue.toLocaleString()}`;
+
+        // Credits
+        document.getElementById('s-credits-issued').textContent = Math.floor(d.total_credits_issued || 0).toLocaleString();
+        document.getElementById('s-credits-spent').textContent = Math.floor(d.total_credits_spent || 0).toLocaleString();
+        document.getElementById('s-credits-stripe').textContent = (d.credits_from_stripe || 0).toLocaleString() + ' entries';
 
         // Actions
         const actions = [];
@@ -227,6 +263,14 @@ async function load() {
                 priority: 'now',
                 title: 'Set STRIPE_PAYMENT_LINK on Render',
                 desc: 'Your existing Stripe payment link (the $1/mo one). Add it as env var <code>STRIPE_PAYMENT_LINK</code> on Render. Format: <code>https://buy.stripe.com/xxxxx</code>'
+            });
+        }
+
+        if (!skOk) {
+            actions.push({
+                priority: 'next',
+                title: 'Set STRIPE_SECRET_KEY on Render',
+                desc: 'Needed for Stripe sync (pulling existing customer payments into credits). Stripe dashboard → Developers → API keys → Secret key. Add as <code>STRIPE_SECRET_KEY</code> on Render. Use <code>sk_live_...</code> for real data or <code>sk_test_...</code> for testing.'
             });
         }
 

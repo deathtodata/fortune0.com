@@ -31,6 +31,10 @@ import sys
 import base64
 import csv
 import io
+import urllib.request
+import urllib.error
+import urllib.parse
+import math
 
 # Optional: PostgreSQL support (for Render/production)
 try:
@@ -56,6 +60,8 @@ LICENSE_SECRET = os.environ.get("F0_LICENSE_SECRET", "fortune0-dev-secret-2026")
 DATABASE_URL = os.environ.get("DATABASE_URL", "")  # Set for PostgreSQL (Render, etc.)
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")  # whsec_... from Stripe dashboard
 STRIPE_PAYMENT_LINK = os.environ.get("STRIPE_PAYMENT_LINK", "")  # https://buy.stripe.com/xxxxx
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")  # sk_live_... or sk_test_... for API calls
+ADMIN_EMAIL = os.environ.get("F0_ADMIN_EMAIL", "lolztex@gmail.com")  # Admin operations
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -173,6 +179,16 @@ CREATE TABLE IF NOT EXISTS referral_clicks (
     converted INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS credits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_email TEXT NOT NULL,
+    amount REAL NOT NULL,
+    type TEXT NOT NULL,
+    source TEXT DEFAULT 'system',
+    description TEXT,
+    stripe_charge_id TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 SCHEMA_PG = """
@@ -232,6 +248,16 @@ CREATE TABLE IF NOT EXISTS referral_clicks (
     converted INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW()
 );
+CREATE TABLE IF NOT EXISTS credits (
+    id SERIAL PRIMARY KEY,
+    user_email TEXT NOT NULL,
+    amount REAL NOT NULL,
+    type TEXT NOT NULL,
+    source TEXT DEFAULT 'system',
+    description TEXT,
+    stripe_charge_id TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
 """
 
 USE_PG = bool(DATABASE_URL and HAS_PG)
@@ -286,6 +312,49 @@ def get_db():
 def log_activity(conn, user_email, action, detail=""):
     conn.execute("INSERT INTO activity (user_email, action, detail) VALUES (?, ?, ?)",
                  [user_email, action, detail])
+
+# ═══════════════════════════════════════════
+#  STRIPE API (stdlib only — no pip install)
+# ═══════════════════════════════════════════
+
+def stripe_get(endpoint, params=None):
+    """Call Stripe API using urllib. Returns parsed JSON or None on error."""
+    if not STRIPE_SECRET_KEY:
+        return None
+    url = f"https://api.stripe.com/v1/{endpoint}"
+    if params:
+        url += "?" + urllib.parse.urlencode(params)
+    auth = base64.b64encode(f"{STRIPE_SECRET_KEY}:".encode()).decode()
+    req = urllib.request.Request(url, headers={
+        "Authorization": f"Basic {auth}",
+        "Content-Type": "application/x-www-form-urlencoded",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.loads(resp.read().decode())
+    except (urllib.error.URLError, urllib.error.HTTPError, Exception) as e:
+        sys.stderr.write(f"  Stripe API error: {e}\n")
+        return None
+
+def calculate_credits(amount_cents, payment_timestamp):
+    """Calculate credits from a Stripe payment.
+    Base: $1 = 100 credits.
+    Loyalty bonus: +10 credits per month since payment (retroactive).
+    """
+    amount_dollars = amount_cents / 100
+    base_credits = amount_dollars * 100  # $1 = 100 credits
+
+    # Months since payment
+    now = datetime.now(timezone.utc)
+    try:
+        paid_at = datetime.fromtimestamp(payment_timestamp, tz=timezone.utc)
+    except (TypeError, ValueError, OSError):
+        paid_at = now
+    months_elapsed = max(0, (now - paid_at).days / 30)
+    loyalty_bonus = math.floor(months_elapsed) * 10  # 10 credits per month
+
+    total = round(base_credits + loyalty_bonus, 2)
+    return total, base_credits, loyalty_bonus, paid_at
 
 # ═══════════════════════════════════════════
 #  AUTH / SESSIONS
@@ -402,24 +471,32 @@ class Handler(BaseHTTPRequestHandler):
             stripe_configured = bool(STRIPE_WEBHOOK_SECRET)
             payment_link_set = bool(STRIPE_PAYMENT_LINK)
             conn = get_db()
+            stripe_api_set = bool(STRIPE_SECRET_KEY)
             try:
                 user_count = conn.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]
                 affiliate_count = conn.execute("SELECT COUNT(*) c FROM affiliates").fetchone()["c"]
                 active_users = conn.execute("SELECT COUNT(*) c FROM users WHERE tier='active'").fetchone()["c"]
                 total_revenue = conn.execute("SELECT COALESCE(SUM(order_total),0) s FROM commissions").fetchone()["s"]
+                total_credits = conn.execute("SELECT COALESCE(SUM(amount),0) s FROM credits WHERE amount > 0").fetchone()["s"]
+                credits_spent = conn.execute("SELECT COALESCE(SUM(ABS(amount)),0) s FROM credits WHERE amount < 0").fetchone()["s"]
+                credits_imported = conn.execute("SELECT COUNT(*) c FROM credits WHERE source='stripe_import'").fetchone()["c"]
             except Exception:
                 user_count = affiliate_count = active_users = 0
-                total_revenue = 0
+                total_revenue = total_credits = credits_spent = credits_imported = 0
             conn.close()
             self.send_json({
-                "status": "ok", "service": "fortune0", "version": "1.1.0",
+                "status": "ok", "service": "fortune0", "version": "1.2.0",
                 "db": db_type,
                 "stripe_webhook": "configured" if stripe_configured else "not set",
                 "stripe_payment_link": "configured" if payment_link_set else "not set",
+                "stripe_api": "configured" if stripe_api_set else "not set",
                 "users": user_count,
                 "active_users": active_users,
                 "affiliates": affiliate_count,
                 "total_revenue": round(total_revenue, 2),
+                "total_credits_issued": round(total_credits, 2),
+                "total_credits_spent": round(credits_spent, 2),
+                "credits_from_stripe": credits_imported,
             })
 
         elif path == "/api/stats":
@@ -534,15 +611,42 @@ class Handler(BaseHTTPRequestHandler):
                 "format_version": "1.0",
             })
 
+        # ── Credit balance + history ──
+        elif path == "/api/credits":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            conn = get_db()
+            email = sess["email"]
+            balance_row = conn.execute("SELECT COALESCE(SUM(amount),0) bal FROM credits WHERE user_email=?", [email]).fetchone()
+            balance = round(balance_row["bal"], 2)
+            history = conn.execute("SELECT id, amount, type, source, description, created_at FROM credits WHERE user_email=? ORDER BY created_at DESC LIMIT 50", [email]).fetchall()
+            # Count by type
+            granted = conn.execute("SELECT COALESCE(SUM(amount),0) s FROM credits WHERE user_email=? AND type='granted'", [email]).fetchone()["s"]
+            purchased = conn.execute("SELECT COALESCE(SUM(amount),0) s FROM credits WHERE user_email=? AND type='purchased'", [email]).fetchone()["s"]
+            spent = conn.execute("SELECT COALESCE(SUM(amount),0) s FROM credits WHERE user_email=? AND type='spent'", [email]).fetchone()["s"]
+            conn.close()
+            self.send_json({
+                "balance": balance,
+                "total_granted": round(granted, 2),
+                "total_purchased": round(purchased, 2),
+                "total_spent": round(abs(spent), 2),
+                "history": [dict(r) for r in history],
+            })
+
         elif path == "/api/me":
             sess = self.get_user()
             if not sess:
                 self.send_json({"error": "Auth required"}, 401); return
             conn = get_db()
             user = conn.execute("SELECT * FROM users WHERE email=?", [sess["email"]]).fetchone()
+            # Include credit balance
+            balance_row = conn.execute("SELECT COALESCE(SUM(amount),0) bal FROM credits WHERE user_email=?", [sess["email"]]).fetchone()
             conn.close()
             if user:
-                self.send_json(dict(user))
+                ud = dict(user)
+                ud["credit_balance"] = round(balance_row["bal"], 2)
+                self.send_json(ud)
             else:
                 self.send_json({"error": "User not found"}, 404)
 
@@ -1027,6 +1131,186 @@ class Handler(BaseHTTPRequestHandler):
                 "payment_url": payment_url,
                 "referral_code": ud["referral_code"],
             })
+
+        # ── Sync Stripe payment history → credits ──
+        elif path == "/api/admin/sync-stripe":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            if sess["email"] != ADMIN_EMAIL:
+                self.send_json({"error": "Admin only"}, 403); return
+            if not STRIPE_SECRET_KEY:
+                self.send_json({"error": "STRIPE_SECRET_KEY not configured"}, 400); return
+
+            # Pull all successful charges from Stripe (paginate)
+            all_charges = []
+            has_more = True
+            starting_after = None
+            while has_more:
+                params = {"limit": 100, "status": "succeeded"}
+                if starting_after:
+                    params["starting_after"] = starting_after
+                data = stripe_get("charges", params)
+                if not data or "data" not in data:
+                    break
+                charges = data["data"]
+                all_charges.extend(charges)
+                has_more = data.get("has_more", False)
+                if charges:
+                    starting_after = charges[-1]["id"]
+
+            # Also pull customers for email mapping
+            all_customers = []
+            has_more = True
+            starting_after = None
+            while has_more:
+                params = {"limit": 100}
+                if starting_after:
+                    params["starting_after"] = starting_after
+                data = stripe_get("customers", params)
+                if not data or "data" not in data:
+                    break
+                customers = data["data"]
+                all_customers.extend(customers)
+                has_more = data.get("has_more", False)
+                if customers:
+                    starting_after = customers[-1]["id"]
+
+            # Build customer ID → email map
+            cust_emails = {}
+            for c in all_customers:
+                if c.get("email"):
+                    cust_emails[c["id"]] = c["email"].lower()
+
+            conn = get_db()
+            imported = 0
+            skipped = 0
+            created_accounts = 0
+
+            for charge in all_charges:
+                charge_id = charge["id"]
+                amount_cents = charge.get("amount", 0)
+                created_ts = charge.get("created", 0)
+                customer_id = charge.get("customer", "")
+
+                # Get email from charge or customer
+                email = ""
+                if charge.get("billing_details", {}).get("email"):
+                    email = charge["billing_details"]["email"].lower()
+                elif charge.get("receipt_email"):
+                    email = charge["receipt_email"].lower()
+                elif customer_id and customer_id in cust_emails:
+                    email = cust_emails[customer_id]
+
+                if not email or amount_cents <= 0:
+                    skipped += 1
+                    continue
+
+                # Check if already imported
+                existing = conn.execute("SELECT id FROM credits WHERE stripe_charge_id=?", [charge_id]).fetchone()
+                if existing:
+                    skipped += 1
+                    continue
+
+                # Calculate credits
+                total_credits, base, loyalty, paid_at = calculate_credits(amount_cents, created_ts)
+
+                # Ensure user exists
+                user = conn.execute("SELECT * FROM users WHERE email=?", [email]).fetchone()
+                if not user:
+                    code = generate_referral_code(email)
+                    key = generate_license_key(email, days=28)
+                    try:
+                        conn.execute("INSERT INTO users (email, referral_code, license_key, tier) VALUES (?, ?, ?, 'active')",
+                                     [email, code, key])
+                        conn.execute("INSERT INTO affiliates (email, referral_code, commission_rate) VALUES (?, ?, 0.10)",
+                                     [email, code])
+                        created_accounts += 1
+                    except Exception:
+                        pass
+
+                # Always activate since they paid
+                conn.execute("UPDATE users SET tier='active' WHERE email=?", [email])
+
+                # Insert credit entry
+                desc = f"${amount_cents/100:.2f} payment on {paid_at.strftime('%Y-%m-%d')} ({int(base)} base + {int(loyalty)} loyalty)"
+                conn.execute(
+                    "INSERT INTO credits (user_email, amount, type, source, description, stripe_charge_id) VALUES (?, ?, 'granted', 'stripe_import', ?, ?)",
+                    [email, total_credits, desc, charge_id]
+                )
+                log_activity(conn, email, "credits_granted", f"{total_credits} credits from Stripe import")
+                imported += 1
+
+            conn.commit()
+
+            # Summary stats
+            total_credits_issued = conn.execute("SELECT COALESCE(SUM(amount),0) s FROM credits WHERE source='stripe_import'").fetchone()["s"]
+            conn.close()
+
+            self.send_json({
+                "synced": True,
+                "charges_found": len(all_charges),
+                "customers_found": len(all_customers),
+                "credits_imported": imported,
+                "skipped_duplicate": skipped,
+                "accounts_created": created_accounts,
+                "total_credits_issued": round(total_credits_issued, 2),
+            })
+
+        # ── Manual credit grant (admin) ──
+        elif path == "/api/admin/grant-credits":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            if sess["email"] != ADMIN_EMAIL:
+                self.send_json({"error": "Admin only"}, 403); return
+
+            target_email = body.get("email", "").strip().lower()
+            amount = float(body.get("amount", 0))
+            reason = body.get("reason", "Manual grant")
+
+            if not target_email or amount <= 0:
+                self.send_json({"error": "Email and positive amount required"}, 400); return
+
+            conn = get_db()
+            conn.execute(
+                "INSERT INTO credits (user_email, amount, type, source, description) VALUES (?, ?, 'granted', 'admin', ?)",
+                [target_email, amount, reason]
+            )
+            log_activity(conn, target_email, "credits_granted", f"{amount} credits: {reason}")
+            conn.commit()
+            balance = conn.execute("SELECT COALESCE(SUM(amount),0) bal FROM credits WHERE user_email=?", [target_email]).fetchone()["bal"]
+            conn.close()
+            self.send_json({"granted": True, "email": target_email, "amount": amount, "new_balance": round(balance, 2)})
+
+        # ── Spend credits ──
+        elif path == "/api/credits/spend":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+
+            amount = float(body.get("amount", 0))
+            reason = body.get("reason", "")
+            if amount <= 0:
+                self.send_json({"error": "Amount must be positive"}, 400); return
+
+            conn = get_db()
+            email = sess["email"]
+            balance = conn.execute("SELECT COALESCE(SUM(amount),0) bal FROM credits WHERE user_email=?", [email]).fetchone()["bal"]
+            if balance < amount:
+                conn.close()
+                self.send_json({"error": "Insufficient credits", "balance": round(balance, 2), "requested": amount}, 400)
+                return
+
+            conn.execute(
+                "INSERT INTO credits (user_email, amount, type, source, description) VALUES (?, ?, 'spent', 'user', ?)",
+                [email, -amount, reason]
+            )
+            log_activity(conn, email, "credits_spent", f"{amount} credits: {reason}")
+            conn.commit()
+            new_balance = conn.execute("SELECT COALESCE(SUM(amount),0) bal FROM credits WHERE user_email=?", [email]).fetchone()["bal"]
+            conn.close()
+            self.send_json({"spent": True, "amount": amount, "new_balance": round(new_balance, 2)})
 
         else:
             self.send_json({"error": "Not found"}, 404)
