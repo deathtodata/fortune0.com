@@ -553,6 +553,42 @@ class Handler(BaseHTTPRequestHandler):
             conn.close()
             self.send_json([dict(r) for r in rows])
 
+        # ── Leaderboard (public, anonymized) ──
+        elif path == "/api/leaderboard":
+            conn = get_db()
+            # Top affiliates by earned (anonymize emails)
+            affs = conn.execute("""
+                SELECT a.referral_code, a.commission_rate, a.total_referrals, a.total_earned,
+                       COALESCE(cr.balance, 0) as credit_balance,
+                       u.tier
+                FROM affiliates a
+                LEFT JOIN users u ON u.email = a.email
+                LEFT JOIN (
+                    SELECT user_email, SUM(amount) as balance FROM credits GROUP BY user_email
+                ) cr ON cr.user_email = a.email
+                WHERE a.email NOT LIKE '%@example.com'
+                  AND a.email NOT LIKE '%@fortune0.com'
+                ORDER BY a.total_earned DESC
+                LIMIT 25
+            """).fetchall()
+
+            # Platform totals
+            total_users = conn.execute("SELECT COUNT(*) c FROM users WHERE email NOT LIKE '%@example.com' AND email NOT LIKE '%@fortune0.com'").fetchone()["c"]
+            active_users = conn.execute("SELECT COUNT(*) c FROM users WHERE tier='active' AND email NOT LIKE '%@example.com' AND email NOT LIKE '%@fortune0.com'").fetchone()["c"]
+            total_revenue = conn.execute("SELECT COALESCE(SUM(order_total),0) s FROM commissions WHERE affiliate_email NOT LIKE '%@example.com'").fetchone()["s"]
+            total_credits = conn.execute("SELECT COALESCE(SUM(amount),0) s FROM credits WHERE amount > 0 AND user_email NOT LIKE '%@example.com'").fetchone()["s"]
+
+            conn.close()
+            self.send_json({
+                "leaderboard": [dict(r) for r in affs],
+                "platform": {
+                    "total_users": total_users,
+                    "active_users": active_users,
+                    "total_revenue": round(total_revenue, 2),
+                    "total_credits": round(total_credits, 2),
+                },
+            })
+
         # ── Data export (CSV) ──
         elif path == "/api/export/contacts":
             sess = self.get_user()
@@ -1282,6 +1318,35 @@ class Handler(BaseHTTPRequestHandler):
             balance = conn.execute("SELECT COALESCE(SUM(amount),0) bal FROM credits WHERE user_email=?", [target_email]).fetchone()["bal"]
             conn.close()
             self.send_json({"granted": True, "email": target_email, "amount": amount, "new_balance": round(balance, 2)})
+
+        # ── Admin: purge test data ──
+        elif path == "/api/admin/purge-test-data":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            if sess["email"] != ADMIN_EMAIL:
+                self.send_json({"error": "Admin only"}, 403); return
+
+            conn = get_db()
+            # Test patterns to clean
+            test_patterns = ['%@example.com', '%@fortune0.com']
+            purged = {"users": 0, "affiliates": 0, "contacts": 0, "commissions": 0, "credits": 0, "activity": 0}
+
+            for pattern in test_patterns:
+                purged["users"] += conn.execute("DELETE FROM users WHERE email LIKE ?", [pattern]).rowcount
+                purged["affiliates"] += conn.execute("DELETE FROM affiliates WHERE email LIKE ?", [pattern]).rowcount
+                purged["contacts"] += conn.execute("DELETE FROM contacts WHERE user_email LIKE ?", [pattern]).rowcount
+                purged["commissions"] += conn.execute("DELETE FROM commissions WHERE affiliate_email LIKE ?", [pattern]).rowcount
+                purged["credits"] += conn.execute("DELETE FROM credits WHERE user_email LIKE ?", [pattern]).rowcount
+                purged["activity"] += conn.execute("DELETE FROM activity WHERE user_email LIKE ?", [pattern]).rowcount
+
+            conn.commit()
+            total = sum(purged.values())
+            log_activity(conn, sess["email"], "admin_purge", f"Purged {total} test records")
+            conn.commit()
+            conn.close()
+
+            self.send_json({"purged": True, "records_removed": purged, "total": total})
 
         # ── Spend credits ──
         elif path == "/api/credits/spend":
