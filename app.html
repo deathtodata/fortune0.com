@@ -800,9 +800,9 @@ function updateAuthUI() {
         document.getElementById('user-tier').textContent = state.user.tier.toUpperCase();
         document.getElementById('auth-actions').innerHTML = `<button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>`;
 
-        // Referral link
+        // Referral link — points to your personal profile page
         const host = location.origin;
-        const refLink = `${host}/r/${state.user.refCode}`;
+        const refLink = `${host}/u/${state.user.refCode}`;
         document.getElementById('referral-link').value = refLink;
 
         // QR code

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:title" content="fortune0">
+<meta property="og:description" content="Join the open incubator. Build, earn, and grow.">
+<meta property="og:image" content="/og-image.png">
+<style>
+:root {
+    --bg:#000;--surface:#0A0A0A;--surface2:#141414;
+    --border:#1A1A1A;--border-l:#2A2A2A;
+    --gold:#D4AF37;--gold-rgb:212,175,55;
+    --red:#EF476F;--white:#fff;--text:rgba(255,255,255,0.6);--dim:rgba(255,255,255,0.3);
+    --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+    --mono:'SF Mono','Menlo',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{-webkit-font-smoothing:antialiased;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh;display:flex;flex-direction:column;}
+
+/* Background effect */
+.bg-glow{
+    position:fixed;top:-30%;left:50%;transform:translateX(-50%);
+    width:800px;height:800px;
+    background:radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 60%);
+    pointer-events:none;z-index:0;
+}
+
+/* Layout */
+.container{max-width:640px;margin:0 auto;padding:40px 20px;position:relative;z-index:1;flex:1;}
+
+/* Header */
+.profile-header{text-align:center;margin-bottom:32px;}
+.profile-logo{
+    width:64px;height:64px;margin:0 auto 16px;
+    background:linear-gradient(135deg, #D4AF37, #B8962E);
+    border-radius:16px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 24px rgba(212,175,55,0.2);
+}
+.profile-logo svg{width:40px;height:40px;}
+.profile-name{font-size:13px;color:var(--gold);font-family:var(--mono);font-weight:600;letter-spacing:1px;margin-bottom:4px;}
+.profile-tagline{font-size:15px;color:var(--white);font-weight:500;}
+
+/* Code badge */
+.code-badge{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--surface);border:1px solid rgba(212,175,55,0.2);
+    padding:8px 16px;border-radius:99px;margin-top:12px;
+    font-family:var(--mono);font-size:14px;color:var(--gold);font-weight:700;
+    letter-spacing:1px;
+}
+.code-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:0.4;}50%{opacity:1;}}
+
+/* Stats row */
+.stats-row{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+    margin-bottom:24px;
+}
+.stat-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:16px;text-align:center;
+}
+.stat-card .num{font-size:24px;font-weight:800;color:var(--white);font-family:var(--mono);}
+.stat-card .lbl{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+
+/* Cards */
+.card{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:24px;margin-bottom:16px;
+}
+.card h3{color:var(--white);font-size:16px;margin-bottom:12px;}
+
+/* Link items */
+.link-item{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 16px;background:var(--bg);border:1px solid var(--border);
+    border-radius:10px;margin-bottom:8px;transition:all 0.2s;
+    cursor:pointer;text-decoration:none;color:var(--text);
+}
+.link-item:hover{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.03);}
+.link-icon{
+    width:36px;height:36px;min-width:36px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+}
+.link-icon.gold{background:rgba(212,175,55,0.1);}
+.link-icon.blue{background:rgba(100,149,237,0.1);}
+.link-icon.green{background:rgba(80,200,120,0.1);}
+.link-icon.purple{background:rgba(179,136,255,0.1);}
+.link-text{flex:1;min-width:0;}
+.link-text .title{color:var(--white);font-weight:500;font-size:14px;}
+.link-text .desc{font-size:12px;color:var(--dim);margin-top:1px;}
+.link-arrow{color:var(--dim);font-size:18px;flex-shrink:0;}
+
+/* CTA */
+.cta-section{text-align:center;margin:32px 0 24px;}
+.cta-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--gold);color:#000;border:none;
+    padding:14px 32px;border-radius:12px;font-size:15px;font-weight:700;
+    cursor:pointer;transition:all 0.2s;font-family:var(--font);
+}
+.cta-btn:hover{box-shadow:0 0 40px rgba(212,175,55,0.4);transform:scale(1.03);}
+.cta-sub{font-size:12px;color:var(--dim);margin-top:8px;}
+
+/* QR section */
+.qr-section{text-align:center;margin:24px 0;}
+.qr-box{
+    display:inline-block;background:white;padding:12px;border-radius:12px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.3);
+}
+.qr-box img{width:140px;height:140px;display:block;}
+.qr-label{font-size:11px;color:var(--dim);margin-top:8px;font-family:var(--mono);}
+
+/* Join form (hidden by default) */
+.join-form{display:none;margin-top:16px;}
+.join-form.show{display:block;}
+.join-input{
+    width:100%;background:var(--bg);border:1px solid var(--border);
+    color:var(--white);padding:12px 16px;border-radius:10px;font-size:14px;
+    margin-bottom:12px;font-family:var(--font);
+}
+.join-input:focus{border-color:var(--gold);outline:none;}
+.join-input::placeholder{color:var(--dim);}
+.join-submit{
+    width:100%;background:var(--gold);color:#000;border:none;
+    padding:12px;border-radius:10px;font-size:14px;font-weight:700;
+    cursor:pointer;transition:all 0.2s;font-family:var(--font);
+}
+.join-submit:hover{box-shadow:0 0 30px rgba(212,175,55,0.4);}
+.join-result{
+    margin-top:16px;padding:16px;background:var(--bg);border:1px solid rgba(212,175,55,0.2);
+    border-radius:10px;display:none;
+}
+.join-result.show{display:block;}
+.join-result .your-code{font-family:var(--mono);font-size:20px;color:var(--gold);font-weight:700;}
+
+/* Footer */
+.profile-footer{
+    text-align:center;padding:24px 20px;
+    font-size:12px;color:var(--dim);
+    border-top:1px solid var(--border);
+}
+.profile-footer a{color:var(--dim);}
+.profile-footer a:hover{color:var(--gold);}
+
+/* Loading / Error states */
+.loading{text-align:center;padding:80px 20px;color:var(--dim);}
+.loading .spinner{
+    width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--gold);
+    border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.error-state{text-align:center;padding:80px 20px;}
+.error-state h2{color:var(--white);margin-bottom:8px;}
+.error-state p{color:var(--dim);margin-bottom:20px;}
+.error-state a{
+    display:inline-block;background:var(--gold);color:#000;
+    padding:10px 24px;border-radius:8px;font-weight:600;text-decoration:none;
+}
+
+/* Toast */
+.toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--surface2);border:1px solid var(--gold);
+    color:var(--white);padding:10px 20px;border-radius:10px;
+    font-size:13px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:200;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media(max-width:480px){
+    .container{padding:24px 16px;}
+    .stats-row{grid-template-columns:1fr 1fr 1fr;gap:8px;}
+    .stat-card{padding:12px 8px;}
+    .stat-card .num{font-size:18px;}
+    .code-badge{font-size:12px;padding:6px 12px;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<!-- Loading state -->
+<div class="container" id="loading-state">
+    <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading profile...</p>
+    </div>
+</div>
+
+<!-- Error state -->
+<div class="container" id="error-state" style="display:none;">
+    <div class="error-state">
+        <h2>Profile not found</h2>
+        <p>This referral code doesn't exist or has expired.</p>
+        <a href="/join">Join fortune0</a>
+    </div>
+</div>
+
+<!-- Profile content -->
+<div class="container" id="profile-content" style="display:none;">
+    <div class="profile-header">
+        <div class="profile-logo">
+            <svg viewBox="0 0 512 512" fill="none"><circle cx="256" cy="256" r="140" stroke="#fff" stroke-width="36" opacity=".95"/><circle cx="360" cy="152" r="16" fill="#fff" opacity=".9"/><circle cx="360" cy="152" r="8" fill="#000" opacity=".5"/></svg>
+        </div>
+        <div class="profile-name" id="p-name">fortune0</div>
+        <div class="profile-tagline" id="p-tagline">Open incubator member</div>
+        <div class="code-badge">
+            <span class="dot"></span>
+            <span id="p-code">IK-XXXXXXXX</span>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="p-stats">
+        <div class="stat-card"><div class="num" id="p-referrals">0</div><div class="lbl">Referrals</div></div>
+        <div class="stat-card"><div class="num" id="p-clicks">0</div><div class="lbl">Clicks</div></div>
+        <div class="stat-card"><div class="num" id="p-rate">10%</div><div class="lbl">Commission</div></div>
+    </div>
+
+    <!-- Links / Projects -->
+    <div class="card" id="links-card">
+        <h3>Projects &amp; links</h3>
+        <a class="link-item" href="/ideas" id="link-ideas">
+            <div class="link-icon gold">💡</div>
+            <div class="link-text">
+                <div class="title">Browse ideas</div>
+                <div class="desc">Open-source business ideas anyone can build</div>
+            </div>
+            <span class="link-arrow">→</span>
+        </a>
+        <a class="link-item" href="/join" id="link-earn">
+            <div class="link-icon green">💰</div>
+            <div class="link-text">
+                <div class="title">Earn commissions</div>
+                <div class="desc">Share your code and earn on every sale</div>
+            </div>
+            <span class="link-arrow">→</span>
+        </a>
+        <a class="link-item" href="https://death2data.com" target="_blank">
+            <div class="link-icon purple">🔒</div>
+            <div class="link-text">
+                <div class="title">Death2Data</div>
+                <div class="desc">Privacy-first tools and local AI</div>
+            </div>
+            <span class="link-arrow">→</span>
+        </a>
+    </div>
+
+    <!-- QR code -->
+    <div class="qr-section">
+        <div class="qr-box" id="p-qr"></div>
+        <div class="qr-label">Scan to visit this page</div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section">
+        <button class="cta-btn" onclick="showJoinForm()">Join through this referral</button>
+        <div class="cta-sub">Free forever. Get your own page and referral code.</div>
+    </div>
+
+    <!-- Join form -->
+    <div class="join-form" id="join-form">
+        <div class="card">
+            <h3>Create your account</h3>
+            <p style="color:var(--dim);font-size:13px;margin-bottom:16px;">
+                You're joining through <strong style="color:var(--gold)" id="join-ref-label">IK-XXXXXXXX</strong>.
+                They'll earn commission on anything you generate.
+            </p>
+            <input class="join-input" type="email" id="join-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doJoin()">
+            <button class="join-submit" onclick="doJoin()">Create free account</button>
+            <div class="join-result" id="join-result">
+                <p style="color:var(--white);margin-bottom:8px;">You're in! Here's your referral code:</p>
+                <div class="your-code" id="join-your-code"></div>
+                <p style="color:var(--dim);font-size:12px;margin-top:8px;">Share it to earn commissions. <a href="/app" style="color:var(--gold);">Open your dashboard →</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<div class="profile-footer">
+    <a href="/">fortune0.com</a> · <a href="/app">Dashboard</a> · <a href="/join">Earn</a>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// Get the referral code from the URL: /u/IK-XXXXXXXX
+const pathParts = window.location.pathname.split('/');
+const CODE = pathParts[2] || '';
+
+async function loadProfile() {
+    if (!CODE) {
+        showError();
+        return;
+    }
+
+    try {
+        const resp = await fetch(`/api/profile/${CODE}`);
+        if (!resp.ok) {
+            showError();
+            return;
+        }
+        const data = await resp.json();
+        renderProfile(data);
+    } catch (e) {
+        showError();
+    }
+}
+
+function renderProfile(data) {
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('profile-content').style.display = 'block';
+
+    // Update page title
+    document.title = `${data.code} — fortune0`;
+
+    // Update OG tags
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.content = `Join fortune0 through ${data.code}`;
+
+    // Profile info
+    document.getElementById('p-code').textContent = data.code;
+    document.getElementById('p-name').textContent = data.code;
+    document.getElementById('p-tagline').textContent = data.tier ? `${data.tier} tier member` : 'Open incubator member';
+
+    // Stats
+    document.getElementById('p-referrals').textContent = data.referrals || 0;
+    document.getElementById('p-clicks').textContent = data.clicks || 0;
+    document.getElementById('p-rate').textContent = `${Math.round((data.commission_rate || 0.10) * 100)}%`;
+
+    // QR code
+    const pageUrl = window.location.href;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&color=D4AF37&bgcolor=FFFFFF&data=${encodeURIComponent(pageUrl)}`;
+    document.getElementById('p-qr').innerHTML = `<img src="${qrUrl}" alt="QR Code" onerror="this.parentElement.style.display='none'">`;
+
+    // Join form ref label
+    document.getElementById('join-ref-label').textContent = data.code;
+
+    // Update join link to include referral
+    document.getElementById('link-earn').href = `/join?ref=${data.code}`;
+}
+
+function showError() {
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('error-state').style.display = 'block';
+}
+
+function showJoinForm() {
+    const form = document.getElementById('join-form');
+    form.classList.add('show');
+    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => document.getElementById('join-email').focus(), 400);
+}
+
+async function doJoin() {
+    const email = document.getElementById('join-email').value.trim().toLowerCase();
+    if (!email || !email.includes('@')) {
+        toast('Enter a valid email');
+        return;
+    }
+
+    const btn = document.querySelector('.join-submit');
+    btn.textContent = 'Creating...';
+    btn.disabled = true;
+
+    try {
+        const resp = await fetch('/api/join', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, referred_by: CODE }),
+        });
+        const data = await resp.json();
+
+        if (data.referral_code) {
+            document.getElementById('join-your-code').textContent = data.referral_code;
+            document.getElementById('join-result').classList.add('show');
+            btn.textContent = 'Done!';
+            toast('Welcome to fortune0!');
+        } else {
+            btn.textContent = 'Create free account';
+            btn.disabled = false;
+            toast(data.error || 'Something went wrong');
+        }
+    } catch (e) {
+        btn.textContent = 'Create free account';
+        btn.disabled = false;
+        toast('Connection failed');
+    }
+}
+
+// Load on page ready
+loadProfile();
+</script>
+</body>
+</html>

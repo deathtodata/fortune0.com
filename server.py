@@ -472,6 +472,40 @@ class Handler(BaseHTTPRequestHandler):
                 "commission_rate": aff["commission_rate"],
             })
 
+        # ── Profile page: /u/IK-XXXXXXXX ──
+        elif path.startswith("/u/"):
+            # Serve the profile page template — JS fetches /api/profile/CODE
+            self.send_file(os.path.join(SITE_DIR, "profile.html"))
+
+        # ── Profile API: /api/profile/IK-XXXXXXXX ──
+        elif path.startswith("/api/profile/"):
+            code = path[len("/api/profile/"):]
+            if not code:
+                self.send_json({"error": "Code required"}, 400); return
+            conn = get_db()
+            # Look up user by referral code
+            user = conn.execute("SELECT * FROM users WHERE referral_code=?", [code]).fetchone()
+            if not user:
+                conn.close()
+                self.send_json({"error": "Not found"}, 404); return
+            # Get affiliate stats if they have them
+            aff = conn.execute("SELECT * FROM affiliates WHERE referral_code=?", [code]).fetchone()
+            clicks = conn.execute("SELECT COUNT(*) c FROM referral_clicks WHERE referral_code=?", [code]).fetchone()["c"]
+            conn.close()
+            ud = dict(user)
+            ad = dict(aff) if aff else {}
+            profile = {
+                "code": code,
+                "email_hash": hashlib.sha256(ud["email"].encode()).hexdigest()[:8],  # anonymous
+                "tier": ud.get("tier", "free"),
+                "member_since": str(ud.get("created_at", "")),
+                "clicks": clicks,
+                "referrals": ad.get("total_referrals", 0),
+                "commission_rate": ad.get("commission_rate", 0.10),
+                "earned": round(ad.get("total_earned", 0), 2),
+            }
+            self.send_json(profile)
+
         # ── Referral redirect: /r/IK-XXXXXXXX ──
         elif path.startswith("/r/"):
             code = path[3:]  # strip "/r/"
@@ -489,16 +523,10 @@ class Handler(BaseHTTPRequestHandler):
                          [code, source_domain, visitor_hash])
             conn.commit()
             conn.close()
-            # Redirect to signup with referral pre-filled
-            if aff:
-                self.send_response(302)
-                self.send_header("Location", f"/join?ref={code}")
-                self.end_headers()
-            else:
-                # Unknown code — still redirect to join, they can sign up fresh
-                self.send_response(302)
-                self.send_header("Location", "/join")
-                self.end_headers()
+            # Redirect to profile page (which has the join CTA)
+            self.send_response(302)
+            self.send_header("Location", f"/u/{code}")
+            self.end_headers()
 
         # ── Static files ──
         elif path == "/":
@@ -710,6 +738,7 @@ class Handler(BaseHTTPRequestHandler):
         # ── Self-service affiliate join (no auth required) ──
         elif path == "/api/join":
             email = body.get("email", "").strip().lower()
+            referred_by = body.get("referred_by", "").strip()  # referral code of who sent them
             if not email or "@" not in email:
                 self.send_json({"error": "Valid email required"}, 400); return
             code = generate_referral_code(email)
@@ -721,11 +750,23 @@ class Handler(BaseHTTPRequestHandler):
                 d = dict(existing)
                 d["clicks"] = clicks
                 d["short_url"] = f"/r/{existing['referral_code']}"
+                d["profile_url"] = f"/u/{existing['referral_code']}"
                 d["returning"] = True
                 self.send_json(d)
                 return
             conn.execute("INSERT INTO affiliates (email, referral_code, commission_rate) VALUES (?, ?, 0.10)",
                          [email, code])
+            # Track who referred this person
+            if referred_by:
+                referrer = conn.execute("SELECT * FROM affiliates WHERE referral_code=?", [referred_by]).fetchone()
+                if referrer:
+                    conn.execute("UPDATE affiliates SET total_referrals=total_referrals+1 WHERE referral_code=?", [referred_by])
+                    log_activity(conn, referrer["email"], "referral_signup", f"{email} joined through {referred_by}")
+                    # Mark the most recent referral click as converted
+                    if USE_PG:
+                        conn.execute("UPDATE referral_clicks SET converted=1 WHERE id=(SELECT id FROM referral_clicks WHERE referral_code=? AND converted=0 ORDER BY created_at DESC LIMIT 1)", [referred_by])
+                    else:
+                        conn.execute("UPDATE referral_clicks SET converted=1 WHERE referral_code=? AND converted=0 ORDER BY created_at DESC LIMIT 1", [referred_by])
             # Also create a user account
             license_key = generate_license_key(email)
             try:
@@ -742,6 +783,7 @@ class Handler(BaseHTTPRequestHandler):
             d["token"] = token
             d["license_key"] = license_key
             d["short_url"] = f"/r/{code}"
+            d["profile_url"] = f"/u/{code}"
             d["clicks"] = 0
             d["returning"] = False
             self.send_json(d, 201)
