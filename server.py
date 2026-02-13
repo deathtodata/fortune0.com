@@ -232,44 +232,45 @@ CREATE TABLE IF NOT EXISTS referral_clicks (
 
 USE_PG = bool(DATABASE_URL and HAS_PG)
 
-class PGRowWrapper:
-    """Makes psycopg2 rows act like sqlite3.Row (access by name)."""
-    def __init__(self, cursor):
-        self.cursor = cursor
-        self.description = cursor.description
-    def __getitem__(self, key):
-        if isinstance(key, str):
-            cols = [d[0] for d in self.description]
-            return self.cursor.fetchone()[cols.index(key)] if False else None
-        return None
-
-def get_db():
-    if USE_PG:
-        conn = psycopg2.connect(DATABASE_URL)
-        conn.autocommit = False
-        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+class PGWrapper:
+    """Wraps a psycopg2 connection to act like sqlite3 (? placeholders, dict rows, .execute on conn)."""
+    def __init__(self, dsn):
+        self._conn = psycopg2.connect(dsn)
+        self._conn.autocommit = False
+        # Create tables
+        cur = self._conn.cursor()
         for stmt in SCHEMA_PG.split(';'):
             stmt = stmt.strip()
             if stmt:
                 cur.execute(stmt)
-        conn.commit()
-        # Wrap so conn.execute works like sqlite
-        conn._pg_cursor = cur
-        original_execute = conn.cursor
-        def pg_execute(sql, params=None):
-            c = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            # Convert ? placeholders to %s for psycopg2
-            sql = sql.replace('?', '%s')
-            c.execute(sql, params or [])
-            return c
-        conn.execute = pg_execute
-        original_close = conn.close
-        def pg_close():
-            try: conn.commit()
-            except: pass
-            original_close()
-        conn.close = pg_close
-        return conn
+        self._conn.commit()
+        cur.close()
+
+    def execute(self, sql, params=None):
+        sql = sql.replace('?', '%s')
+        cur = self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute(sql, params or [])
+        return cur
+
+    def executescript(self, sql):
+        cur = self._conn.cursor()
+        cur.execute(sql)
+        self._conn.commit()
+        cur.close()
+
+    def commit(self):
+        self._conn.commit()
+
+    def close(self):
+        try:
+            self._conn.commit()
+        except Exception:
+            pass
+        self._conn.close()
+
+def get_db():
+    if USE_PG:
+        return PGWrapper(DATABASE_URL)
     else:
         db_path = os.path.join(DATA_DIR, "fortune0.db")
         conn = sqlite3.connect(db_path)
@@ -588,12 +589,11 @@ class Handler(BaseHTTPRequestHandler):
             if not name:
                 self.send_json({"error": "Name required"}, 400); return
             conn = get_db()
-            cur = conn.execute("INSERT INTO contacts (user_email, name, email, phone, company, notes) VALUES (?, ?, ?, ?, ?, ?)",
+            conn.execute("INSERT INTO contacts (user_email, name, email, phone, company, notes) VALUES (?, ?, ?, ?, ?, ?)",
                          [sess["email"], name, body.get("email",""), body.get("phone",""), body.get("company",""), body.get("notes","")])
-            cid = cur.lastrowid
             log_activity(conn, sess["email"], "contact_added", f"Added: {name}")
             conn.commit()
-            row = conn.execute("SELECT * FROM contacts WHERE id=?", [cid]).fetchone()
+            row = conn.execute("SELECT * FROM contacts WHERE user_email=? AND name=? ORDER BY id DESC LIMIT 1", [sess["email"], name]).fetchone()
             conn.close()
             self.send_json(dict(row), 201)
 
