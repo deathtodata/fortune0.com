@@ -326,6 +326,22 @@ footer{
 .footer-status .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:0.4;}50%{opacity:1;}}
 
+/* ═══ MOBILE CARD LAYOUT ═══ */
+.m-cards{display:none;}
+.m-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:14px;margin-bottom:8px;
+}
+.m-card-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;}
+.m-card-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:0.5px;}
+.m-card-value{font-size:13px;color:var(--white);font-family:var(--mono);text-align:right;}
+.m-card-value.gold{color:var(--gold);font-weight:600;}
+.m-card-rank{
+    font-family:var(--mono);font-size:20px;font-weight:800;
+    color:var(--gold);margin-right:12px;
+}
+.m-card-actions{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+
 /* ═══ MOBILE ═══ */
 @media(max-width:768px){
     .nav-center{display:none;}
@@ -337,13 +353,19 @@ footer{
     .header-main{padding:0 12px;}
     .content{padding:16px 12px;}
     .card{padding:16px;}
-    /* Mobile contact cards instead of table */
     .contacts-table-wrap{overflow-x:auto;}
+    /* Hide desktop tables, show mobile cards */
+    .desktop-table{display:none;}
+    .m-cards{display:block;}
+    /* Credit ledger responsive */
+    #credits-card .m-card-row{flex-wrap:wrap;}
 }
 @media(max-width:480px){
     .card-grid{grid-template-columns:1fr;}
     .identity-code{font-size:22px;}
     .ssl-badge{display:none;}
+    .identity-link{flex-direction:column;gap:6px;}
+    .identity-link input{font-size:11px;}
 }
 
 /* Mobile nav drawer */
@@ -478,6 +500,18 @@ footer{
             </div>
         </div>
 
+        <!-- Affiliate share tools -->
+        <div class="card" id="share-tools-card" style="display:none;">
+            <h3 style="margin-bottom:4px;">Share and earn</h3>
+            <p style="color:var(--dim);font-size:12px;margin-bottom:16px;">Send these links to earn commission on every signup and sale.</p>
+            <div id="share-links"></div>
+            <div style="margin-top:16px;">
+                <div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Copy-paste message</div>
+                <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px;color:var(--text);line-height:1.6;cursor:pointer;" id="share-blurb" onclick="copyShareBlurb()"></div>
+                <div style="font-size:11px;color:var(--dim);margin-top:4px;">Click to copy</div>
+            </div>
+        </div>
+
         <!-- Recent activity -->
         <div class="card">
             <h3>Recent activity</h3>
@@ -535,7 +569,7 @@ footer{
 
     <!-- Contacts table -->
     <div class="card" style="padding:0;overflow:hidden;">
-        <div class="contacts-table-wrap">
+        <div class="contacts-table-wrap desktop-table">
             <table>
                 <thead>
                     <tr>
@@ -552,6 +586,7 @@ footer{
                 </tbody>
             </table>
         </div>
+        <div class="m-cards" id="contacts-mobile" style="padding:12px;"></div>
     </div>
 </div>
 
@@ -611,24 +646,32 @@ footer{
 
     <!-- Leaderboard -->
     <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
             <h3>Leaderboard</h3>
             <div style="font-size:11px;color:var(--dim);font-family:var(--mono);" id="lb-platform-stats"></div>
         </div>
-        <p style="color:var(--dim);font-size:12px;margin-bottom:12px;">Ranked by revenue driven. Test accounts excluded.</p>
-        <table>
-            <thead><tr><th style="width:40px;">#</th><th>Code</th><th>Tier</th><th>Rate</th><th>Referrals</th><th>Credits</th><th>Revenue</th></tr></thead>
-            <tbody id="leaderboard-table"><tr><td colspan="7" style="color:var(--dim)">Loading...</td></tr></tbody>
-        </table>
+        <p style="color:var(--dim);font-size:12px;margin-bottom:12px;">Ranked by revenue driven. Identities anonymized.</p>
+        <!-- Desktop -->
+        <div class="desktop-table">
+            <table>
+                <thead><tr><th style="width:40px;">#</th><th>ID</th><th>Tier</th><th>Rate</th><th>Referrals</th><th>Credits</th><th>Revenue</th></tr></thead>
+                <tbody id="leaderboard-table"><tr><td colspan="7" style="color:var(--dim)">Loading...</td></tr></tbody>
+            </table>
+        </div>
+        <!-- Mobile -->
+        <div class="m-cards" id="leaderboard-mobile"></div>
     </div>
 
-    <!-- All affiliates (raw data) -->
-    <div class="card">
+    <!-- All affiliates (admin raw data) -->
+    <div class="card" id="aff-raw-card">
         <h3>All affiliates</h3>
-        <table>
-            <thead><tr><th>Email</th><th>Code</th><th>Rate</th><th>Referrals</th><th>Earned</th></tr></thead>
-            <tbody id="aff-table"><tr><td colspan="5" style="color:var(--dim)">No affiliates registered</td></tr></tbody>
-        </table>
+        <div class="desktop-table">
+            <table>
+                <thead><tr><th>Email</th><th>Code</th><th>Rate</th><th>Referrals</th><th>Earned</th></tr></thead>
+                <tbody id="aff-table"><tr><td colspan="5" style="color:var(--dim)">No affiliates registered</td></tr></tbody>
+            </table>
+        </div>
+        <div class="m-cards" id="aff-mobile"></div>
     </div>
 
     <div class="card">
@@ -642,10 +685,13 @@ footer{
 
     <div class="card">
         <h3>Commission history</h3>
-        <table>
-            <thead><tr><th>Order</th><th>Affiliate</th><th>Code</th><th>Total</th><th>Commission</th><th>Platform fee</th><th>Status</th></tr></thead>
-            <tbody id="comm-table"><tr><td colspan="7" style="color:var(--dim)">No commissions yet</td></tr></tbody>
-        </table>
+        <div class="desktop-table">
+            <table>
+                <thead><tr><th>Order</th><th>Affiliate</th><th>Code</th><th>Total</th><th>Commission</th><th>Platform fee</th><th>Status</th></tr></thead>
+                <tbody id="comm-table"><tr><td colspan="7" style="color:var(--dim)">No commissions yet</td></tr></tbody>
+            </table>
+        </div>
+        <div class="m-cards" id="comm-mobile"></div>
     </div>
 </div>
 
@@ -888,6 +934,8 @@ function updateAuthUI() {
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=D4AF37&bgcolor=FFFFFF&data=${encodeURIComponent(refLink)}`;
         document.getElementById('qr-container').innerHTML = `<img src="${qrUrl}" alt="QR Code" onerror="this.parentElement.innerHTML='<span style=\\'font-size:11px;color:#999\\'>QR</span>'">`;
 
+        renderShareTools();
+
         // Token inspector
         tokenDisplay.innerHTML =
             `<span style="color:var(--gold)">Session token:</span> ${state.token}\n` +
@@ -906,6 +954,8 @@ function updateAuthUI() {
         document.getElementById('welcome-sub').textContent = 'Sign in to see your dashboard';
         document.getElementById('auth-actions').innerHTML = '';
         tokenDisplay.textContent = 'Not authenticated. Sign in to see your token.';
+        document.getElementById('share-tools-card').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'none';
     }
 }
 
@@ -960,11 +1010,14 @@ async function refreshContacts() {
 
 function renderContacts() {
     const tbody = document.getElementById('contacts-table');
+    const mobile = document.getElementById('contacts-mobile');
     const data = state.contacts;
     if (!data.length) {
         tbody.innerHTML = '<tr><td colspan="6" style="color:var(--dim);padding:20px 12px;">No contacts yet. Click "+ Add" to get started.</td></tr>';
+        mobile.innerHTML = '<p style="color:var(--dim)">No contacts yet. Click "+ Add" to get started.</p>';
         return;
     }
+    // Desktop table
     tbody.innerHTML = data.map(c => {
         const isEditing = state.editingId === c.id;
         return `<tr class="contact-row ${isEditing ? 'editing' : ''}" data-id="${c.id}">
@@ -1000,6 +1053,19 @@ function renderContacts() {
             </td>
         </tr>`;
     }).join('');
+
+    // Mobile cards
+    mobile.innerHTML = data.map(c => `<div class="m-card">
+        <div style="color:var(--white);font-weight:600;font-size:15px;margin-bottom:6px;">${esc(c.name)}</div>
+        ${c.email ? `<div class="m-card-row"><span class="m-card-label">Email</span><span class="m-card-value" style="font-size:12px;">${esc(c.email)}</span></div>` : ''}
+        ${c.phone ? `<div class="m-card-row"><span class="m-card-label">Phone</span><span class="m-card-value">${esc(c.phone)}</span></div>` : ''}
+        ${c.company ? `<div class="m-card-row"><span class="m-card-label">Company</span><span class="m-card-value" style="color:var(--text);">${esc(c.company)}</span></div>` : ''}
+        ${c.notes ? `<div style="font-size:12px;color:var(--dim);margin-top:6px;line-height:1.4;">${esc(c.notes)}</div>` : ''}
+        <div class="m-card-actions">
+            <button class="btn btn-ghost btn-sm" onclick="startEdit(${c.id})">Edit</button>
+            <button class="btn btn-red btn-sm" onclick="deleteContact(${c.id})">Del</button>
+        </div>
+    </div>`).join('');
 }
 
 function searchContacts() {
@@ -1077,26 +1143,51 @@ async function refreshAffiliates() {
     const { ok, data } = await api('GET', '/api/affiliates');
     if (!ok) return;
     const tbody = document.getElementById('aff-table');
+    const mobile = document.getElementById('aff-mobile');
     if (!data.length) {
         tbody.innerHTML = '<tr><td colspan="5" style="color:var(--dim)">No affiliates registered</td></tr>';
+        if (mobile) mobile.innerHTML = '<p style="color:var(--dim);padding:8px;">No affiliates registered</p>';
         return;
     }
+    // Desktop
     tbody.innerHTML = data.map(a =>
         `<tr><td style="color:var(--white)">${esc(a.email)}</td><td class="mono" style="color:var(--gold)">${esc(a.referral_code)}</td><td>${(a.commission_rate*100).toFixed(0)}%</td><td>${a.total_referrals}</td><td class="gold">$${Number(a.total_earned).toFixed(2)}</td></tr>`
     ).join('');
+    // Mobile
+    if (mobile) mobile.innerHTML = data.map(a => `<div class="m-card">
+        <div style="color:var(--white);font-weight:500;margin-bottom:4px;">${esc(a.email)}</div>
+        <div class="m-card-row"><span class="m-card-label">Code</span><span class="m-card-value gold">${esc(a.referral_code)}</span></div>
+        <div class="m-card-row"><span class="m-card-label">Rate</span><span class="m-card-value">${(a.commission_rate*100).toFixed(0)}%</span></div>
+        <div class="m-card-row"><span class="m-card-label">Referrals</span><span class="m-card-value">${a.total_referrals}</span></div>
+        <div class="m-card-row"><span class="m-card-label">Earned</span><span class="m-card-value gold">$${Number(a.total_earned).toFixed(2)}</span></div>
+    </div>`).join('');
 }
 
 async function refreshCommissions() {
     const { ok, data } = await api('GET', '/api/commissions');
     if (!ok) return;
     const tbody = document.getElementById('comm-table');
+    const mobile = document.getElementById('comm-mobile');
     if (!data.length) {
         tbody.innerHTML = '<tr><td colspan="7" style="color:var(--dim)">No commissions yet</td></tr>';
+        if (mobile) mobile.innerHTML = '<p style="color:var(--dim);padding:8px;">No commissions yet</p>';
         return;
     }
+    // Desktop
     tbody.innerHTML = data.map(c =>
         `<tr><td class="mono">${esc(c.order_id)}</td><td>${esc(c.affiliate_email)}</td><td class="mono" style="color:var(--gold)">${esc(c.discount_code)}</td><td class="gold">$${Number(c.order_total).toFixed(2)}</td><td class="gold">$${Number(c.commission_amount).toFixed(2)}</td><td style="color:var(--dim)">$${Number(c.platform_fee).toFixed(2)} (${(c.platform_fee_rate*100)}%)</td><td><span class="badge yellow">${c.status}</span></td></tr>`
     ).join('');
+    // Mobile
+    if (mobile) mobile.innerHTML = data.map(c => `<div class="m-card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-family:var(--mono);font-size:11px;color:var(--dim);">${esc(c.order_id)}</span>
+            <span class="badge yellow">${c.status}</span>
+        </div>
+        <div class="m-card-row"><span class="m-card-label">Code</span><span class="m-card-value gold">${esc(c.discount_code)}</span></div>
+        <div class="m-card-row"><span class="m-card-label">Order</span><span class="m-card-value gold">$${Number(c.order_total).toFixed(2)}</span></div>
+        <div class="m-card-row"><span class="m-card-label">Commission</span><span class="m-card-value gold">$${Number(c.commission_amount).toFixed(2)}</span></div>
+        <div class="m-card-row"><span class="m-card-label">Platform fee</span><span class="m-card-value" style="color:var(--dim);">$${Number(c.platform_fee).toFixed(2)}</span></div>
+    </div>`).join('');
 }
 
 // ═══════════════════════════════════════════
@@ -1200,39 +1291,79 @@ async function refreshCredits() {
 // ═══════════════════════════════════════════
 // LEADERBOARD
 // ═══════════════════════════════════════════
+function anonId(code) {
+    // Anonymize: show first 3 chars + masked rest
+    if (!code) return '---';
+    return code.slice(0, 5) + '-' + '***';
+}
+
+function getTier(earned) {
+    if (earned >= 200000) return { name: 'Partner', color: 'var(--gold)' };
+    if (earned >= 50000) return { name: 'Scale', color: 'var(--gold)' };
+    if (earned >= 10000) return { name: 'Growth', color: 'var(--text)' };
+    return { name: 'Starter', color: 'var(--dim)' };
+}
+
 async function refreshLeaderboard() {
     const { ok, data } = await api('GET', '/api/leaderboard');
     if (!ok) return;
 
     const tbody = document.getElementById('leaderboard-table');
+    const mobile = document.getElementById('leaderboard-mobile');
     const lb = data.leaderboard || [];
 
     if (!lb.length) {
         tbody.innerHTML = '<tr><td colspan="7" style="color:var(--dim)">No affiliates yet (test accounts excluded)</td></tr>';
+        mobile.innerHTML = '<p style="color:var(--dim);padding:8px;">No affiliates yet.</p>';
     } else {
+        // Desktop table
         tbody.innerHTML = lb.map((a, i) => {
             const rank = i + 1;
             const rankStyle = rank === 1 ? 'color:var(--gold);font-weight:800;' : rank <= 3 ? 'color:var(--white);font-weight:600;' : 'color:var(--dim);';
             const earned = Number(a.total_earned || 0);
-            const tier = earned >= 200000 ? 'Partner' : earned >= 50000 ? 'Scale' : earned >= 10000 ? 'Growth' : 'Starter';
-            const tierColor = tier === 'Partner' ? 'var(--gold)' : tier === 'Scale' ? 'var(--gold)' : tier === 'Growth' ? 'var(--text)' : 'var(--dim)';
+            const tier = getTier(earned);
             const credits = Math.floor(a.credit_balance || 0);
             return `<tr>
                 <td style="${rankStyle}font-family:var(--mono);font-size:16px;">${rank}</td>
-                <td class="mono" style="color:var(--gold);">${esc(a.referral_code)}</td>
-                <td><span style="color:${tierColor};font-size:12px;font-weight:600;">${tier}</span></td>
+                <td class="mono" style="color:var(--gold);">${esc(anonId(a.referral_code))}</td>
+                <td><span style="color:${tier.color};font-size:12px;font-weight:600;">${tier.name}</span></td>
                 <td>${(a.commission_rate * 100).toFixed(0)}%</td>
                 <td>${a.total_referrals}</td>
                 <td style="font-family:var(--mono);">${credits.toLocaleString()}</td>
                 <td class="gold" style="font-family:var(--mono);">$${earned.toLocaleString()}</td>
             </tr>`;
         }).join('');
+
+        // Mobile cards
+        mobile.innerHTML = lb.map((a, i) => {
+            const rank = i + 1;
+            const earned = Number(a.total_earned || 0);
+            const tier = getTier(earned);
+            const credits = Math.floor(a.credit_balance || 0);
+            return `<div class="m-card">
+                <div style="display:flex;align-items:center;margin-bottom:8px;">
+                    <span class="m-card-rank">#${rank}</span>
+                    <div style="flex:1;">
+                        <div style="font-family:var(--mono);color:var(--gold);font-size:14px;">${esc(anonId(a.referral_code))}</div>
+                        <div style="font-size:12px;color:${tier.color};font-weight:600;">${tier.name}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-family:var(--mono);color:var(--gold);font-weight:700;font-size:16px;">$${earned.toLocaleString()}</div>
+                        <div style="font-size:11px;color:var(--dim);">${credits.toLocaleString()} credits</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:16px;font-size:12px;color:var(--dim);">
+                    <span>${(a.commission_rate * 100).toFixed(0)}% rate</span>
+                    <span>${a.total_referrals} referrals</span>
+                </div>
+            </div>`;
+        }).join('');
     }
 
     // Platform stats
     const p = data.platform || {};
     const statsEl = document.getElementById('lb-platform-stats');
-    statsEl.textContent = `${p.total_users || 0} users / ${p.active_users || 0} active / $${(p.total_revenue || 0).toLocaleString()} rev / ${Math.floor(p.total_credits || 0).toLocaleString()} credits`;
+    statsEl.textContent = `${p.total_users || 0} users / ${p.active_users || 0} active / $${(p.total_revenue || 0).toLocaleString()} rev`;
 }
 
 async function syncStripe() {
@@ -1271,6 +1402,50 @@ async function grantCreditsPrompt() {
     } else {
         toast('Failed: ' + (data.error || 'Unknown'));
     }
+}
+
+// ═══════════════════════════════════════════
+// SHARE TOOLS
+// ═══════════════════════════════════════════
+function renderShareTools() {
+    if (!state.user) return;
+    document.getElementById('share-tools-card').style.display = 'block';
+
+    const code = state.user.refCode;
+    const host = location.origin;
+
+    // Products/domains with affiliate links
+    const products = [
+        { name: 'Your profile', url: `${host}/u/${code}`, desc: 'Personal storefront' },
+        { name: 'fortune0 signup', url: `${host}/onboard?ref=${code}`, desc: 'Onboarding with your code' },
+        { name: 'fortune0 home', url: `${host}/?ref=${code}`, desc: 'Landing page with attribution' },
+        { name: '$1 activation', url: `${host}/join?ref=${code}`, desc: 'Direct to paid signup' },
+    ];
+
+    const linksEl = document.getElementById('share-links');
+    linksEl.innerHTML = products.map(p => `
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div style="flex:1;min-width:0;">
+                <div style="color:var(--white);font-weight:500;font-size:13px;">${p.name}</div>
+                <div style="font-size:11px;color:var(--dim);">${p.desc}</div>
+            </div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--text);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.url}</div>
+            <button class="btn btn-ghost btn-sm" onclick="copyText('${p.url}')">Copy</button>
+        </div>
+    `).join('');
+
+    // Pre-written share message
+    const blurb = `Check out fortune0 — I've been using it to track referrals and earn commissions. Sign up through my link and we both get credits:\n\n${host}/u/${code}`;
+    document.getElementById('share-blurb').textContent = blurb;
+}
+
+function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => toast('Copied!')).catch(() => toast('Copy failed'));
+}
+
+function copyShareBlurb() {
+    const text = document.getElementById('share-blurb').textContent;
+    navigator.clipboard.writeText(text).then(() => toast('Message copied!')).catch(() => toast('Copy failed'));
 }
 
 async function purgeTestData() {

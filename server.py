@@ -556,8 +556,7 @@ class Handler(BaseHTTPRequestHandler):
         # ── Leaderboard (public, anonymized) ──
         elif path == "/api/leaderboard":
             conn = get_db()
-            # Top affiliates by earned (anonymize emails)
-            affs = conn.execute("""
+            affs_raw = conn.execute("""
                 SELECT a.referral_code, a.commission_rate, a.total_referrals, a.total_earned,
                        COALESCE(cr.balance, 0) as credit_balance,
                        u.tier
@@ -572,6 +571,16 @@ class Handler(BaseHTTPRequestHandler):
                 LIMIT 25
             """).fetchall()
 
+            # Anonymize: hash the referral code, only show prefix + hash
+            affs = []
+            for r in affs_raw:
+                d = dict(r)
+                code = d.get("referral_code", "")
+                anon = hashlib.sha256(code.encode()).hexdigest()[:6].upper()
+                d["referral_code"] = f"F0-{anon}"
+                d["credit_balance"] = round(d.get("credit_balance", 0), 0)
+                affs.append(d)
+
             # Platform totals
             total_users = conn.execute("SELECT COUNT(*) c FROM users WHERE email NOT LIKE '%@example.com' AND email NOT LIKE '%@fortune0.com'").fetchone()["c"]
             active_users = conn.execute("SELECT COUNT(*) c FROM users WHERE tier='active' AND email NOT LIKE '%@example.com' AND email NOT LIKE '%@fortune0.com'").fetchone()["c"]
@@ -580,7 +589,7 @@ class Handler(BaseHTTPRequestHandler):
 
             conn.close()
             self.send_json({
-                "leaderboard": [dict(r) for r in affs],
+                "leaderboard": affs,
                 "platform": {
                     "total_users": total_users,
                     "active_users": active_users,
