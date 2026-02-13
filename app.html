@@ -674,7 +674,7 @@ async function refreshContacts() {
         return;
     }
     tbody.innerHTML = data.map(c =>
-        `<tr><td style="color:var(--white)">${esc(c.name)}</td><td class="mono">${esc(c.email)||'—'}</td><td class="mono">${esc(c.phone)||'—'}</td><td>${esc(c.company)||'—'}</td><td style="color:var(--dim)">${(c.created_at||'').split(' ')[0]}</td></tr>`
+        `<tr><td style="color:var(--white)">${esc(c.name)}</td><td class="mono">${esc(c.email)||'—'}</td><td class="mono">${esc(c.phone)||'—'}</td><td>${esc(c.company)||'—'}</td><td style="color:var(--dim)">${(c.created_at||'').split(' ')[0]}</td><td><button onclick="editContact(${c.id},'${esc(c.name).replace(/'/g,"\\'")}','${esc(c.email||"").replace(/'/g,"\\'")}','${esc(c.phone||"").replace(/'/g,"\\'")}','${esc(c.company||"").replace(/'/g,"\\'")}','${esc(c.notes||"").replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--border);color:var(--gold);padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px;margin-right:4px;">Edit</button><button onclick="deleteContact(${c.id})" style="background:none;border:1px solid var(--border);color:var(--red);padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px;">Del</button></td></tr>`
     ).join('');
 }
 
@@ -725,6 +725,25 @@ async function addContact() {
     ['c-name','c-email','c-phone','c-company'].forEach(id => document.getElementById(id).value = '');
     await refreshContacts();
     await refreshStats();
+}
+
+async function editContact(id, name, email, phone, company, notes) {
+    const newName = prompt('Name:', name);
+    if (newName === null) return;
+    const newEmail = prompt('Email:', email);
+    const newPhone = prompt('Phone:', phone);
+    const newCompany = prompt('Company:', company);
+    const newNotes = prompt('Notes:', notes);
+    const { ok } = await api('POST', '/api/contacts/update', {
+        id, name: newName, email: newEmail || '', phone: newPhone || '', company: newCompany || '', notes: newNotes || ''
+    });
+    if (ok) { await refreshContacts(); await refreshStats(); }
+}
+
+async function deleteContact(id) {
+    if (!confirm('Delete this contact?')) return;
+    const { ok } = await api('POST', '/api/contacts/delete', { id });
+    if (ok) { await refreshContacts(); await refreshStats(); }
 }
 
 async function addAffiliate() {

@@ -29,6 +29,14 @@ import secrets
 import sqlite3
 import sys
 import base64
+
+# Optional: PostgreSQL support (for Render/production)
+try:
+    import psycopg2
+    import psycopg2.extras
+    HAS_PG = True
+except ImportError:
+    HAS_PG = False
 import threading
 from datetime import datetime, timezone, timedelta
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -43,6 +51,7 @@ PORT = int(os.environ.get("PORT", os.environ.get("F0_PORT", 8080)))
 SITE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(SITE_DIR, "data")
 LICENSE_SECRET = os.environ.get("F0_LICENSE_SECRET", "fortune0-dev-secret-2026")
+DATABASE_URL = os.environ.get("DATABASE_URL", "")  # Set for PostgreSQL (Render, etc.)
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -103,7 +112,7 @@ def validate_license_key(key):
 #  DATABASE
 # ═══════════════════════════════════════════
 
-CENTRAL_SCHEMA = """
+SCHEMA_SQLITE = """
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
@@ -162,13 +171,112 @@ CREATE TABLE IF NOT EXISTS referral_clicks (
 );
 """
 
+SCHEMA_PG = """
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    referral_code TEXT UNIQUE NOT NULL,
+    license_key TEXT,
+    tier TEXT DEFAULT 'free',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS affiliates (
+    id SERIAL PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    referral_code TEXT UNIQUE NOT NULL,
+    commission_rate REAL DEFAULT 0.10,
+    total_earned REAL DEFAULT 0.0,
+    total_referrals INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS commissions (
+    id SERIAL PRIMARY KEY,
+    affiliate_email TEXT NOT NULL,
+    order_id TEXT NOT NULL UNIQUE,
+    order_total REAL NOT NULL,
+    commission_amount REAL NOT NULL,
+    commission_rate REAL NOT NULL,
+    platform_fee REAL NOT NULL DEFAULT 0,
+    platform_fee_rate REAL NOT NULL DEFAULT 0.05,
+    status TEXT DEFAULT 'pending',
+    discount_code TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS contacts (
+    id SERIAL PRIMARY KEY,
+    user_email TEXT NOT NULL,
+    name TEXT NOT NULL,
+    email TEXT,
+    phone TEXT,
+    company TEXT,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS activity (
+    id SERIAL PRIMARY KEY,
+    user_email TEXT,
+    action TEXT NOT NULL,
+    detail TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS referral_clicks (
+    id SERIAL PRIMARY KEY,
+    referral_code TEXT NOT NULL,
+    source_domain TEXT,
+    visitor_hash TEXT,
+    converted INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+"""
+
+USE_PG = bool(DATABASE_URL and HAS_PG)
+
+class PGRowWrapper:
+    """Makes psycopg2 rows act like sqlite3.Row (access by name)."""
+    def __init__(self, cursor):
+        self.cursor = cursor
+        self.description = cursor.description
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            cols = [d[0] for d in self.description]
+            return self.cursor.fetchone()[cols.index(key)] if False else None
+        return None
+
 def get_db():
-    db_path = os.path.join(DATA_DIR, "fortune0.db")
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.executescript(CENTRAL_SCHEMA)
-    return conn
+    if USE_PG:
+        conn = psycopg2.connect(DATABASE_URL)
+        conn.autocommit = False
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        for stmt in SCHEMA_PG.split(';'):
+            stmt = stmt.strip()
+            if stmt:
+                cur.execute(stmt)
+        conn.commit()
+        # Wrap so conn.execute works like sqlite
+        conn._pg_cursor = cur
+        original_execute = conn.cursor
+        def pg_execute(sql, params=None):
+            c = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            # Convert ? placeholders to %s for psycopg2
+            sql = sql.replace('?', '%s')
+            c.execute(sql, params or [])
+            return c
+        conn.execute = pg_execute
+        original_close = conn.close
+        def pg_close():
+            try: conn.commit()
+            except: pass
+            original_close()
+        conn.close = pg_close
+        return conn
+    else:
+        db_path = os.path.join(DATA_DIR, "fortune0.db")
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.executescript(SCHEMA_SQLITE)
+        return conn
 
 def log_activity(conn, user_email, action, detail=""):
     conn.execute("INSERT INTO activity (user_email, action, detail) VALUES (?, ?, ?)",
@@ -556,6 +664,33 @@ class Handler(BaseHTTPRequestHandler):
                 "order_id": order_id,
             })
 
+        # ── Update contact ──
+        elif path == "/api/contacts/update":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            cid = body.get("id")
+            if not cid:
+                self.send_json({"error": "ID required"}, 400); return
+            conn = get_db()
+            # Only update fields that were sent
+            updates = []
+            vals = []
+            for field in ["name", "email", "phone", "company", "notes"]:
+                if field in body:
+                    updates.append(f"{field}=?")
+                    vals.append(body[field])
+            if not updates:
+                conn.close()
+                self.send_json({"error": "No fields to update"}, 400); return
+            vals.extend([cid, sess["email"]])
+            conn.execute(f"UPDATE contacts SET {','.join(updates)} WHERE id=? AND user_email=?", vals)
+            log_activity(conn, sess["email"], "contact_updated", f"Updated contact #{cid}")
+            conn.commit()
+            row = conn.execute("SELECT * FROM contacts WHERE id=?", [cid]).fetchone()
+            conn.close()
+            self.send_json(dict(row) if row else {"error": "Not found"}, 200 if row else 404)
+
         # ── Delete contact ──
         elif path == "/api/contacts/delete":
             sess = self.get_user()
@@ -566,6 +701,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"error": "ID required"}, 400); return
             conn = get_db()
             conn.execute("DELETE FROM contacts WHERE id=? AND user_email=?", [cid, sess["email"]])
+            log_activity(conn, sess["email"], "contact_deleted", f"Deleted contact #{cid}")
             conn.commit(); conn.close()
             self.send_json({"deleted": True})
 
