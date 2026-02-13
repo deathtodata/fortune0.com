@@ -262,6 +262,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     <div class="cta-section">
         <button class="cta-btn" onclick="showJoinForm()">Join through this referral</button>
         <div class="cta-sub">Free forever. Get your own page and referral code.</div>
+        <div style="margin-top:12px;">
+            <a href="#" id="tutorial-link" style="font-size:13px;color:var(--dim);">Or take the interactive tutorial first →</a>
+        </div>
     </div>
 
     <!-- Join form -->
@@ -353,6 +356,7 @@ function renderProfile(data) {
 
     // Update join link to include referral
     document.getElementById('link-earn').href = `/join?ref=${data.code}`;
+    document.getElementById('tutorial-link').href = `/onboard?ref=${data.code}`;
 }
 
 function showError() {

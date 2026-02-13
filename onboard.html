@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 — Get Started</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+:root {
+    --bg:#000;--surface:#0A0A0A;--surface2:#141414;
+    --border:#1A1A1A;--border-l:#2A2A2A;
+    --gold:#D4AF37;--gold-rgb:212,175,55;
+    --red:#EF476F;--green:#50C878;--white:#fff;
+    --text:rgba(255,255,255,0.6);--dim:rgba(255,255,255,0.3);
+    --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+    --mono:'SF Mono','Menlo',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{-webkit-font-smoothing:antialiased;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh;}
+
+/* Progress bar */
+.progress-bar{
+    position:fixed;top:0;left:0;right:0;z-index:100;height:3px;
+    background:var(--surface2);
+}
+.progress-fill{
+    height:100%;background:var(--gold);transition:width 0.4s ease;width:0%;
+    box-shadow:0 0 12px rgba(212,175,55,0.4);
+}
+
+/* Header */
+.ob-header{
+    position:sticky;top:3px;z-index:90;
+    background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
+    padding:12px 20px;display:flex;align-items:center;justify-content:space-between;
+}
+.ob-logo{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--white);display:flex;align-items:center;gap:8px;}
+.ob-logo svg{width:20px;height:20px;}
+.ob-step-label{font-size:12px;color:var(--dim);font-family:var(--mono);}
+.ob-skip{font-size:12px;color:var(--dim);cursor:pointer;background:none;border:none;font-family:var(--font);}
+.ob-skip:hover{color:var(--gold);}
+
+/* Container */
+.ob-container{max-width:600px;margin:0 auto;padding:40px 20px 80px;}
+
+/* Step indicators */
+.step-dots{display:flex;gap:8px;justify-content:center;margin-bottom:32px;}
+.step-dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--surface2);border:1px solid var(--border);
+    transition:all 0.3s;cursor:pointer;
+}
+.step-dot.active{background:var(--gold);border-color:var(--gold);box-shadow:0 0 8px rgba(212,175,55,0.3);}
+.step-dot.done{background:var(--green);border-color:var(--green);}
+
+/* Steps */
+.step{display:none;animation:fadeUp 0.4s ease;}
+.step.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+.step-number{
+    font-size:12px;color:var(--gold);font-family:var(--mono);font-weight:600;
+    letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;
+}
+.step h2{color:var(--white);font-size:24px;margin-bottom:8px;line-height:1.3;}
+.step .desc{color:var(--text);font-size:15px;margin-bottom:24px;line-height:1.7;}
+
+/* Cards */
+.ob-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:24px;margin-bottom:16px;
+}
+.ob-card h3{color:var(--white);font-size:16px;margin-bottom:8px;}
+
+/* Inputs */
+.ob-input{
+    width:100%;background:var(--bg);border:1px solid var(--border);
+    color:var(--white);padding:14px 16px;border-radius:10px;font-size:15px;
+    font-family:var(--font);transition:border-color 0.2s;margin-bottom:12px;
+}
+.ob-input:focus{border-color:var(--gold);outline:none;}
+.ob-input::placeholder{color:var(--dim);}
+
+/* Buttons */
+.ob-btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:14px 28px;border-radius:10px;font-size:15px;font-weight:600;
+    border:none;cursor:pointer;transition:all 0.2s;font-family:var(--font);
+}
+.ob-btn-gold{background:var(--gold);color:#000;}
+.ob-btn-gold:hover{box-shadow:0 0 30px rgba(212,175,55,0.4);transform:scale(1.02);}
+.ob-btn-gold:disabled{opacity:0.4;transform:none;box-shadow:none;cursor:default;}
+.ob-btn-ghost{background:none;border:1px solid var(--border);color:var(--text);}
+.ob-btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+.ob-btn-sm{padding:8px 16px;font-size:13px;border-radius:8px;}
+.ob-actions{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;}
+
+/* Success animation */
+.check-anim{
+    display:inline-flex;align-items:center;gap:8px;
+    color:var(--green);font-weight:600;font-size:14px;
+    opacity:0;transform:translateY(8px);transition:all 0.3s;
+}
+.check-anim.show{opacity:1;transform:translateY(0);}
+
+/* Result display */
+.result-box{
+    background:var(--bg);border:1px solid rgba(212,175,55,0.2);
+    border-radius:10px;padding:16px 20px;margin:16px 0;
+    font-family:var(--mono);font-size:14px;
+}
+.result-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.result-value{color:var(--gold);font-size:20px;font-weight:700;letter-spacing:1px;}
+.result-link{
+    display:flex;align-items:center;gap:8px;margin-top:8px;
+    background:var(--surface);border:1px solid var(--border);
+    padding:10px 14px;border-radius:8px;
+}
+.result-link input{flex:1;background:none;border:none;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;}
+.result-link button{
+    background:var(--gold);color:#000;border:none;
+    padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;
+}
+
+/* Highlight card */
+.highlight{
+    background:linear-gradient(135deg, rgba(212,175,55,0.08), transparent);
+    border:1px solid rgba(212,175,55,0.15);border-radius:12px;
+    padding:20px;margin:16px 0;
+}
+.highlight .icon{font-size:24px;margin-bottom:8px;}
+.highlight .title{color:var(--white);font-weight:600;margin-bottom:4px;}
+.highlight .text{font-size:13px;color:var(--dim);}
+
+/* Interactive demo */
+.demo-contact{
+    display:flex;gap:12px;align-items:center;
+    padding:12px 16px;background:var(--bg);border:1px solid var(--border);
+    border-radius:10px;margin-bottom:8px;transition:all 0.3s;
+}
+.demo-contact.added{border-color:rgba(80,200,120,0.3);background:rgba(80,200,120,0.03);}
+.demo-contact .avatar{
+    width:36px;height:36px;min-width:36px;border-radius:8px;
+    background:var(--surface2);display:flex;align-items:center;justify-content:center;
+    font-size:14px;font-weight:600;color:var(--dim);
+}
+.demo-contact .info{flex:1;}
+.demo-contact .name{color:var(--white);font-weight:500;font-size:14px;}
+.demo-contact .email{font-size:12px;color:var(--dim);font-family:var(--mono);}
+.demo-contact .status{font-size:11px;font-weight:600;opacity:0;transition:opacity 0.3s;}
+.demo-contact.added .status{opacity:1;color:var(--green);}
+
+/* QR display */
+.qr-display{
+    display:inline-block;background:white;padding:16px;border-radius:12px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.3);margin:16px 0;
+}
+.qr-display img{width:160px;height:160px;display:block;}
+
+/* Completion */
+.completion-card{text-align:center;padding:40px 20px;}
+.completion-icon{font-size:48px;margin-bottom:16px;}
+.completion-card h2{font-size:28px;margin-bottom:8px;}
+.completion-links{display:flex;flex-direction:column;gap:8px;margin-top:24px;max-width:300px;margin-left:auto;margin-right:auto;}
+.completion-link{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 16px;background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;text-decoration:none;color:var(--text);transition:all 0.2s;
+}
+.completion-link:hover{border-color:rgba(212,175,55,0.3);color:var(--white);}
+.completion-link .icon{font-size:18px;}
+.completion-link .label{flex:1;font-weight:500;}
+.completion-link .arrow{color:var(--dim);}
+
+/* Toast */
+.toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--surface2);border:1px solid var(--gold);
+    color:var(--white);padding:10px 20px;border-radius:10px;
+    font-size:13px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:200;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media(max-width:480px){
+    .ob-container{padding:24px 16px 60px;}
+    .step h2{font-size:20px;}
+    .ob-btn{padding:12px 20px;font-size:14px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+<!-- Header -->
+<div class="ob-header">
+    <div class="ob-logo">
+        <svg viewBox="0 0 512 512" fill="none"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="256" r="140" stroke="url(#g1)" stroke-width="36" opacity=".95"/><circle cx="360" cy="152" r="16" fill="#D4AF37" opacity=".9"/><defs><linearGradient id="g1" x1="116" y1="116" x2="396" y2="396"><stop stop-color="#D4AF37"/><stop offset="1" stop-color="#B8962E"/></linearGradient></defs></svg>
+        fortune0
+    </div>
+    <span class="ob-step-label" id="step-label">Step 1 of 5</span>
+    <button class="ob-skip" onclick="window.location='/app'">Skip to dashboard →</button>
+</div>
+
+<!-- Container -->
+<div class="ob-container">
+
+<!-- Step dots -->
+<div class="step-dots" id="step-dots"></div>
+
+<!-- ═══ STEP 1: Welcome ═══ -->
+<div class="step active" id="step-0">
+    <div class="step-number">Step 1</div>
+    <h2>Your business starts with one code</h2>
+    <div class="desc">
+        fortune0 gives you a referral code, a personal page, and a way to earn commissions.
+        No inventory. No upfront cost. Just share your code.
+    </div>
+
+    <div class="highlight">
+        <div class="icon">🔑</div>
+        <div class="title">How it works</div>
+        <div class="text">
+            You sign up → get a referral code → get a personal page.
+            Share it anywhere. When someone joins or buys through your code, you earn commission. That's it.
+        </div>
+    </div>
+
+    <div class="highlight">
+        <div class="icon">🔗</div>
+        <div class="title">The chain</div>
+        <div class="text">
+            People who join through you get their OWN code. They share it.
+            Attribution tracks everything. Everyone earns.
+        </div>
+    </div>
+
+    <div class="ob-actions">
+        <button class="ob-btn ob-btn-gold" onclick="goStep(1)">Let's go →</button>
+    </div>
+</div>
+
+<!-- ═══ STEP 2: Create account ═══ -->
+<div class="step" id="step-1">
+    <div class="step-number">Step 2</div>
+    <h2>Create your account</h2>
+    <div class="desc">Enter your email. No password, no credit card. You'll get a referral code instantly.</div>
+
+    <div class="ob-card">
+        <input class="ob-input" type="email" id="ob-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doSignup()">
+        <button class="ob-btn ob-btn-gold" id="signup-btn" onclick="doSignup()" style="width:100%;">Create my account</button>
+        <div class="check-anim" id="signup-check">✓ Account created</div>
+    </div>
+
+    <!-- Shows after signup -->
+    <div id="signup-result" style="display:none;">
+        <div class="result-box">
+            <div class="result-label">Your referral code</div>
+            <div class="result-value" id="ob-code"></div>
+        </div>
+        <div class="result-box">
+            <div class="result-label">Your personal page</div>
+            <div class="result-link">
+                <input type="text" id="ob-profile-link" readonly>
+                <button onclick="copyLink()">Copy</button>
+            </div>
+        </div>
+        <div class="ob-actions">
+            <button class="ob-btn ob-btn-gold" onclick="goStep(2)">Next: See your page →</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ STEP 3: Your profile page ═══ -->
+<div class="step" id="step-2">
+    <div class="step-number">Step 3</div>
+    <h2>This is your page</h2>
+    <div class="desc">
+        Everyone who scans your QR code or clicks your link lands here.
+        They see your stats and can join through you.
+    </div>
+
+    <div class="ob-card" style="text-align:center;">
+        <div class="qr-display" id="ob-qr"></div>
+        <p style="font-size:13px;color:var(--dim);margin-top:8px;">This QR code links to your personal page. Try scanning it with your phone.</p>
+    </div>
+
+    <div class="highlight">
+        <div class="icon">📊</div>
+        <div class="title">Everything is tracked</div>
+        <div class="text">
+            Every click, every signup, every sale that flows through your code is logged.
+            You can see it all in your dashboard.
+        </div>
+    </div>
+
+    <div class="ob-actions">
+        <button class="ob-btn ob-btn-gold" onclick="goStep(3)">Next: Add a contact →</button>
+        <a class="ob-btn ob-btn-ghost" id="view-profile-btn" href="#" target="_blank">View your page ↗</a>
+    </div>
+</div>
+
+<!-- ═══ STEP 4: Add a contact ═══ -->
+<div class="step" id="step-3">
+    <div class="step-number">Step 4</div>
+    <h2>Add your first contact</h2>
+    <div class="desc">
+        Your CRM tracks everyone in your network. Add a contact — they could be a potential customer,
+        affiliate, or collaborator.
+    </div>
+
+    <div class="ob-card">
+        <div style="display:flex;gap:12px;margin-bottom:12px;">
+            <input class="ob-input" id="ob-c-name" placeholder="Name" style="margin-bottom:0;">
+            <input class="ob-input" id="ob-c-email" placeholder="Email (optional)" style="margin-bottom:0;">
+        </div>
+        <button class="ob-btn ob-btn-gold ob-btn-sm" id="add-contact-btn" onclick="doAddContact()">Add contact</button>
+        <div class="check-anim" id="contact-check">✓ Contact added</div>
+    </div>
+
+    <!-- Contact list preview -->
+    <div id="contact-preview"></div>
+
+    <div class="ob-actions" id="step3-actions" style="display:none;">
+        <button class="ob-btn ob-btn-gold" onclick="goStep(4)">Next: See how you earn →</button>
+    </div>
+</div>
+
+<!-- ═══ STEP 5: How you earn ═══ -->
+<div class="step" id="step-4">
+    <div class="step-number">Step 5</div>
+    <h2>Here's how you earn</h2>
+    <div class="desc">
+        When someone uses your referral code on a purchase, you get a commission.
+        The more volume your network drives, the lower the platform fee.
+    </div>
+
+    <div class="highlight">
+        <div class="icon">💰</div>
+        <div class="title">Commission structure</div>
+        <div class="text">
+            Default: 10% commission on every attributed sale.
+            Platform takes 5% (drops to 3% at high volume).
+            You keep the rest.
+        </div>
+    </div>
+
+    <div class="highlight">
+        <div class="icon">📈</div>
+        <div class="title">Volume tiers</div>
+        <div class="text">
+            $0–$10K → 5% platform fee.
+            $10K–$50K → 4%.
+            $50K–$250K → 3.5%.
+            $250K+ → 3%.
+            The more you sell, the more you keep.
+        </div>
+    </div>
+
+    <div class="highlight">
+        <div class="icon">🔁</div>
+        <div class="title">The referral chain</div>
+        <div class="text">
+            Share your code → someone joins → they get their own code → they share it →
+            sales flow up. You earn on your direct referrals.
+        </div>
+    </div>
+
+    <div class="ob-actions">
+        <button class="ob-btn ob-btn-gold" onclick="goStep(5)">Finish setup →</button>
+    </div>
+</div>
+
+<!-- ═══ STEP 6: Done ═══ -->
+<div class="step" id="step-5">
+    <div class="completion-card">
+        <div class="completion-icon">🎉</div>
+        <h2 style="color:var(--white);">You're all set</h2>
+        <p style="color:var(--text);margin-bottom:8px;">Your referral code is live. Your page is shareable. Start earning.</p>
+        <div class="result-box" style="display:inline-block;text-align:center;">
+            <div class="result-label">Your code</div>
+            <div class="result-value" id="final-code">—</div>
+        </div>
+
+        <div class="completion-links">
+            <a class="completion-link" id="final-dashboard" href="/app">
+                <span class="icon">📊</span>
+                <span class="label">Open your dashboard</span>
+                <span class="arrow">→</span>
+            </a>
+            <a class="completion-link" id="final-profile" href="#" target="_blank">
+                <span class="icon">👤</span>
+                <span class="label">View your profile page</span>
+                <span class="arrow">→</span>
+            </a>
+            <a class="completion-link" href="/join">
+                <span class="icon">💰</span>
+                <span class="label">Affiliate details</span>
+                <span class="arrow">→</span>
+            </a>
+            <a class="completion-link" href="/ideas">
+                <span class="icon">💡</span>
+                <span class="label">Browse ideas to promote</span>
+                <span class="arrow">→</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const TOTAL_STEPS = 6;
+let currentStep = 0;
+let userData = null; // {token, email, refCode}
+
+// ═══ Navigation ═══
+function goStep(n) {
+    // Can't skip ahead past signup
+    if (n >= 2 && !userData) {
+        toast('Complete signup first');
+        return;
+    }
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step-' + n).classList.add('active');
+    currentStep = n;
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress() {
+    const pct = ((currentStep + 1) / TOTAL_STEPS) * 100;
+    document.getElementById('progress').style.width = pct + '%';
+    document.getElementById('step-label').textContent = `Step ${currentStep + 1} of ${TOTAL_STEPS}`;
+
+    // Update dots
+    document.querySelectorAll('.step-dot').forEach((dot, i) => {
+        dot.className = 'step-dot';
+        if (i < currentStep) dot.classList.add('done');
+        if (i === currentStep) dot.classList.add('active');
+    });
+}
+
+// Build step dots
+document.getElementById('step-dots').innerHTML = Array.from({length: TOTAL_STEPS}, (_, i) =>
+    `<div class="step-dot ${i === 0 ? 'active' : ''}" onclick="if(${i} <= currentStep || userData) goStep(${i})"></div>`
+).join('');
+
+// ═══ API Helper ═══
+async function api(method, path, body = null) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (userData?.token) opts.headers['Authorization'] = 'Bearer ' + userData.token;
+    if (body) opts.body = JSON.stringify(body);
+    try {
+        const resp = await fetch(path, opts);
+        const data = await resp.json();
+        return { ok: resp.ok, data };
+    } catch (e) {
+        return { ok: false, data: { error: e.message } };
+    }
+}
+
+// ═══ Step 2: Signup ═══
+async function doSignup() {
+    const email = document.getElementById('ob-email').value.trim().toLowerCase();
+    if (!email || !email.includes('@')) { toast('Enter a valid email'); return; }
+
+    const btn = document.getElementById('signup-btn');
+    btn.textContent = 'Creating...';
+    btn.disabled = true;
+
+    const { ok, data } = await api('POST', '/api/signup', { email });
+    if (!ok) {
+        btn.textContent = 'Create my account';
+        btn.disabled = false;
+        toast(data.error || 'Failed — is the server running?');
+        return;
+    }
+
+    userData = { token: data.token, email: data.email, refCode: data.referral_code };
+
+    // Show success
+    btn.style.display = 'none';
+    const check = document.getElementById('signup-check');
+    check.classList.add('show');
+
+    // Fill in results
+    document.getElementById('ob-code').textContent = data.referral_code;
+    const profileUrl = `${location.origin}/u/${data.referral_code}`;
+    document.getElementById('ob-profile-link').value = profileUrl;
+
+    // Show result section
+    setTimeout(() => {
+        document.getElementById('signup-result').style.display = 'block';
+    }, 500);
+
+    // Pre-fill step 3 (profile page)
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&color=D4AF37&bgcolor=FFFFFF&data=${encodeURIComponent(profileUrl)}`;
+    document.getElementById('ob-qr').innerHTML = `<img src="${qrUrl}" alt="QR Code">`;
+    document.getElementById('view-profile-btn').href = profileUrl;
+
+    // Pre-fill completion
+    document.getElementById('final-code').textContent = data.referral_code;
+    document.getElementById('final-profile').href = profileUrl;
+}
+
+function copyLink() {
+    const input = document.getElementById('ob-profile-link');
+    input.select();
+    navigator.clipboard.writeText(input.value).then(() => toast('Copied!')).catch(() => {
+        document.execCommand('copy');
+        toast('Copied!');
+    });
+}
+
+// ═══ Step 4: Add Contact ═══
+let contactCount = 0;
+
+async function doAddContact() {
+    const name = document.getElementById('ob-c-name').value.trim();
+    const email = document.getElementById('ob-c-email').value.trim();
+    if (!name) { toast('Enter a name'); return; }
+
+    const btn = document.getElementById('add-contact-btn');
+    btn.disabled = true;
+    btn.textContent = 'Adding...';
+
+    const { ok } = await api('POST', '/api/contacts', { name, email });
+
+    btn.disabled = false;
+    btn.textContent = 'Add contact';
+
+    if (!ok) { toast('Failed to add'); return; }
+
+    contactCount++;
+    const check = document.getElementById('contact-check');
+    check.textContent = `✓ ${contactCount} contact${contactCount > 1 ? 's' : ''} added`;
+    check.classList.add('show');
+
+    // Add to preview list
+    const preview = document.getElementById('contact-preview');
+    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    preview.innerHTML = `<div class="demo-contact added">
+        <div class="avatar">${initials}</div>
+        <div class="info"><div class="name">${name}</div><div class="email">${email || 'No email'}</div></div>
+        <span class="status">Added ✓</span>
+    </div>` + preview.innerHTML;
+
+    // Clear inputs
+    document.getElementById('ob-c-name').value = '';
+    document.getElementById('ob-c-email').value = '';
+    document.getElementById('ob-c-name').focus();
+
+    // Show next button after first contact
+    document.getElementById('step3-actions').style.display = 'flex';
+}
+
+// ═══ Toast ═══
+function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ═══ Check if ref code in URL ═══
+const params = new URLSearchParams(window.location.search);
+const ref = params.get('ref');
+if (ref) {
+    // Pre-fill that they came through a referral
+    document.querySelector('#step-0 .desc').innerHTML +=
+        `<br><br><span style="color:var(--gold);">You were referred by <strong>${ref}</strong>. When you sign up, they'll earn commission.</span>`;
+}
+
+// Init
+updateProgress();
+</script>
+</body>
+</html>
