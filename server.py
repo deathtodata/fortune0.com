@@ -37,14 +37,6 @@ import urllib.parse
 import math
 import re as _re
 
-# Chart generator (matplotlib + numpy)
-try:
-    from charts import generate_chart, list_chart_types, HAS_MPL
-except ImportError:
-    HAS_MPL = False
-    def generate_chart(*a, **kw): return None
-    def list_chart_types(): return {}
-
 # Optional: PostgreSQL support (for Render/production)
 try:
     import psycopg2
@@ -992,64 +984,12 @@ class Handler(BaseHTTPRequestHandler):
                 },
             })
 
-        # ── Chart API: /api/chart/<type> ──
-        elif path.startswith("/api/chart/"):
-            chart_type = path[len("/api/chart/"):]
-            if not chart_type:
-                self.send_json({"error": "Chart type required", "available": list_chart_types()}, 400)
-                return
-
-            # Load domains.json
-            domains_path = os.path.join(SITE_DIR, "domains.json")
-            domains = []
-            if os.path.exists(domains_path):
-                with open(domains_path) as f:
-                    domains = json.load(f)
-
-            # Gather params from query string
-            params = {k: v[0] for k, v in qs.items()}
-
-            # For platform chart, pull stats from DB
-            if chart_type == "platform":
-                try:
-                    conn = get_db()
-                    params["total_users"] = conn.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]
-                    params["active_users"] = conn.execute("SELECT COUNT(*) c FROM users WHERE tier='active'").fetchone()["c"]
-                    params["total_revenue"] = conn.execute("SELECT COALESCE(SUM(order_total),0) s FROM commissions").fetchone()["s"]
-                    params["total_credits"] = conn.execute("SELECT COALESCE(SUM(amount),0) s FROM credits WHERE amount > 0").fetchone()["s"]
-                    conn.close()
-                except Exception:
-                    pass
-
-            png = generate_chart(chart_type, domains, params)
-            if png is None:
-                if not HAS_MPL:
-                    self.send_json({"error": "matplotlib not installed", "hint": "pip install matplotlib numpy"}, 500)
-                else:
-                    self.send_json({"error": f"Unknown chart type: {chart_type}", "available": list_chart_types()}, 400)
-                return
-
-            self.send_response(200)
-            self.send_header("Content-Type", "image/png")
-            self.send_header("Content-Length", len(png))
-            self.send_header("Cache-Control", "no-cache")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(png)
-
-        # ── Chart types listing ──
-        elif path == "/api/charts":
+        # ── Charts redirect (charts render client-side now) ──
+        elif path.startswith("/api/chart"):
             self.send_json({
-                "available": list_chart_types(),
-                "matplotlib": HAS_MPL,
-                "usage": "/api/chart/<type>?param1=value1&param2=value2",
-                "generator_params": {
-                    "labels": "comma-separated labels",
-                    "values": "comma-separated numbers",
-                    "chart_type": "bar, line, pie, scatter",
-                    "title": "chart title",
-                    "color": "hex color (e.g. #d4a843)",
-                },
+                "message": "Charts render client-side now. Go to /charts for the analytics dashboard.",
+                "dashboard": "/charts",
+                "data_endpoints": ["/health", "/api/analytics", "/domains.json"],
             })
 
         # ── Notes: list public notes or user's own notes ──
