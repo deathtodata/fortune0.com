@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 — System Status</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+:root {
+    --bg:#000;--surface:#0A0A0A;--surface2:#141414;
+    --border:#1A1A1A;--border-l:#2A2A2A;
+    --gold:#D4AF37;--red:#EF476F;--green:#50C878;--yellow:#FFD166;
+    --white:#fff;--text:rgba(255,255,255,0.6);--dim:rgba(255,255,255,0.3);
+    --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+    --mono:'SF Mono','Menlo',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;padding:40px 20px;}
+
+.container{max-width:720px;margin:0 auto;}
+h1{color:var(--white);font-size:20px;font-family:var(--mono);margin-bottom:4px;}
+.subtitle{color:var(--dim);font-size:13px;margin-bottom:32px;}
+
+.section{margin-bottom:32px;}
+.section-title{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--mono);margin-bottom:12px;font-weight:600;}
+
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;}
+.row-label{color:var(--text);font-size:13px;}
+.row-value{font-family:var(--mono);font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;}
+
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.dot.green{background:var(--green);}
+.dot.red{background:var(--red);}
+.dot.yellow{background:var(--yellow);}
+.dot.dim{background:var(--border-l);}
+
+.val-ok{color:var(--green);}
+.val-warn{color:var(--yellow);}
+.val-bad{color:var(--red);}
+.val-dim{color:var(--dim);}
+.val-gold{color:var(--gold);}
+
+.action-box{background:var(--surface);border:1px solid rgba(212,175,55,0.2);border-radius:10px;padding:16px 20px;margin-bottom:8px;}
+.action-box .title{color:var(--white);font-weight:600;font-size:14px;margin-bottom:4px;}
+.action-box .desc{font-size:12px;color:var(--dim);line-height:1.6;}
+.action-box code{background:var(--bg);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:12px;color:var(--gold);}
+.action-box .priority{font-size:10px;font-family:var(--mono);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.priority.now{color:var(--red);}
+.priority.next{color:var(--yellow);}
+.priority.later{color:var(--dim);}
+
+.loading{color:var(--dim);font-style:italic;}
+.refresh{background:none;border:1px solid var(--border);color:var(--dim);padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:var(--mono);}
+.refresh:hover{border-color:var(--gold);color:var(--gold);}
+
+a{color:var(--gold);text-decoration:none;}
+a:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>fortune0 system status</h1>
+<div class="subtitle">What's running, what's configured, what needs attention. <button class="refresh" onclick="load()">Refresh</button></div>
+
+<!-- Server -->
+<div class="section">
+    <div class="section-title">Server</div>
+    <div class="row">
+        <span class="row-label">Server response</span>
+        <span class="row-value" id="s-health"><span class="loading">checking...</span></span>
+    </div>
+    <div class="row">
+        <span class="row-label">Database</span>
+        <span class="row-value" id="s-db"><span class="loading">—</span></span>
+    </div>
+    <div class="row">
+        <span class="row-label">Version</span>
+        <span class="row-value" id="s-version"><span class="loading">—</span></span>
+    </div>
+</div>
+
+<!-- Stripe -->
+<div class="section">
+    <div class="section-title">Stripe integration</div>
+    <div class="row">
+        <span class="row-label">Webhook secret (STRIPE_WEBHOOK_SECRET)</span>
+        <span class="row-value" id="s-stripe-wh"><span class="loading">—</span></span>
+    </div>
+    <div class="row">
+        <span class="row-label">Payment link (STRIPE_PAYMENT_LINK)</span>
+        <span class="row-value" id="s-stripe-pl"><span class="loading">—</span></span>
+    </div>
+    <div class="row">
+        <span class="row-label">Webhook URL</span>
+        <span class="row-value val-dim" style="font-size:11px;">/api/webhooks/stripe</span>
+    </div>
+</div>
+
+<!-- Users -->
+<div class="section">
+    <div class="section-title">Accounts</div>
+    <div class="row">
+        <span class="row-label">Total users</span>
+        <span class="row-value val-gold" id="s-users">—</span>
+    </div>
+    <div class="row">
+        <span class="row-label">Active (paid $1)</span>
+        <span class="row-value val-gold" id="s-active">—</span>
+    </div>
+    <div class="row">
+        <span class="row-label">Affiliates</span>
+        <span class="row-value" id="s-affiliates">—</span>
+    </div>
+    <div class="row">
+        <span class="row-label">Attributed revenue</span>
+        <span class="row-value val-gold" id="s-revenue">—</span>
+    </div>
+</div>
+
+<!-- Git -->
+<div class="section">
+    <div class="section-title">Deployment</div>
+    <div class="row">
+        <span class="row-label">Git unpushed commits</span>
+        <span class="row-value" id="s-git">Check locally</span>
+    </div>
+    <div class="row">
+        <span class="row-label">Render URL</span>
+        <span class="row-value"><a href="https://fortune0-com.onrender.com" target="_blank">fortune0-com.onrender.com</a></span>
+    </div>
+    <div class="row">
+        <span class="row-label">Death2Data webhook</span>
+        <span class="row-value"><span class="dot red"></span> <span class="val-bad">100% error rate</span></span>
+    </div>
+</div>
+
+<!-- What to do -->
+<div class="section">
+    <div class="section-title">Action items</div>
+    <div id="actions"></div>
+</div>
+
+<!-- Pages -->
+<div class="section">
+    <div class="section-title">All pages</div>
+    <div class="row"><span class="row-label"><a href="/">index.html</a></span><span class="row-value val-dim">Landing page</span></div>
+    <div class="row"><span class="row-label"><a href="/onboard">onboard.html</a></span><span class="row-value val-dim">7-step onboarding + income goal</span></div>
+    <div class="row"><span class="row-label"><a href="/app">app.html</a></span><span class="row-value val-dim">Dashboard console</span></div>
+    <div class="row"><span class="row-label"><a href="/join">join.html</a></span><span class="row-value val-dim">Affiliate signup</span></div>
+    <div class="row"><span class="row-label"><a href="/profile">profile.html</a></span><span class="row-value val-dim">Storefront template (/u/CODE)</span></div>
+    <div class="row"><span class="row-label"><a href="/ideas">ideas.html</a></span><span class="row-value val-dim">Idea browser</span></div>
+    <div class="row"><span class="row-label"><a href="/storyboard">storyboard.html</a></span><span class="row-value val-dim">Product storyboard</span></div>
+    <div class="row"><span class="row-label"><a href="/blueprint">blueprint.html</a></span><span class="row-value val-dim">Platform blueprint</span></div>
+    <div class="row"><span class="row-label"><a href="/setup">setup.html</a></span><span class="row-value val-dim">Dev setup guide</span></div>
+    <div class="row"><span class="row-label"><a href="/status">status.html</a></span><span class="row-value val-gold">This page</span></div>
+</div>
+
+<!-- API -->
+<div class="section">
+    <div class="section-title">API endpoints</div>
+    <div class="row"><span class="row-label">GET /health</span><span class="row-value val-dim">System status + config check</span></div>
+    <div class="row"><span class="row-label">POST /api/signup</span><span class="row-value val-dim">Create free account</span></div>
+    <div class="row"><span class="row-label">POST /api/login</span><span class="row-value val-dim">License key auth</span></div>
+    <div class="row"><span class="row-label">POST /api/recover</span><span class="row-value val-dim">Account recovery (email)</span></div>
+    <div class="row"><span class="row-label">POST /api/activate</span><span class="row-value val-dim">Get Stripe payment link</span></div>
+    <div class="row"><span class="row-label">POST /api/join</span><span class="row-value val-dim">Self-service affiliate join</span></div>
+    <div class="row"><span class="row-label">GET/POST /api/contacts</span><span class="row-value val-dim">Contact CRUD</span></div>
+    <div class="row"><span class="row-label">GET /api/affiliates</span><span class="row-value val-dim">List affiliates</span></div>
+    <div class="row"><span class="row-label">GET /api/commissions</span><span class="row-value val-dim">Commission history</span></div>
+    <div class="row"><span class="row-label">POST /api/webhooks/stripe</span><span class="row-value val-dim">Stripe payment webhook</span></div>
+    <div class="row"><span class="row-label">POST /api/webhooks/order</span><span class="row-value val-dim">Order attribution</span></div>
+    <div class="row"><span class="row-label">GET /api/profile/CODE</span><span class="row-value val-dim">Public profile data</span></div>
+    <div class="row"><span class="row-label">GET /r/CODE</span><span class="row-value val-dim">Referral redirect + click tracking</span></div>
+    <div class="row"><span class="row-label">GET /u/CODE</span><span class="row-value val-dim">Personal storefront page</span></div>
+</div>
+
+</div>
+
+<script>
+async function load() {
+    try {
+        const resp = await fetch('/health');
+        const d = await resp.json();
+
+        // Server
+        document.getElementById('s-health').innerHTML = `<span class="dot green"></span> <span class="val-ok">Running</span>`;
+        document.getElementById('s-db').innerHTML = `<span class="dot ${d.db === 'postgresql' ? 'green' : 'yellow'}"></span> <span class="${d.db === 'postgresql' ? 'val-ok' : 'val-warn'}">${d.db}</span>`;
+        document.getElementById('s-version').innerHTML = `<span class="val-dim">${d.version}</span>`;
+
+        // Stripe
+        const whOk = d.stripe_webhook === 'configured';
+        const plOk = d.stripe_payment_link === 'configured';
+        document.getElementById('s-stripe-wh').innerHTML = `<span class="dot ${whOk ? 'green' : 'red'}"></span> <span class="${whOk ? 'val-ok' : 'val-bad'}">${d.stripe_webhook}</span>`;
+        document.getElementById('s-stripe-pl').innerHTML = `<span class="dot ${plOk ? 'green' : 'red'}"></span> <span class="${plOk ? 'val-ok' : 'val-bad'}">${d.stripe_payment_link}</span>`;
+
+        // Users
+        document.getElementById('s-users').textContent = d.users;
+        document.getElementById('s-active').textContent = d.active_users;
+        document.getElementById('s-affiliates').textContent = d.affiliates;
+        document.getElementById('s-revenue').textContent = `$${d.total_revenue.toLocaleString()}`;
+
+        // Actions
+        const actions = [];
+
+        // Check for unpushed
+        actions.push({
+            priority: 'now',
+            title: 'Push 3 commits to GitHub',
+            desc: 'Run <code>cd ~/code/fortune0-site && git push</code> from your terminal. This deploys: income goal onboarding, emoji cleanup, Stripe webhook + activation gate.'
+        });
+
+        if (!whOk) {
+            actions.push({
+                priority: 'now',
+                title: 'Set STRIPE_WEBHOOK_SECRET on Render',
+                desc: 'Stripe dashboard → Developers → Webhooks → Add destination → URL: <code>https://fortune0-com.onrender.com/api/webhooks/stripe</code> → Event: <code>checkout.session.completed</code> → Copy the <code>whsec_...</code> secret → Render dashboard → Environment → Add <code>STRIPE_WEBHOOK_SECRET</code>.'
+            });
+        }
+
+        if (!plOk) {
+            actions.push({
+                priority: 'now',
+                title: 'Set STRIPE_PAYMENT_LINK on Render',
+                desc: 'Your existing Stripe payment link (the $1/mo one). Add it as env var <code>STRIPE_PAYMENT_LINK</code> on Render. Format: <code>https://buy.stripe.com/xxxxx</code>'
+            });
+        }
+
+        actions.push({
+            priority: 'next',
+            title: 'Fix or disable death2data webhook',
+            desc: 'The webhook at <code>api.death2data.com/webhook</code> has 100% error rate. Either point it at a working server or disable it in Stripe dashboard to stop the noise.'
+        });
+
+        actions.push({
+            priority: 'later',
+            title: 'Point fortune0.com DNS at Render',
+            desc: 'Currently fortune0.com likely points at GitHub Pages. Add a custom domain in Render dashboard to serve the full platform from fortune0.com.'
+        });
+
+        actions.push({
+            priority: 'later',
+            title: 'Build token ledger',
+            desc: 'Next layer: token balances, transfers between users, earning tokens for work on ideas. Connects to affiliate engine and the $1 activation tier.'
+        });
+
+        document.getElementById('actions').innerHTML = actions.map(a => `
+            <div class="action-box">
+                <div class="priority ${a.priority}">${a.priority === 'now' ? 'Do now' : a.priority === 'next' ? 'Do next' : 'Later'}</div>
+                <div class="title">${a.title}</div>
+                <div class="desc">${a.desc}</div>
+            </div>
+        `).join('');
+
+    } catch (e) {
+        document.getElementById('s-health').innerHTML = `<span class="dot red"></span> <span class="val-bad">Offline — ${e.message}</span>`;
+        document.getElementById('actions').innerHTML = `
+            <div class="action-box">
+                <div class="priority now">Do now</div>
+                <div class="title">Server is not responding</div>
+                <div class="desc">Either the server isn't running locally, or you're viewing this on a domain that hasn't been deployed yet. Push your commits and check Render.</div>
+            </div>
+        `;
+    }
+}
+
+load();
+</script>
+</body>
+</html>

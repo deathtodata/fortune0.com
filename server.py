@@ -381,8 +381,29 @@ class Handler(BaseHTTPRequestHandler):
 
         # ── API routes ──
         if path == "/health":
-            self.send_json({"status": "ok", "service": "fortune0", "version": "1.0.0",
-                            "uptime": "running", "db": "sqlite"})
+            db_type = "postgresql" if USE_PG else "sqlite"
+            stripe_configured = bool(STRIPE_WEBHOOK_SECRET)
+            payment_link_set = bool(STRIPE_PAYMENT_LINK)
+            conn = get_db()
+            try:
+                user_count = conn.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]
+                affiliate_count = conn.execute("SELECT COUNT(*) c FROM affiliates").fetchone()["c"]
+                active_users = conn.execute("SELECT COUNT(*) c FROM users WHERE tier='active'").fetchone()["c"]
+                total_revenue = conn.execute("SELECT COALESCE(SUM(order_total),0) s FROM commissions").fetchone()["s"]
+            except Exception:
+                user_count = affiliate_count = active_users = 0
+                total_revenue = 0
+            conn.close()
+            self.send_json({
+                "status": "ok", "service": "fortune0", "version": "1.1.0",
+                "db": db_type,
+                "stripe_webhook": "configured" if stripe_configured else "not set",
+                "stripe_payment_link": "configured" if payment_link_set else "not set",
+                "users": user_count,
+                "active_users": active_users,
+                "affiliates": affiliate_count,
+                "total_revenue": round(total_revenue, 2),
+            })
 
         elif path == "/api/stats":
             sess = self.get_user()
