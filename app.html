@@ -285,12 +285,11 @@ td.gold{color:var(--gold);font-weight:600;}
     padding:20px;display:flex;gap:16px;align-items:flex-start;
 }
 .sec-icon{
-    width:40px;height:40px;min-width:40px;border-radius:10px;
-    display:flex;align-items:center;justify-content:center;font-size:18px;
+    width:10px;height:10px;min-width:10px;border-radius:50%;margin-top:5px;
 }
-.sec-icon.ok{background:rgba(212,175,55,0.1);color:var(--gold);}
-.sec-icon.warn{background:rgba(255,209,102,0.1);color:var(--yellow);}
-.sec-icon.info{background:rgba(0,212,255,0.1);color:#0ad;}
+.sec-icon.ok{background:var(--gold);}
+.sec-icon.warn{background:var(--yellow,#FFD166);}
+.sec-icon.info{background:rgba(255,255,255,0.2);}
 .sec-item h4{color:var(--white);font-size:14px;margin-bottom:4px;}
 .sec-item p{font-size:12px;color:var(--dim);line-height:1.5;}
 
@@ -1116,19 +1115,19 @@ function navigate(view) {
 // ═══════════════════════════════════════════
 function renderSecurity() {
     const checks = [
-        { icon: '🔒', cls: 'ok', title: 'HTTPS / TLS', desc: 'All traffic encrypted in transit. TLS certificates auto-provisioned.' },
-        { icon: '🔑', cls: 'ok', title: 'HMAC-signed license keys', desc: 'SHA-256 signed, bound to email + expiry. Cannot be forged.' },
-        { icon: '🗄️', cls: 'ok', title: 'Database isolation', desc: 'Per-user data isolation. No cross-user leakage possible.' },
-        { icon: '🛡️', cls: 'ok', title: 'SQL injection protection', desc: 'All queries use parameterized statements. No string concat in SQL.' },
-        { icon: '⏱️', cls: 'ok', title: 'Rate limiting', desc: '100 req/min per IP. Prevents brute force and abuse.' },
-        { icon: '🪝', cls: 'ok', title: 'Webhook HMAC verification', desc: 'Webhooks are cryptographically verified before processing.' },
-        { icon: '🍪', cls: 'info', title: 'Session tokens', desc: 'HTTP-only cookies with 7-day expiry. Visible in demo mode for transparency.' },
-        { icon: '📋', cls: 'info', title: 'CORS policy', desc: 'Cross-Origin Resource Sharing enabled. Restrictable per domain in production.' },
-        { icon: '🔐', cls: state.user ? 'ok' : 'warn', title: 'Authentication state', desc: state.user ? `Authenticated as ${state.user.email}. Token expires in 7 days.` : 'Not authenticated. Sign in to establish a session.' },
-        { icon: '📊', cls: 'info', title: 'Audit logging', desc: 'Every API call logged. Open the console to see it live.' },
+        { icon: '', cls: 'ok', title: 'HTTPS / TLS', desc: 'All traffic encrypted in transit. TLS certificates auto-provisioned.' },
+        { icon: '', cls: 'ok', title: 'HMAC-signed license keys', desc: 'SHA-256 signed, bound to email + expiry. Cannot be forged.' },
+        { icon: '', cls: 'ok', title: 'Database isolation', desc: 'Per-user data isolation. No cross-user leakage possible.' },
+        { icon: '', cls: 'ok', title: 'SQL injection protection', desc: 'All queries use parameterized statements. No string concat in SQL.' },
+        { icon: '', cls: 'ok', title: 'Rate limiting', desc: '100 req/min per IP. Prevents brute force and abuse.' },
+        { icon: '', cls: 'ok', title: 'Webhook HMAC verification', desc: 'Webhooks are cryptographically verified before processing.' },
+        { icon: '', cls: 'info', title: 'Session tokens', desc: 'HTTP-only cookies with 7-day expiry. Visible in demo mode for transparency.' },
+        { icon: '', cls: 'info', title: 'CORS policy', desc: 'Cross-Origin Resource Sharing enabled. Restrictable per domain in production.' },
+        { icon: '', cls: state.user ? 'ok' : 'warn', title: 'Authentication state', desc: state.user ? `Authenticated as ${state.user.email}. Token expires in 7 days.` : 'Not authenticated. Sign in to establish a session.' },
+        { icon: '', cls: 'info', title: 'Audit logging', desc: 'Every API call logged. Open the console to see it live.' },
     ];
     document.getElementById('security-grid').innerHTML = checks.map(c =>
-        `<div class="sec-item"><div class="sec-icon ${c.cls}">${c.icon}</div><div><h4>${c.title}</h4><p>${c.desc}</p></div></div>`
+        `<div class="sec-item"><div class="sec-icon ${c.cls}"></div><div><h4>${c.title}</h4><p>${c.desc}</p></div></div>`
     ).join('');
 }
 
@@ -1204,7 +1203,7 @@ const tests = [
             });
             output(goodOk ? `✓ Valid code attributed ($${goodData.commission})` : '✗ FAIL');
             const { data: after } = await api('GET', '/api/commissions');
-            output(after.length === countBefore + 1 ? '✓ Exactly one new commission' : `⚠ Expected ${countBefore+1}, got ${after.length}`);
+            output(after.length === countBefore + 1 ? '✓ Exactly one new commission' : `✗ Expected ${countBefore+1}, got ${after.length}`);
             await refreshData();
             return true;
         }
@@ -1260,10 +1259,10 @@ async function runTest(i) {
     try {
         await tests[i].run(line => { output.textContent += line + '\n'; });
         log('TEST', `/tests/${i}`, 200, 'PASSED');
-        output.textContent += '\n✅ PASSED';
+        output.textContent += '\n-- PASSED';
     } catch (e) {
         log('TEST', `/tests/${i}`, 500, `FAILED: ${e.message}`);
-        output.textContent += `\n❌ FAILED: ${e.message}`;
+        output.textContent += `\n✗ FAILED: ${e.message}`;
     }
 }
 

@@ -83,14 +83,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 }
 .link-item:hover{border-color:rgba(212,175,55,0.3);background:rgba(212,175,55,0.03);}
 .link-icon{
-    width:36px;height:36px;min-width:36px;border-radius:8px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:16px;
+    width:8px;height:8px;min-width:8px;border-radius:50%;margin-top:2px;
 }
-.link-icon.gold{background:rgba(212,175,55,0.1);}
-.link-icon.blue{background:rgba(100,149,237,0.1);}
-.link-icon.green{background:rgba(80,200,120,0.1);}
-.link-icon.purple{background:rgba(179,136,255,0.1);}
+.link-icon.gold{background:var(--gold);}
+.link-icon.blue{background:cornflowerblue;}
+.link-icon.green{background:#50C878;}
+.link-icon.purple{background:#B388FF;}
 .link-text{flex:1;min-width:0;}
 .link-text .title{color:var(--white);font-weight:500;font-size:14px;}
 .link-text .desc{font-size:12px;color:var(--dim);margin-top:1px;}
@@ -227,7 +225,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     <div class="card" id="links-card">
         <h3>Projects &amp; links</h3>
         <a class="link-item" href="/ideas" id="link-ideas">
-            <div class="link-icon gold">💡</div>
+            <div class="link-icon gold"></div>
             <div class="link-text">
                 <div class="title">Browse ideas</div>
                 <div class="desc">Open-source business ideas anyone can build</div>
@@ -235,7 +233,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
             <span class="link-arrow">→</span>
         </a>
         <a class="link-item" href="/join" id="link-earn">
-            <div class="link-icon green">💰</div>
+            <div class="link-icon green"></div>
             <div class="link-text">
                 <div class="title">Earn commissions</div>
                 <div class="desc">Share your code and earn on every sale</div>
@@ -243,7 +241,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
             <span class="link-arrow">→</span>
         </a>
         <a class="link-item" href="https://death2data.com" target="_blank">
-            <div class="link-icon purple">🔒</div>
+            <div class="link-icon purple"></div>
             <div class="link-text">
                 <div class="title">Death2Data</div>
                 <div class="desc">Privacy-first tools and local AI</div>

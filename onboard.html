@@ -84,7 +84,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .result-link button{background:var(--gold);color:#000;border:none;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;}
 
 .highlight{background:linear-gradient(135deg, rgba(212,175,55,0.08), transparent);border:1px solid rgba(212,175,55,0.15);border-radius:12px;padding:20px;margin:16px 0;}
-.highlight .icon{font-size:24px;margin-bottom:8px;}
 .highlight .title{color:var(--white);font-weight:600;margin-bottom:4px;}
 .highlight .text{font-size:13px;color:var(--dim);}
 
@@ -109,8 +108,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     padding:14px 0;border-bottom:1px solid var(--border);
 }
 .bp-row:last-child{border-bottom:none;}
-.bp-label{color:var(--text);font-size:14px;display:flex;align-items:center;gap:8px;}
-.bp-label .emoji{font-size:18px;}
+.bp-label{color:var(--text);font-size:14px;}
 .bp-value{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--white);}
 .bp-value.gold{color:var(--gold);}
 .bp-note{font-size:12px;color:var(--dim);margin-top:12px;line-height:1.6;padding:12px;background:var(--bg);border-radius:8px;}
@@ -128,15 +126,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .qr-display{display:inline-block;background:white;padding:16px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.3);margin:16px 0;}
 .qr-display img{width:160px;height:160px;display:block;}
 
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle;}
+.status-dot.done{background:var(--green);}
+.status-dot.pending{background:var(--border-l);}
+
 .completion-card{text-align:center;padding:40px 20px;}
-.completion-icon{font-size:48px;margin-bottom:16px;}
 .completion-card h2{font-size:28px;margin-bottom:8px;}
 .completion-links{display:flex;flex-direction:column;gap:8px;margin-top:24px;max-width:320px;margin-left:auto;margin-right:auto;}
-.completion-link{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);transition:all 0.2s;}
+.completion-link{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);transition:all 0.2s;}
 .completion-link:hover{border-color:rgba(212,175,55,0.3);color:var(--white);}
-.completion-link .icon{font-size:18px;}
-.completion-link .label{flex:1;font-weight:500;}
-.completion-link .arrow{color:var(--dim);}
+.completion-link .label{font-weight:500;}
+.completion-link .arrow{color:var(--dim);font-family:var(--mono);}
 
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--gold);color:var(--white);padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:200;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -210,31 +210,31 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
             <p style="color:var(--dim);font-size:13px;margin-bottom:16px;">Here's the math to hit <strong style="color:var(--gold)" id="bp-target">$0</strong>/month.</p>
 
             <div class="bp-row">
-                <div class="bp-label"><span class="emoji">💰</span> Monthly income goal</div>
+                <div class="bp-label">Monthly income goal</div>
                 <div class="bp-value gold" id="bp-income">$0</div>
             </div>
             <div class="bp-row">
-                <div class="bp-label"><span class="emoji">🛒</span> Sales needed (at $150 avg)</div>
+                <div class="bp-label">Sales needed (at $150 avg)</div>
                 <div class="bp-value" id="bp-sales">0</div>
             </div>
             <div class="bp-row">
-                <div class="bp-label"><span class="emoji">📊</span> Attributed revenue needed</div>
+                <div class="bp-label">Attributed revenue needed</div>
                 <div class="bp-value" id="bp-revenue">$0</div>
             </div>
             <div class="bp-row">
-                <div class="bp-label"><span class="emoji">👥</span> Active referrals needed</div>
+                <div class="bp-label">Active referrals needed</div>
                 <div class="bp-value gold" id="bp-referrals">0</div>
             </div>
             <div class="bp-row">
-                <div class="bp-label"><span class="emoji">🔗</span> Clicks/month needed (2% conv.)</div>
+                <div class="bp-label">Clicks/month needed (2% conv.)</div>
                 <div class="bp-value" id="bp-clicks">0</div>
             </div>
             <div class="bp-row">
-                <div class="bp-label"><span class="emoji">📈</span> Your commission rate</div>
+                <div class="bp-label">Your commission rate</div>
                 <div class="bp-value gold" id="bp-rate">10%</div>
             </div>
             <div class="bp-row">
-                <div class="bp-label"><span class="emoji">🏢</span> Platform fee</div>
+                <div class="bp-label">Platform fee</div>
                 <div class="bp-value" id="bp-fee">5%</div>
             </div>
 
@@ -289,7 +289,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
     </div>
 
     <div class="highlight">
-        <div class="icon">📊</div>
         <div class="title">Everything is tracked</div>
         <div class="text">Every click, every signup, every sale that flows through your code is logged and visible in your dashboard.</div>
     </div>
@@ -333,33 +332,32 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
     <div class="ob-card">
         <div class="bp-row">
-            <div class="bp-label"><span class="emoji">✅</span> Account created</div>
+            <div class="bp-label"><span class="status-dot done"></span> Account created</div>
             <div class="bp-value gold">Done</div>
         </div>
         <div class="bp-row">
-            <div class="bp-label"><span class="emoji">✅</span> Profile page live</div>
+            <div class="bp-label"><span class="status-dot done"></span> Profile page live</div>
             <div class="bp-value gold">Done</div>
         </div>
         <div class="bp-row">
-            <div class="bp-label"><span class="emoji">✅</span> Contacts added</div>
+            <div class="bp-label"><span class="status-dot done"></span> Contacts added</div>
             <div class="bp-value gold" id="recap-contacts">0</div>
         </div>
         <div class="bp-row">
-            <div class="bp-label"><span class="emoji">⏳</span> Share your code</div>
+            <div class="bp-label"><span class="status-dot pending"></span> Share your code</div>
             <div class="bp-value">Next</div>
         </div>
         <div class="bp-row">
-            <div class="bp-label"><span class="emoji">⏳</span> Get <span id="recap-referrals">0</span> active referrals</div>
+            <div class="bp-label"><span class="status-dot pending"></span> Get <span id="recap-referrals">0</span> active referrals</div>
             <div class="bp-value">Goal</div>
         </div>
         <div class="bp-row">
-            <div class="bp-label"><span class="emoji">⏳</span> Hit <span id="recap-revenue2">$0</span> in attributed sales</div>
+            <div class="bp-label"><span class="status-dot pending"></span> Hit <span id="recap-revenue2">$0</span> in attributed sales</div>
             <div class="bp-value">Goal</div>
         </div>
     </div>
 
     <div class="highlight">
-        <div class="icon">🎯</div>
         <div class="title">What to do right now</div>
         <div class="text" id="recap-action">Share your profile page with 5 people today. That's it. If just 1 joins and does the same, the network grows on its own.</div>
     </div>
@@ -372,7 +370,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 <!-- ═══ STEP 6: Done ═══ -->
 <div class="step" id="step-5">
     <div class="completion-card">
-        <div class="completion-icon">🚀</div>
         <h2 style="color:var(--white);">You're live</h2>
         <p style="color:var(--text);margin-bottom:8px;">Your code is active. Your page is shareable. Your blueprint is set.</p>
         <div class="result-box" style="display:inline-block;text-align:center;">
@@ -382,22 +379,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
         <div class="completion-links">
             <a class="completion-link" href="/app">
-                <span class="icon">📊</span>
                 <span class="label">Open your dashboard</span>
                 <span class="arrow">→</span>
             </a>
             <a class="completion-link" id="final-profile" href="#" target="_blank">
-                <span class="icon">👤</span>
                 <span class="label">Share your storefront</span>
                 <span class="arrow">→</span>
             </a>
             <a class="completion-link" href="/join">
-                <span class="icon">💰</span>
                 <span class="label">Affiliate details</span>
                 <span class="arrow">→</span>
             </a>
             <a class="completion-link" href="/ideas">
-                <span class="icon">💡</span>
                 <span class="label">Browse ideas to promote</span>
                 <span class="arrow">→</span>
             </a>
