@@ -576,7 +576,9 @@ async function doSignup() {
     btn.textContent = 'Creating...';
     btn.disabled = true;
 
-    const { ok, data } = await api('POST', '/api/signup', { email });
+    const signupBody = { email };
+    if (ref) signupBody.referred_by = ref;
+    const { ok, data } = await api('POST', '/api/signup', signupBody);
     if (!ok) {
         btn.textContent = 'Create my account';
         btn.disabled = false;
@@ -698,12 +700,21 @@ function toast(msg) {
     setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-// ═══ Referral from URL ═══
+// ═══ Referral + source from URL ═══
 const params = new URLSearchParams(window.location.search);
 const ref = params.get('ref');
+const fromSource = params.get('from');
+
 if (ref) {
     document.querySelector('#step-0 .desc').innerHTML +=
         `<br><br><span style="color:var(--gold);">Referred by <strong>${ref}</strong> — they'll earn when you sign up.</span>`;
+}
+
+if (fromSource === 'd2d') {
+    document.querySelector('#step-0 h2').textContent = 'Activate your death2data account';
+    document.querySelector('#step-0 .desc').innerHTML =
+        'You came from death2data. Complete this quick setup to unlock unlimited private search, local-first tools, and credits across the fortune0 network.' +
+        (ref ? `<br><br><span style="color:var(--gold);">Referred by <strong>${ref}</strong></span>` : '');
 }
 
 updateProgress();
