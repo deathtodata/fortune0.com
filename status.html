@@ -104,12 +104,8 @@ a:hover{text-decoration:underline;}
 <div class="section">
     <div class="section-title">Search</div>
     <div class="row">
-        <span class="row-label">Brave Search API (BRAVE_SEARCH_KEY)</span>
-        <span class="row-value" id="s-brave"><span class="loading">—</span></span>
-    </div>
-    <div class="row">
-        <span class="row-label">SearXNG fallback</span>
-        <span class="row-value val-dim" style="font-size:11px;">5 public instances (used if Brave unavailable)</span>
+        <span class="row-label">SearXNG instance (SEARXNG_URL)</span>
+        <span class="row-value" id="s-searxng"><span class="loading">—</span></span>
     </div>
     <div class="row">
         <span class="row-label">Search paywall</span>
@@ -246,8 +242,8 @@ async function load() {
         document.getElementById('s-stripe-sk').innerHTML = `<span class="dot ${skOk ? 'green' : 'yellow'}"></span> <span class="${skOk ? 'val-ok' : 'val-warn'}">${d.stripe_api || 'not set'}</span>`;
 
         // Search
-        const braveOk = d.brave_search && d.brave_search.startsWith('configured');
-        document.getElementById('s-brave').innerHTML = `<span class="dot ${braveOk ? 'green' : 'red'}"></span> <span class="${braveOk ? 'val-ok' : 'val-bad'}">${d.brave_search || 'not set'}</span>`;
+        const searxOk = d.searxng && d.searxng.startsWith('http');
+        document.getElementById('s-searxng').innerHTML = `<span class="dot ${searxOk ? 'green' : 'yellow'}"></span> <span class="${searxOk ? 'val-ok' : 'val-warn'}">${d.searxng || 'not set'}</span>`;
 
         // Users
         document.getElementById('s-users').textContent = d.users;
@@ -293,11 +289,11 @@ async function load() {
                 desc: 'Needed for Stripe sync (pulling existing customer payments into credits). Stripe dashboard → Developers → API keys → Secret key. Add as <code>STRIPE_SECRET_KEY</code> on Render. Use <code>sk_live_...</code> for real data or <code>sk_test_...</code> for testing.'
             });
         }
-        if (!braveOk) {
+        if (!searxOk) {
             actions.push({
                 priority: 'critical',
-                title: 'Set BRAVE_SEARCH_KEY on Render',
-                desc: 'Search won\'t work reliably without this. Go to <a href="https://api.search.brave.com/app/keys" target="_blank">api.search.brave.com/app/keys</a>, create a free account, copy your API key, and add as <code>BRAVE_SEARCH_KEY</code> on Render. Free tier = 2,000 searches/month.'
+                title: 'Deploy SearXNG and set SEARXNG_URL on Render',
+                desc: 'Search needs its own SearXNG instance. Create a new Web Service on Render from the <code>searxng/</code> directory in the repo. Then set <code>SEARXNG_URL</code> on the fortune0 service to the SearXNG service URL.'
             });
         }
 
