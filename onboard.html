@@ -19,17 +19,9 @@
 html{-webkit-font-smoothing:antialiased;}
 body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh;}
 
-/* Progress bar */
-.progress-bar{
-    position:fixed;top:0;left:0;right:0;z-index:100;height:3px;
-    background:var(--surface2);
-}
-.progress-fill{
-    height:100%;background:var(--gold);transition:width 0.4s ease;width:0%;
-    box-shadow:0 0 12px rgba(212,175,55,0.4);
-}
+.progress-bar{position:fixed;top:0;left:0;right:0;z-index:100;height:3px;background:var(--surface2);}
+.progress-fill{height:100%;background:var(--gold);transition:width 0.4s ease;width:0%;box-shadow:0 0 12px rgba(212,175,55,0.4);}
 
-/* Header */
 .ob-header{
     position:sticky;top:3px;z-index:90;
     background:rgba(0,0,0,0.92);backdrop-filter:blur(20px);
@@ -42,39 +34,24 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .ob-skip{font-size:12px;color:var(--dim);cursor:pointer;background:none;border:none;font-family:var(--font);}
 .ob-skip:hover{color:var(--gold);}
 
-/* Container */
 .ob-container{max-width:600px;margin:0 auto;padding:40px 20px 80px;}
 
-/* Step indicators */
 .step-dots{display:flex;gap:8px;justify-content:center;margin-bottom:32px;}
-.step-dot{
-    width:10px;height:10px;border-radius:50%;
-    background:var(--surface2);border:1px solid var(--border);
-    transition:all 0.3s;cursor:pointer;
-}
+.step-dot{width:10px;height:10px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);transition:all 0.3s;cursor:pointer;}
 .step-dot.active{background:var(--gold);border-color:var(--gold);box-shadow:0 0 8px rgba(212,175,55,0.3);}
 .step-dot.done{background:var(--green);border-color:var(--green);}
 
-/* Steps */
 .step{display:none;animation:fadeUp 0.4s ease;}
 .step.active{display:block;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
 
-.step-number{
-    font-size:12px;color:var(--gold);font-family:var(--mono);font-weight:600;
-    letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;
-}
+.step-number{font-size:12px;color:var(--gold);font-family:var(--mono);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
 .step h2{color:var(--white);font-size:24px;margin-bottom:8px;line-height:1.3;}
 .step .desc{color:var(--text);font-size:15px;margin-bottom:24px;line-height:1.7;}
 
-/* Cards */
-.ob-card{
-    background:var(--surface);border:1px solid var(--border);border-radius:12px;
-    padding:24px;margin-bottom:16px;
-}
+.ob-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;}
 .ob-card h3{color:var(--white);font-size:16px;margin-bottom:8px;}
 
-/* Inputs */
 .ob-input{
     width:100%;background:var(--bg);border:1px solid var(--border);
     color:var(--white);padding:14px 16px;border-radius:10px;font-size:15px;
@@ -83,7 +60,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .ob-input:focus{border-color:var(--gold);outline:none;}
 .ob-input::placeholder{color:var(--dim);}
 
-/* Buttons */
 .ob-btn{
     display:inline-flex;align-items:center;gap:8px;
     padding:14px 28px;border-radius:10px;font-size:15px;font-weight:600;
@@ -97,157 +73,185 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .ob-btn-sm{padding:8px 16px;font-size:13px;border-radius:8px;}
 .ob-actions{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;}
 
-/* Success animation */
-.check-anim{
-    display:inline-flex;align-items:center;gap:8px;
-    color:var(--green);font-weight:600;font-size:14px;
-    opacity:0;transform:translateY(8px);transition:all 0.3s;
-}
+.check-anim{display:inline-flex;align-items:center;gap:8px;color:var(--green);font-weight:600;font-size:14px;opacity:0;transform:translateY(8px);transition:all 0.3s;}
 .check-anim.show{opacity:1;transform:translateY(0);}
 
-/* Result display */
-.result-box{
-    background:var(--bg);border:1px solid rgba(212,175,55,0.2);
-    border-radius:10px;padding:16px 20px;margin:16px 0;
-    font-family:var(--mono);font-size:14px;
-}
+.result-box{background:var(--bg);border:1px solid rgba(212,175,55,0.2);border-radius:10px;padding:16px 20px;margin:16px 0;font-family:var(--mono);font-size:14px;}
 .result-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
 .result-value{color:var(--gold);font-size:20px;font-weight:700;letter-spacing:1px;}
-.result-link{
-    display:flex;align-items:center;gap:8px;margin-top:8px;
-    background:var(--surface);border:1px solid var(--border);
-    padding:10px 14px;border-radius:8px;
-}
+.result-link{display:flex;align-items:center;gap:8px;margin-top:8px;background:var(--surface);border:1px solid var(--border);padding:10px 14px;border-radius:8px;}
 .result-link input{flex:1;background:none;border:none;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;}
-.result-link button{
-    background:var(--gold);color:#000;border:none;
-    padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;
-}
+.result-link button{background:var(--gold);color:#000;border:none;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;}
 
-/* Highlight card */
-.highlight{
-    background:linear-gradient(135deg, rgba(212,175,55,0.08), transparent);
-    border:1px solid rgba(212,175,55,0.15);border-radius:12px;
-    padding:20px;margin:16px 0;
-}
+.highlight{background:linear-gradient(135deg, rgba(212,175,55,0.08), transparent);border:1px solid rgba(212,175,55,0.15);border-radius:12px;padding:20px;margin:16px 0;}
 .highlight .icon{font-size:24px;margin-bottom:8px;}
 .highlight .title{color:var(--white);font-weight:600;margin-bottom:4px;}
 .highlight .text{font-size:13px;color:var(--dim);}
 
-/* Interactive demo */
-.demo-contact{
-    display:flex;gap:12px;align-items:center;
-    padding:12px 16px;background:var(--bg);border:1px solid var(--border);
-    border-radius:10px;margin-bottom:8px;transition:all 0.3s;
+/* Income selector */
+.income-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.income-opt{
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;
 }
+.income-opt:hover{border-color:var(--border-l);}
+.income-opt.selected{border-color:var(--gold);background:rgba(212,175,55,0.05);}
+.income-opt .amount{font-family:var(--mono);font-size:22px;font-weight:800;color:var(--white);}
+.income-opt .per{font-size:12px;color:var(--dim);margin-top:2px;}
+.income-opt .label{font-size:11px;color:var(--gold);margin-top:6px;font-weight:600;opacity:0;transition:opacity 0.2s;}
+.income-opt.selected .label{opacity:1;}
+
+/* Blueprint breakdown */
+.blueprint{display:none;animation:fadeUp 0.4s ease;}
+.blueprint.show{display:block;}
+.bp-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 0;border-bottom:1px solid var(--border);
+}
+.bp-row:last-child{border-bottom:none;}
+.bp-label{color:var(--text);font-size:14px;display:flex;align-items:center;gap:8px;}
+.bp-label .emoji{font-size:18px;}
+.bp-value{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--white);}
+.bp-value.gold{color:var(--gold);}
+.bp-note{font-size:12px;color:var(--dim);margin-top:12px;line-height:1.6;padding:12px;background:var(--bg);border-radius:8px;}
+
+/* Contact demo */
+.demo-contact{display:flex;gap:12px;align-items:center;padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;transition:all 0.3s;}
 .demo-contact.added{border-color:rgba(80,200,120,0.3);background:rgba(80,200,120,0.03);}
-.demo-contact .avatar{
-    width:36px;height:36px;min-width:36px;border-radius:8px;
-    background:var(--surface2);display:flex;align-items:center;justify-content:center;
-    font-size:14px;font-weight:600;color:var(--dim);
-}
+.demo-contact .avatar{width:36px;height:36px;min-width:36px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--dim);}
 .demo-contact .info{flex:1;}
 .demo-contact .name{color:var(--white);font-weight:500;font-size:14px;}
 .demo-contact .email{font-size:12px;color:var(--dim);font-family:var(--mono);}
 .demo-contact .status{font-size:11px;font-weight:600;opacity:0;transition:opacity 0.3s;}
 .demo-contact.added .status{opacity:1;color:var(--green);}
 
-/* QR display */
-.qr-display{
-    display:inline-block;background:white;padding:16px;border-radius:12px;
-    box-shadow:0 4px 24px rgba(0,0,0,0.3);margin:16px 0;
-}
+.qr-display{display:inline-block;background:white;padding:16px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.3);margin:16px 0;}
 .qr-display img{width:160px;height:160px;display:block;}
 
-/* Completion */
 .completion-card{text-align:center;padding:40px 20px;}
 .completion-icon{font-size:48px;margin-bottom:16px;}
 .completion-card h2{font-size:28px;margin-bottom:8px;}
-.completion-links{display:flex;flex-direction:column;gap:8px;margin-top:24px;max-width:300px;margin-left:auto;margin-right:auto;}
-.completion-link{
-    display:flex;align-items:center;gap:12px;
-    padding:14px 16px;background:var(--surface);border:1px solid var(--border);
-    border-radius:10px;text-decoration:none;color:var(--text);transition:all 0.2s;
-}
+.completion-links{display:flex;flex-direction:column;gap:8px;margin-top:24px;max-width:320px;margin-left:auto;margin-right:auto;}
+.completion-link{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);transition:all 0.2s;}
 .completion-link:hover{border-color:rgba(212,175,55,0.3);color:var(--white);}
 .completion-link .icon{font-size:18px;}
 .completion-link .label{flex:1;font-weight:500;}
 .completion-link .arrow{color:var(--dim);}
 
-/* Toast */
-.toast{
-    position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
-    background:var(--surface2);border:1px solid var(--gold);
-    color:var(--white);padding:10px 20px;border-radius:10px;
-    font-size:13px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:200;
-}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--gold);color:var(--white);padding:10px 20px;border-radius:10px;font-size:13px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:200;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 @media(max-width:480px){
     .ob-container{padding:24px 16px 60px;}
     .step h2{font-size:20px;}
     .ob-btn{padding:12px 20px;font-size:14px;}
+    .income-options{grid-template-columns:1fr 1fr;}
+    .income-opt .amount{font-size:18px;}
 }
 </style>
 </head>
 <body>
 
-<!-- Progress bar -->
 <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
 
-<!-- Header -->
 <div class="ob-header">
     <div class="ob-logo">
         <svg viewBox="0 0 512 512" fill="none"><rect width="512" height="512" rx="96" fill="#000"/><circle cx="256" cy="256" r="140" stroke="url(#g1)" stroke-width="36" opacity=".95"/><circle cx="360" cy="152" r="16" fill="#D4AF37" opacity=".9"/><defs><linearGradient id="g1" x1="116" y1="116" x2="396" y2="396"><stop stop-color="#D4AF37"/><stop offset="1" stop-color="#B8962E"/></linearGradient></defs></svg>
         fortune0
     </div>
-    <span class="ob-step-label" id="step-label">Step 1 of 5</span>
+    <span class="ob-step-label" id="step-label">Step 1 of 6</span>
     <button class="ob-skip" onclick="window.location='/app'">Skip to dashboard →</button>
 </div>
 
-<!-- Container -->
 <div class="ob-container">
-
-<!-- Step dots -->
 <div class="step-dots" id="step-dots"></div>
 
-<!-- ═══ STEP 1: Welcome ═══ -->
+<!-- ═══ STEP 1: Income Goal ═══ -->
 <div class="step active" id="step-0">
     <div class="step-number">Step 1</div>
-    <h2>Your business starts with one code</h2>
-    <div class="desc">
-        fortune0 gives you a referral code, a personal page, and a way to earn commissions.
-        No inventory. No upfront cost. Just share your code.
-    </div>
+    <h2>How much do you want to earn?</h2>
+    <div class="desc">Pick a target. We'll build your blueprint — exactly how many referrals and sales you need to hit it.</div>
 
-    <div class="highlight">
-        <div class="icon">🔑</div>
-        <div class="title">How it works</div>
-        <div class="text">
-            You sign up → get a referral code → get a personal page.
-            Share it anywhere. When someone joins or buys through your code, you earn commission. That's it.
+    <div class="income-options" id="income-options">
+        <div class="income-opt" onclick="selectIncome(1000)">
+            <div class="amount">$1K</div>
+            <div class="per">per month</div>
+            <div class="label">Side income</div>
+        </div>
+        <div class="income-opt" onclick="selectIncome(5000)">
+            <div class="amount">$5K</div>
+            <div class="per">per month</div>
+            <div class="label">Part-time</div>
+        </div>
+        <div class="income-opt" onclick="selectIncome(10000)">
+            <div class="amount">$10K</div>
+            <div class="per">per month</div>
+            <div class="label">Full-time</div>
+        </div>
+        <div class="income-opt" onclick="selectIncome(25000)">
+            <div class="amount">$25K</div>
+            <div class="per">per month</div>
+            <div class="label">Agency</div>
         </div>
     </div>
 
-    <div class="highlight">
-        <div class="icon">🔗</div>
-        <div class="title">The chain</div>
-        <div class="text">
-            People who join through you get their OWN code. They share it.
-            Attribution tracks everything. Everyone earns.
+    <div style="text-align:center;margin-bottom:16px;">
+        <span style="font-size:12px;color:var(--dim);">Or enter a custom amount:</span>
+        <div style="display:flex;gap:8px;max-width:240px;margin:8px auto 0;">
+            <span style="color:var(--gold);font-size:20px;font-weight:700;line-height:46px;">$</span>
+            <input class="ob-input" type="number" id="custom-income" placeholder="per month" style="margin:0;text-align:center;" onkeydown="if(event.key==='Enter'){selectIncome(parseInt(this.value))}">
         </div>
     </div>
 
-    <div class="ob-actions">
-        <button class="ob-btn ob-btn-gold" onclick="goStep(1)">Let's go →</button>
+    <!-- Blueprint (shows after selection) -->
+    <div class="blueprint" id="blueprint">
+        <div class="ob-card">
+            <h3>Your blueprint</h3>
+            <p style="color:var(--dim);font-size:13px;margin-bottom:16px;">Here's the math to hit <strong style="color:var(--gold)" id="bp-target">$0</strong>/month.</p>
+
+            <div class="bp-row">
+                <div class="bp-label"><span class="emoji">💰</span> Monthly income goal</div>
+                <div class="bp-value gold" id="bp-income">$0</div>
+            </div>
+            <div class="bp-row">
+                <div class="bp-label"><span class="emoji">🛒</span> Sales needed (at $150 avg)</div>
+                <div class="bp-value" id="bp-sales">0</div>
+            </div>
+            <div class="bp-row">
+                <div class="bp-label"><span class="emoji">📊</span> Attributed revenue needed</div>
+                <div class="bp-value" id="bp-revenue">$0</div>
+            </div>
+            <div class="bp-row">
+                <div class="bp-label"><span class="emoji">👥</span> Active referrals needed</div>
+                <div class="bp-value gold" id="bp-referrals">0</div>
+            </div>
+            <div class="bp-row">
+                <div class="bp-label"><span class="emoji">🔗</span> Clicks/month needed (2% conv.)</div>
+                <div class="bp-value" id="bp-clicks">0</div>
+            </div>
+            <div class="bp-row">
+                <div class="bp-label"><span class="emoji">📈</span> Your commission rate</div>
+                <div class="bp-value gold" id="bp-rate">10%</div>
+            </div>
+            <div class="bp-row">
+                <div class="bp-label"><span class="emoji">🏢</span> Platform fee</div>
+                <div class="bp-value" id="bp-fee">5%</div>
+            </div>
+
+            <div class="bp-note" id="bp-note"></div>
+        </div>
+
+        <div class="ob-actions">
+            <button class="ob-btn ob-btn-gold" onclick="goStep(1)">Let's make it happen →</button>
+        </div>
     </div>
 </div>
 
-<!-- ═══ STEP 2: Create account ═══ -->
+<!-- ═══ STEP 2: Create Account ═══ -->
 <div class="step" id="step-1">
     <div class="step-number">Step 2</div>
-    <h2>Create your account</h2>
-    <div class="desc">Enter your email. No password, no credit card. You'll get a referral code instantly.</div>
+    <h2>Claim your code</h2>
+    <div class="desc">This is your identity in the system. Every sale, every referral, every commission — all tied to this one code.</div>
 
     <div class="ob-card">
         <input class="ob-input" type="email" id="ob-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doSignup()">
@@ -255,7 +259,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
         <div class="check-anim" id="signup-check">✓ Account created</div>
     </div>
 
-    <!-- Shows after signup -->
     <div id="signup-result" style="display:none;">
         <div class="result-box">
             <div class="result-label">Your referral code</div>
@@ -269,131 +272,123 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
             </div>
         </div>
         <div class="ob-actions">
-            <button class="ob-btn ob-btn-gold" onclick="goStep(2)">Next: See your page →</button>
+            <button class="ob-btn ob-btn-gold" onclick="goStep(2)">Next: Your storefront →</button>
         </div>
     </div>
 </div>
 
-<!-- ═══ STEP 3: Your profile page ═══ -->
+<!-- ═══ STEP 3: Your Profile Page ═══ -->
 <div class="step" id="step-2">
     <div class="step-number">Step 3</div>
-    <h2>This is your page</h2>
-    <div class="desc">
-        Everyone who scans your QR code or clicks your link lands here.
-        They see your stats and can join through you.
-    </div>
+    <h2>This is your storefront</h2>
+    <div class="desc">Everyone who scans your QR code or clicks your link lands here. They see your stats, your projects, and a button to join through you.</div>
 
     <div class="ob-card" style="text-align:center;">
         <div class="qr-display" id="ob-qr"></div>
-        <p style="font-size:13px;color:var(--dim);margin-top:8px;">This QR code links to your personal page. Try scanning it with your phone.</p>
+        <p style="font-size:13px;color:var(--dim);margin-top:8px;">Scan this with your phone — it opens your live page.</p>
     </div>
 
     <div class="highlight">
         <div class="icon">📊</div>
         <div class="title">Everything is tracked</div>
-        <div class="text">
-            Every click, every signup, every sale that flows through your code is logged.
-            You can see it all in your dashboard.
-        </div>
+        <div class="text">Every click, every signup, every sale that flows through your code is logged and visible in your dashboard.</div>
     </div>
 
     <div class="ob-actions">
-        <button class="ob-btn ob-btn-gold" onclick="goStep(3)">Next: Add a contact →</button>
+        <button class="ob-btn ob-btn-gold" onclick="goStep(3)">Next: Build your network →</button>
         <a class="ob-btn ob-btn-ghost" id="view-profile-btn" href="#" target="_blank">View your page ↗</a>
     </div>
 </div>
 
-<!-- ═══ STEP 4: Add a contact ═══ -->
+<!-- ═══ STEP 4: Add Contact ═══ -->
 <div class="step" id="step-3">
     <div class="step-number">Step 4</div>
-    <h2>Add your first contact</h2>
+    <h2>Start your network</h2>
     <div class="desc">
-        Your CRM tracks everyone in your network. Add a contact — they could be a potential customer,
-        affiliate, or collaborator.
+        Your blueprint says you need <strong style="color:var(--gold)" id="step4-referrals">—</strong> active referrals.
+        Start by adding people you'd share your code with.
     </div>
 
     <div class="ob-card">
         <div style="display:flex;gap:12px;margin-bottom:12px;">
-            <input class="ob-input" id="ob-c-name" placeholder="Name" style="margin-bottom:0;">
+            <input class="ob-input" id="ob-c-name" placeholder="Name" style="margin-bottom:0;" onkeydown="if(event.key==='Enter')doAddContact()">
             <input class="ob-input" id="ob-c-email" placeholder="Email (optional)" style="margin-bottom:0;">
         </div>
         <button class="ob-btn ob-btn-gold ob-btn-sm" id="add-contact-btn" onclick="doAddContact()">Add contact</button>
         <div class="check-anim" id="contact-check">✓ Contact added</div>
     </div>
 
-    <!-- Contact list preview -->
     <div id="contact-preview"></div>
 
     <div class="ob-actions" id="step3-actions" style="display:none;">
-        <button class="ob-btn ob-btn-gold" onclick="goStep(4)">Next: See how you earn →</button>
+        <button class="ob-btn ob-btn-gold" onclick="goStep(4)">Next: Your blueprint →</button>
     </div>
 </div>
 
-<!-- ═══ STEP 5: How you earn ═══ -->
+<!-- ═══ STEP 5: Blueprint Recap ═══ -->
 <div class="step" id="step-4">
     <div class="step-number">Step 5</div>
-    <h2>Here's how you earn</h2>
-    <div class="desc">
-        When someone uses your referral code on a purchase, you get a commission.
-        The more volume your network drives, the lower the platform fee.
-    </div>
+    <h2>Your plan to <span id="recap-target" style="color:var(--gold)">$0</span>/month</h2>
+    <div class="desc">Here's where you are and what comes next.</div>
 
-    <div class="highlight">
-        <div class="icon">💰</div>
-        <div class="title">Commission structure</div>
-        <div class="text">
-            Default: 10% commission on every attributed sale.
-            Platform takes 5% (drops to 3% at high volume).
-            You keep the rest.
+    <div class="ob-card">
+        <div class="bp-row">
+            <div class="bp-label"><span class="emoji">✅</span> Account created</div>
+            <div class="bp-value gold">Done</div>
+        </div>
+        <div class="bp-row">
+            <div class="bp-label"><span class="emoji">✅</span> Profile page live</div>
+            <div class="bp-value gold">Done</div>
+        </div>
+        <div class="bp-row">
+            <div class="bp-label"><span class="emoji">✅</span> Contacts added</div>
+            <div class="bp-value gold" id="recap-contacts">0</div>
+        </div>
+        <div class="bp-row">
+            <div class="bp-label"><span class="emoji">⏳</span> Share your code</div>
+            <div class="bp-value">Next</div>
+        </div>
+        <div class="bp-row">
+            <div class="bp-label"><span class="emoji">⏳</span> Get <span id="recap-referrals">0</span> active referrals</div>
+            <div class="bp-value">Goal</div>
+        </div>
+        <div class="bp-row">
+            <div class="bp-label"><span class="emoji">⏳</span> Hit <span id="recap-revenue2">$0</span> in attributed sales</div>
+            <div class="bp-value">Goal</div>
         </div>
     </div>
 
     <div class="highlight">
-        <div class="icon">📈</div>
-        <div class="title">Volume tiers</div>
-        <div class="text">
-            $0–$10K → 5% platform fee.
-            $10K–$50K → 4%.
-            $50K–$250K → 3.5%.
-            $250K+ → 3%.
-            The more you sell, the more you keep.
-        </div>
-    </div>
-
-    <div class="highlight">
-        <div class="icon">🔁</div>
-        <div class="title">The referral chain</div>
-        <div class="text">
-            Share your code → someone joins → they get their own code → they share it →
-            sales flow up. You earn on your direct referrals.
-        </div>
+        <div class="icon">🎯</div>
+        <div class="title">What to do right now</div>
+        <div class="text" id="recap-action">Share your profile page with 5 people today. That's it. If just 1 joins and does the same, the network grows on its own.</div>
     </div>
 
     <div class="ob-actions">
-        <button class="ob-btn ob-btn-gold" onclick="goStep(5)">Finish setup →</button>
+        <button class="ob-btn ob-btn-gold" onclick="goStep(5)">Finish →</button>
     </div>
 </div>
 
 <!-- ═══ STEP 6: Done ═══ -->
 <div class="step" id="step-5">
     <div class="completion-card">
-        <div class="completion-icon">🎉</div>
-        <h2 style="color:var(--white);">You're all set</h2>
-        <p style="color:var(--text);margin-bottom:8px;">Your referral code is live. Your page is shareable. Start earning.</p>
+        <div class="completion-icon">🚀</div>
+        <h2 style="color:var(--white);">You're live</h2>
+        <p style="color:var(--text);margin-bottom:8px;">Your code is active. Your page is shareable. Your blueprint is set.</p>
         <div class="result-box" style="display:inline-block;text-align:center;">
             <div class="result-label">Your code</div>
             <div class="result-value" id="final-code">—</div>
         </div>
 
         <div class="completion-links">
-            <a class="completion-link" id="final-dashboard" href="/app">
+            <a class="completion-link" href="/app">
                 <span class="icon">📊</span>
                 <span class="label">Open your dashboard</span>
                 <span class="arrow">→</span>
             </a>
             <a class="completion-link" id="final-profile" href="#" target="_blank">
                 <span class="icon">👤</span>
-                <span class="label">View your profile page</span>
+                <span class="label">Share your storefront</span>
                 <span class="arrow">→</span>
             </a>
             <a class="completion-link" href="/join">
@@ -412,21 +407,27 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
 const TOTAL_STEPS = 6;
 let currentStep = 0;
-let userData = null; // {token, email, refCode}
+let userData = null;
+let incomeGoal = 0;
 
 // ═══ Navigation ═══
 function goStep(n) {
-    // Can't skip ahead past signup
-    if (n >= 2 && !userData) {
-        toast('Complete signup first');
-        return;
+    if (n >= 1 && !incomeGoal) { toast('Pick an income goal first'); return; }
+    if (n >= 3 && !userData) { toast('Create your account first'); return; }
+
+    // Update recap when entering step 4
+    if (n === 4) {
+        document.getElementById('recap-target').textContent = `$${incomeGoal.toLocaleString()}`;
+        document.getElementById('recap-contacts').textContent = contactCount;
+        document.getElementById('recap-referrals').textContent = document.getElementById('bp-referrals')?.textContent || '0';
+        document.getElementById('recap-revenue2').textContent = document.getElementById('bp-revenue')?.textContent || '$0';
     }
+
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.getElementById('step-' + n).classList.add('active');
     currentStep = n;
@@ -438,8 +439,6 @@ function updateProgress() {
     const pct = ((currentStep + 1) / TOTAL_STEPS) * 100;
     document.getElementById('progress').style.width = pct + '%';
     document.getElementById('step-label').textContent = `Step ${currentStep + 1} of ${TOTAL_STEPS}`;
-
-    // Update dots
     document.querySelectorAll('.step-dot').forEach((dot, i) => {
         dot.className = 'step-dot';
         if (i < currentStep) dot.classList.add('done');
@@ -447,12 +446,11 @@ function updateProgress() {
     });
 }
 
-// Build step dots
 document.getElementById('step-dots').innerHTML = Array.from({length: TOTAL_STEPS}, (_, i) =>
-    `<div class="step-dot ${i === 0 ? 'active' : ''}" onclick="if(${i} <= currentStep || userData) goStep(${i})"></div>`
+    `<div class="step-dot ${i === 0 ? 'active' : ''}" onclick="goStep(${i})"></div>`
 ).join('');
 
-// ═══ API Helper ═══
+// ═══ API ═══
 async function api(method, path, body = null) {
     const opts = { method, headers: { 'Content-Type': 'application/json' } };
     if (userData?.token) opts.headers['Authorization'] = 'Bearer ' + userData.token;
@@ -464,6 +462,66 @@ async function api(method, path, body = null) {
     } catch (e) {
         return { ok: false, data: { error: e.message } };
     }
+}
+
+// ═══ Step 1: Income Goal ═══
+function selectIncome(amount) {
+    if (!amount || amount <= 0) { toast('Enter a valid amount'); return; }
+    incomeGoal = amount;
+
+    // Highlight selected option
+    document.querySelectorAll('.income-opt').forEach(o => o.classList.remove('selected'));
+    const opts = document.querySelectorAll('.income-opt');
+    const presets = [1000, 5000, 10000, 25000];
+    const idx = presets.indexOf(amount);
+    if (idx >= 0) opts[idx].classList.add('selected');
+
+    // Calculate blueprint
+    const commissionRate = 0.10;
+    const avgOrder = 150;
+    const conversionRate = 0.02;  // 2% of clicks become sales
+    const clicksPerReferral = 50; // each referral generates ~50 clicks/month
+
+    const revenueNeeded = Math.ceil(amount / commissionRate);
+    const salesNeeded = Math.ceil(revenueNeeded / avgOrder);
+    const clicksNeeded = Math.ceil(salesNeeded / conversionRate);
+    const referralsNeeded = Math.ceil(clicksNeeded / clicksPerReferral);
+
+    // Platform fee tier
+    let feeRate = 0.05;
+    if (revenueNeeded >= 250000) feeRate = 0.03;
+    else if (revenueNeeded >= 50000) feeRate = 0.035;
+    else if (revenueNeeded >= 10000) feeRate = 0.04;
+
+    // Fill in blueprint
+    document.getElementById('bp-target').textContent = `$${amount.toLocaleString()}`;
+    document.getElementById('bp-income').textContent = `$${amount.toLocaleString()}`;
+    document.getElementById('bp-sales').textContent = `~${salesNeeded.toLocaleString()}/mo`;
+    document.getElementById('bp-revenue').textContent = `$${revenueNeeded.toLocaleString()}`;
+    document.getElementById('bp-referrals').textContent = `~${referralsNeeded}`;
+    document.getElementById('bp-clicks').textContent = `~${clicksNeeded.toLocaleString()}`;
+    document.getElementById('bp-rate').textContent = `${commissionRate * 100}%`;
+    document.getElementById('bp-fee').textContent = `${(feeRate * 100).toFixed(1)}%`;
+
+    // Note
+    let note = '';
+    if (referralsNeeded <= 5) {
+        note = `You only need about ${referralsNeeded} active people sharing your code. Start with friends, family, or your existing network. Very achievable.`;
+    } else if (referralsNeeded <= 20) {
+        note = `${referralsNeeded} active referrals is solid but doable. Focus on finding people with audiences — one creator or influencer could drive this alone.`;
+    } else if (referralsNeeded <= 50) {
+        note = `You'll need a real network of ~${referralsNeeded} people. Think community building — a Discord, a newsletter, or partnering with other affiliates.`;
+    } else {
+        note = `At this level, you're running an agency. You'll want a team of affiliates, each with their own sub-networks. The platform's tiered fees work in your favor here.`;
+    }
+    document.getElementById('bp-note').textContent = note;
+
+    // Pre-fill step 4 referral count
+    document.getElementById('step4-referrals').textContent = `~${referralsNeeded}`;
+
+    // Show blueprint
+    document.getElementById('blueprint').classList.add('show');
+    document.getElementById('blueprint').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ═══ Step 2: Signup ═══
@@ -485,27 +543,23 @@ async function doSignup() {
 
     userData = { token: data.token, email: data.email, refCode: data.referral_code };
 
-    // Show success
     btn.style.display = 'none';
-    const check = document.getElementById('signup-check');
-    check.classList.add('show');
+    document.getElementById('signup-check').classList.add('show');
 
-    // Fill in results
     document.getElementById('ob-code').textContent = data.referral_code;
     const profileUrl = `${location.origin}/u/${data.referral_code}`;
     document.getElementById('ob-profile-link').value = profileUrl;
 
-    // Show result section
     setTimeout(() => {
         document.getElementById('signup-result').style.display = 'block';
     }, 500);
 
-    // Pre-fill step 3 (profile page)
+    // QR code for step 3
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&color=D4AF37&bgcolor=FFFFFF&data=${encodeURIComponent(profileUrl)}`;
     document.getElementById('ob-qr').innerHTML = `<img src="${qrUrl}" alt="QR Code">`;
     document.getElementById('view-profile-btn').href = profileUrl;
 
-    // Pre-fill completion
+    // Completion step
     document.getElementById('final-code').textContent = data.referral_code;
     document.getElementById('final-profile').href = profileUrl;
 }
@@ -543,7 +597,6 @@ async function doAddContact() {
     check.textContent = `✓ ${contactCount} contact${contactCount > 1 ? 's' : ''} added`;
     check.classList.add('show');
 
-    // Add to preview list
     const preview = document.getElementById('contact-preview');
     const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
     preview.innerHTML = `<div class="demo-contact added">
@@ -552,12 +605,10 @@ async function doAddContact() {
         <span class="status">Added ✓</span>
     </div>` + preview.innerHTML;
 
-    // Clear inputs
     document.getElementById('ob-c-name').value = '';
     document.getElementById('ob-c-email').value = '';
     document.getElementById('ob-c-name').focus();
 
-    // Show next button after first contact
     document.getElementById('step3-actions').style.display = 'flex';
 }
 
@@ -569,16 +620,14 @@ function toast(msg) {
     setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-// ═══ Check if ref code in URL ═══
+// ═══ Referral from URL ═══
 const params = new URLSearchParams(window.location.search);
 const ref = params.get('ref');
 if (ref) {
-    // Pre-fill that they came through a referral
     document.querySelector('#step-0 .desc').innerHTML +=
-        `<br><br><span style="color:var(--gold);">You were referred by <strong>${ref}</strong>. When you sign up, they'll earn commission.</span>`;
+        `<br><br><span style="color:var(--gold);">Referred by <strong>${ref}</strong> — they'll earn when you sign up.</span>`;
 }
 
-// Init
 updateProgress();
 </script>
 </body>
