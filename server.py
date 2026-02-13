@@ -652,10 +652,12 @@ class Handler(BaseHTTPRequestHandler):
                              [commission, aff["email"]])
                 log_activity(conn, aff["email"], "commission", f"${commission} from order {order_id}")
                 conn.commit()
-            except sqlite3.IntegrityError:
-                conn.close()
-                self.send_json({"error": "Duplicate order ID", "attributed": False}, 409)
-                return
+            except (sqlite3.IntegrityError, Exception) as e:
+                if "UNIQUE" in str(e).upper() or "duplicate" in str(e).lower() or isinstance(e, sqlite3.IntegrityError):
+                    conn.close()
+                    self.send_json({"error": "Duplicate order ID", "attributed": False}, 409)
+                    return
+                raise
 
             conn.close()
             self.send_json({
@@ -729,7 +731,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 conn.execute("INSERT INTO users (email, referral_code, license_key, tier) VALUES (?, ?, ?, 'free')",
                              [email, code, license_key])
-            except sqlite3.IntegrityError:
+            except Exception:
                 pass  # user already exists
             log_activity(conn, email, "affiliate_joined", f"Self-service: {code}")
             conn.commit()

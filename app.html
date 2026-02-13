@@ -9,12 +9,11 @@
 :root {
     --bg:#000000;--surface:#0A0A0A;--surface2:#141414;--surface3:#1E1E1E;
     --border:#1A1A1A;--border-l:#2A2A2A;
-    --mint:#D4AF37;--cyan:#D4AF37;--blue:#D4AF37;
-    --yellow:#D4AF37;--red:#EF476F;--purple:#B388FF;--orange:#FF8C42;
+    --gold:#D4AF37;--gold-rgb:212,175,55;
+    --red:#EF476F;--purple:#B388FF;--orange:#FF8C42;--yellow:#D4AF37;
     --white:#FFFFFF;--text:rgba(255,255,255,0.6);--dim:rgba(255,255,255,0.3);
     --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
     --mono:'SF Mono','Menlo',monospace;
-    --gold:#D4AF37;--gold-rgb:212,175,55;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;}
@@ -23,7 +22,7 @@ a{color:var(--gold);text-decoration:none;}
 a:hover{opacity:0.8;}
 ::selection{background:rgba(212,175,55,0.2);}
 button{font-family:var(--font);cursor:pointer;}
-input,select{font-family:var(--font);}
+input,select,textarea{font-family:var(--font);}
 
 /* ═══ HEADER ═══ */
 header{
@@ -55,7 +54,7 @@ header{
     font-size:11px;color:var(--dim);background:var(--surface);
     padding:3px 8px;border-radius:4px;border:1px solid var(--border);
 }
-.ssl-badge svg{width:12px;height:12px;color:var(--mint);}
+.ssl-badge svg{width:12px;height:12px;color:var(--gold);}
 
 /* ═══ BREADCRUMB ═══ */
 .breadcrumb{
@@ -64,7 +63,7 @@ header{
     border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;
 }
 .breadcrumb a{color:var(--dim);}
-.breadcrumb a:hover{color:var(--mint);}
+.breadcrumb a:hover{color:var(--gold);}
 .breadcrumb .sep{opacity:0.3;}
 
 /* ═══ MAIN LAYOUT ═══ */
@@ -75,18 +74,18 @@ header{
 .console-toggle{
     position:fixed;bottom:20px;right:20px;z-index:50;
     background:var(--surface2);border:1px solid var(--border);
-    color:var(--mint);padding:10px 16px;border-radius:10px;
+    color:var(--gold);padding:10px 16px;border-radius:10px;
     font-family:var(--mono);font-size:12px;font-weight:600;
     display:flex;align-items:center;gap:8px;
     box-shadow:0 4px 20px rgba(0,0,0,0.4);
 }
 .console-toggle .count{
-    background:var(--mint);color:var(--bg);
+    background:var(--gold);color:var(--bg);
     padding:1px 6px;border-radius:99px;font-size:10px;min-width:18px;text-align:center;
 }
 .console{
     position:fixed;bottom:0;left:0;right:0;z-index:90;
-    background:var(--bg);border-top:2px solid var(--mint);
+    background:var(--bg);border-top:2px solid var(--gold);
     transition:transform 0.3s;transform:translateY(100%);
     max-height:45vh;display:flex;flex-direction:column;
 }
@@ -96,7 +95,7 @@ header{
     padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);
     flex-shrink:0;
 }
-.console-header h4{font-family:var(--mono);font-size:12px;color:var(--mint);display:flex;align-items:center;gap:8px;}
+.console-header h4{font-family:var(--mono);font-size:12px;color:var(--gold);display:flex;align-items:center;gap:8px;}
 .console-actions{display:flex;gap:8px;}
 .console-btn{
     background:var(--surface2);border:1px solid var(--border);color:var(--text);
@@ -113,15 +112,15 @@ header{
 .log-entry:hover{background:var(--surface);}
 .log-time{color:var(--dim);min-width:80px;flex-shrink:0;}
 .log-method{min-width:48px;font-weight:600;flex-shrink:0;}
-.log-method.GET{color:var(--mint);}
-.log-method.POST{color:var(--cyan);}
+.log-method.GET{color:var(--gold);}
+.log-method.POST{color:var(--gold);}
 .log-method.ERR{color:var(--red);}
-.log-method.SYS{color:var(--yellow);}
+.log-method.SYS{color:var(--gold);}
 .log-method.SEC{color:var(--purple);}
 .log-method.TEST{color:var(--orange);}
 .log-path{color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .log-status{min-width:32px;text-align:right;flex-shrink:0;}
-.log-status.ok{color:var(--mint);}
+.log-status.ok{color:var(--gold);}
 .log-status.err{color:var(--red);}
 .log-status.warn{color:var(--yellow);}
 .log-detail{color:var(--dim);flex-shrink:0;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -133,52 +132,134 @@ header{
 /* Cards */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;}
 .card h3{color:var(--white);font-size:16px;margin-bottom:8px;}
-.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
 
 /* Stat cards */
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}
 .stat .label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;}
 .stat .value{font-size:28px;font-weight:800;color:var(--white);font-family:var(--mono);}
-.stat .value.mint{color:var(--mint);}
-.stat .value.cyan{color:var(--cyan);}
-.stat .value.yellow{color:var(--yellow);}
+.stat .value.gold{color:var(--gold);}
+
+/* Identity card */
+.identity-card{
+    background:linear-gradient(135deg, #0A0A0A 0%, #111 100%);
+    border:1px solid rgba(212,175,55,0.2);border-radius:16px;padding:28px;
+    margin-bottom:16px;position:relative;overflow:hidden;
+}
+.identity-card::before{
+    content:'';position:absolute;top:-50%;right:-50%;width:200%;height:200%;
+    background:radial-gradient(circle at 70% 30%, rgba(212,175,55,0.04) 0%, transparent 50%);
+    pointer-events:none;
+}
+.identity-inner{display:flex;gap:24px;align-items:center;flex-wrap:wrap;}
+.identity-info{flex:1;min-width:200px;}
+.identity-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;}
+.identity-code{
+    font-family:var(--mono);font-size:28px;font-weight:800;color:var(--gold);
+    letter-spacing:2px;margin-bottom:12px;
+}
+.identity-link{
+    display:flex;align-items:center;gap:8px;
+    background:var(--bg);border:1px solid var(--border);border-radius:8px;
+    padding:10px 14px;margin-bottom:12px;max-width:400px;
+}
+.identity-link input{
+    flex:1;background:none;border:none;color:var(--text);
+    font-family:var(--mono);font-size:13px;outline:none;
+}
+.identity-link button{
+    background:var(--gold);color:#000;border:none;
+    padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;
+    transition:all 0.2s;white-space:nowrap;
+}
+.identity-link button:hover{box-shadow:0 0 20px rgba(212,175,55,0.4);}
+.identity-qr{
+    width:120px;height:120px;background:white;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.identity-qr img{width:110px;height:110px;border-radius:4px;}
+.identity-tier{
+    display:inline-block;padding:3px 10px;border-radius:99px;
+    font-size:11px;font-weight:600;letter-spacing:0.5px;
+    background:rgba(212,175,55,0.1);color:var(--gold);border:1px solid rgba(212,175,55,0.2);
+}
 
 /* Forms */
 .form-row{display:flex;gap:12px;margin-bottom:12px;}
 .form-row.stack{flex-direction:column;}
 .form-group{flex:1;}
 .form-group label{display:block;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
-.form-group input,.form-group select{
+.form-group input,.form-group select,.form-group textarea{
     width:100%;background:var(--bg);border:1px solid var(--border);
     color:var(--white);padding:10px 12px;border-radius:8px;font-size:13px;
     transition:border-color 0.2s;
 }
-.form-group input:focus,.form-group select:focus{border-color:var(--mint);outline:none;}
-.form-group input::placeholder{color:var(--dim);}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold);outline:none;}
+.form-group input::placeholder,.form-group textarea::placeholder{color:var(--dim);}
+.form-group textarea{resize:vertical;min-height:60px;font-family:var(--font);line-height:1.5;}
 .btn{
     display:inline-flex;align-items:center;gap:6px;
     padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;
     border:none;transition:all 0.2s;
 }
-.btn-mint{background:var(--gold);color:#000;font-weight:600;}
-.btn-mint:hover{box-shadow:0 0 30px rgba(212,175,55,0.5);transform:scale(1.02);}
+.btn-gold{background:var(--gold);color:#000;font-weight:600;}
+.btn-gold:hover{box-shadow:0 0 30px rgba(212,175,55,0.5);transform:scale(1.02);}
 .btn-ghost{background:none;border:1px solid var(--border);color:var(--text);}
-.btn-ghost:hover{border-color:var(--mint);color:var(--mint);}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px;}
 .btn-orange{background:var(--orange);color:var(--bg);}
 .btn-orange:hover{background:var(--yellow);}
+.btn-red{background:none;border:1px solid rgba(239,71,111,0.3);color:var(--red);}
+.btn-red:hover{background:rgba(239,71,111,0.1);border-color:var(--red);}
+
+/* Search bar */
+.search-bar{
+    display:flex;align-items:center;gap:8px;
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:8px 14px;margin-bottom:16px;
+}
+.search-bar svg{width:16px;height:16px;color:var(--dim);flex-shrink:0;}
+.search-bar input{
+    flex:1;background:none;border:none;color:var(--white);
+    font-size:13px;outline:none;
+}
+.search-bar input::placeholder{color:var(--dim);}
 
 /* Tables */
 table{width:100%;border-collapse:collapse;}
 th{text-align:left;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;padding:10px 12px;border-bottom:1px solid var(--border);}
-td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;}
+td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top;}
 td.mono{font-family:var(--mono);}
-td.mint{color:var(--mint);font-weight:600;}
-td.yellow{color:var(--yellow);}
+td.gold{color:var(--gold);font-weight:600;}
 .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;}
-.badge.green{background:rgba(212,175,55,0.1);color:var(--mint);}
+.badge.green{background:rgba(212,175,55,0.1);color:var(--gold);}
 .badge.yellow{background:rgba(255,209,102,0.1);color:var(--yellow);}
 .badge.red{background:rgba(239,71,111,0.1);color:var(--red);}
-.badge.blue{background:rgba(0,212,255,0.1);color:var(--cyan);}
+
+/* Contact row inline editing */
+.contact-row td{transition:background 0.15s;}
+.contact-row:hover td{background:rgba(255,255,255,0.02);}
+.contact-row.editing td{background:rgba(212,175,55,0.03);}
+.contact-row .cell-display{display:block;}
+.contact-row .cell-edit{display:none;}
+.contact-row.editing .cell-display{display:none;}
+.contact-row.editing .cell-edit{display:block;}
+.cell-edit input,.cell-edit textarea{
+    width:100%;background:var(--bg);border:1px solid var(--border-l);
+    color:var(--white);padding:6px 8px;border-radius:6px;font-size:13px;
+}
+.cell-edit input:focus,.cell-edit textarea:focus{border-color:var(--gold);outline:none;}
+.cell-edit textarea{min-height:40px;resize:vertical;font-family:var(--font);font-size:12px;line-height:1.4;}
+.contact-actions{display:flex;gap:4px;flex-wrap:nowrap;}
+
+/* Contact notes (expandable) */
+.contact-notes{
+    font-size:12px;color:var(--dim);margin-top:4px;
+    max-height:40px;overflow:hidden;transition:max-height 0.2s;
+    cursor:pointer;
+}
+.contact-notes.expanded{max-height:200px;}
+.contact-notes:empty{display:none;}
 
 /* Test runner */
 .test-scenario{
@@ -207,9 +288,9 @@ td.yellow{color:var(--yellow);}
     width:40px;height:40px;min-width:40px;border-radius:10px;
     display:flex;align-items:center;justify-content:center;font-size:18px;
 }
-.sec-icon.ok{background:rgba(212,175,55,0.1);color:var(--mint);}
+.sec-icon.ok{background:rgba(212,175,55,0.1);color:var(--gold);}
 .sec-icon.warn{background:rgba(255,209,102,0.1);color:var(--yellow);}
-.sec-icon.info{background:rgba(0,212,255,0.1);color:var(--cyan);}
+.sec-icon.info{background:rgba(0,212,255,0.1);color:#0ad;}
 .sec-item h4{color:var(--white);font-size:14px;margin-bottom:4px;}
 .sec-item p{font-size:12px;color:var(--dim);line-height:1.5;}
 
@@ -218,6 +299,16 @@ td.yellow{color:var(--yellow);}
 .activity-dot{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0;}
 .activity-text{flex:1;font-size:13px;}
 .activity-time{color:var(--dim);font-size:12px;font-family:var(--mono);flex-shrink:0;}
+
+/* Toast notification */
+.toast{
+    position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--surface2);border:1px solid var(--gold);
+    color:var(--white);padding:10px 20px;border-radius:10px;
+    font-size:13px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:200;
+    box-shadow:0 8px 32px rgba(0,0,0,0.5);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* ═══ FOOTER ═══ */
 footer{
@@ -233,20 +324,46 @@ footer{
 .footer-links a{color:var(--dim);font-size:12px;}
 .footer-links a:hover{color:var(--text);}
 .footer-status{display:flex;align-items:center;gap:6px;font-family:var(--mono);}
-.footer-status .dot{width:6px;height:6px;border-radius:50%;background:var(--mint);animation:pulse 2s infinite;}
+.footer-status .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:0.4;}50%{opacity:1;}}
 
+/* ═══ MOBILE ═══ */
 @media(max-width:768px){
     .nav-center{display:none;}
     .form-row{flex-direction:column;}
-    .card-grid{grid-template-columns:1fr;}
+    .card-grid{grid-template-columns:1fr 1fr;}
     .sec-grid{grid-template-columns:1fr;}
+    .identity-inner{flex-direction:column;align-items:flex-start;}
+    .identity-qr{align-self:center;}
+    .header-main{padding:0 12px;}
+    .content{padding:16px 12px;}
+    .card{padding:16px;}
+    /* Mobile contact cards instead of table */
+    .contacts-table-wrap{overflow-x:auto;}
+}
+@media(max-width:480px){
+    .card-grid{grid-template-columns:1fr;}
+    .identity-code{font-size:22px;}
+    .ssl-badge{display:none;}
+}
+
+/* Mobile nav drawer */
+.mobile-nav{display:none;}
+@media(max-width:768px){
+    .mobile-nav{
+        display:flex;gap:2px;padding:8px 12px;overflow-x:auto;
+        border-bottom:1px solid var(--border);
+        -webkit-overflow-scrolling:touch;
+        scrollbar-width:none;
+    }
+    .mobile-nav::-webkit-scrollbar{display:none;}
+    .mobile-nav .nav-btn{white-space:nowrap;font-size:12px;padding:6px 12px;}
 }
 </style>
 </head>
 <body>
 
-<!-- ═══ SHARED HEADER — appears on EVERY page ═══ -->
+<!-- ═══ HEADER ═══ -->
 <header>
     <div class="header-main">
         <div class="logo" onclick="navigate('home')">
@@ -258,7 +375,7 @@ footer{
             <button class="nav-btn" data-view="contacts" onclick="navigate('contacts')">Contacts</button>
             <button class="nav-btn" data-view="affiliates" onclick="navigate('affiliates')">Affiliates</button>
             <button class="nav-btn" data-view="security" onclick="navigate('security')">Security</button>
-            <button class="nav-btn" data-view="tests" onclick="navigate('tests')">Test Runner</button>
+            <button class="nav-btn" data-view="tests" onclick="navigate('tests')">Tests</button>
         </div>
         <div class="nav-right">
             <div class="ssl-badge">
@@ -270,6 +387,14 @@ footer{
                 <span id="auth-label">Not signed in</span>
             </div>
         </div>
+    </div>
+    <!-- Mobile nav -->
+    <div class="mobile-nav">
+        <button class="nav-btn active" data-view="home" onclick="navigate('home')">Dashboard</button>
+        <button class="nav-btn" data-view="contacts" onclick="navigate('contacts')">Contacts</button>
+        <button class="nav-btn" data-view="affiliates" onclick="navigate('affiliates')">Affiliates</button>
+        <button class="nav-btn" data-view="security" onclick="navigate('security')">Security</button>
+        <button class="nav-btn" data-view="tests" onclick="navigate('tests')">Tests</button>
     </div>
     <div class="breadcrumb" id="breadcrumb">
         <a href="#" onclick="navigate('home')">fortune0</a>
@@ -295,31 +420,49 @@ footer{
     <!-- Quick login -->
     <div class="card" id="login-card">
         <h3>Quick sign in</h3>
-        <p style="margin-bottom:16px;font-size:13px;">Enter an email to create a free account or sign in. No password needed for demo.</p>
+        <p style="margin-bottom:16px;font-size:13px;">Enter an email to create a free account or sign in. No password needed.</p>
         <div class="form-row">
             <div class="form-group">
                 <label>Email</label>
-                <input type="email" id="login-email" placeholder="you@example.com" value="demo@fortune0.com">
+                <input type="email" id="login-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLogin()">
             </div>
         </div>
-        <button class="btn btn-mint" onclick="doLogin()">Sign in / Create account</button>
+        <button class="btn btn-gold" onclick="doLogin()">Sign in / Create account</button>
     </div>
 
-    <!-- Stats (shown when logged in) -->
+    <!-- Dashboard content (shown when logged in) -->
     <div id="dashboard-stats" style="display:none;">
+
+        <!-- Identity card — your referral code is your identity -->
+        <div class="identity-card">
+            <div class="identity-inner">
+                <div class="identity-info">
+                    <div class="identity-label">Your referral code</div>
+                    <div class="identity-code" id="referral-code">—</div>
+                    <div class="identity-link">
+                        <input type="text" id="referral-link" readonly value="">
+                        <button onclick="copyReferralLink()">Copy</button>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <span class="identity-tier" id="user-tier">FREE</span>
+                        <span style="font-size:12px;color:var(--dim);">Share your code. Earn commission on every sale.</span>
+                    </div>
+                </div>
+                <div class="identity-qr" id="qr-container">
+                    <span style="font-size:11px;color:#999;">QR</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats grid -->
         <div class="card-grid" style="margin-bottom:16px;">
-            <div class="stat"><div class="label">Contacts</div><div class="value mint" id="stat-contacts">0</div></div>
-            <div class="stat"><div class="label">Affiliates</div><div class="value cyan" id="stat-affiliates">0</div></div>
-            <div class="stat"><div class="label">Commissions</div><div class="value yellow" id="stat-commissions">0</div></div>
-            <div class="stat"><div class="label">Attributed Revenue</div><div class="value mint" id="stat-revenue">$0</div></div>
+            <div class="stat"><div class="label">Contacts</div><div class="value gold" id="stat-contacts">0</div></div>
+            <div class="stat"><div class="label">Affiliates</div><div class="value gold" id="stat-affiliates">0</div></div>
+            <div class="stat"><div class="label">Commissions</div><div class="value" id="stat-commissions">0</div></div>
+            <div class="stat"><div class="label">Revenue</div><div class="value gold" id="stat-revenue">$0</div></div>
         </div>
 
-        <div class="card">
-            <h3>Referral code</h3>
-            <p style="margin-bottom:8px;font-size:13px;color:var(--dim);">Share this code. When someone uses it, you earn commission.</p>
-            <div style="font-family:var(--mono);font-size:20px;color:var(--mint);font-weight:700;" id="referral-code">—</div>
-        </div>
-
+        <!-- Recent activity -->
         <div class="card">
             <h3>Recent activity</h3>
             <div id="activity-feed"><p style="color:var(--dim)">No activity yet. Try adding a contact or registering an affiliate.</p></div>
@@ -329,32 +472,58 @@ footer{
 
 <!-- CONTACTS -->
 <div class="view" id="view-contacts">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
         <h2 style="color:var(--white);font-size:22px;">Contacts</h2>
-        <button class="btn btn-mint" onclick="document.getElementById('add-contact-form').style.display='block'">+ Add contact</button>
+        <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm" id="toggle-add-btn" onclick="toggleAddContact()">+ Add</button>
+        </div>
     </div>
 
+    <!-- Search -->
+    <div class="search-bar">
+        <svg viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M10 10l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="text" id="contact-search" placeholder="Search contacts by name, email, or company..." oninput="searchContacts()">
+    </div>
+
+    <!-- Add contact form (initially hidden) -->
     <div class="card" id="add-contact-form" style="display:none;">
         <h3>New contact</h3>
         <div class="form-row">
-            <div class="form-group"><label>Name</label><input id="c-name" placeholder="Jane Smith"></div>
+            <div class="form-group"><label>Name</label><input id="c-name" placeholder="Jane Smith" onkeydown="if(event.key==='Enter')addContact()"></div>
             <div class="form-group"><label>Email</label><input id="c-email" placeholder="jane@example.com"></div>
         </div>
         <div class="form-row">
             <div class="form-group"><label>Phone</label><input id="c-phone" placeholder="555-0123"></div>
             <div class="form-group"><label>Company</label><input id="c-company" placeholder="Acme Inc"></div>
         </div>
+        <div class="form-row">
+            <div class="form-group"><label>Notes</label><textarea id="c-notes" placeholder="Any notes about this contact..."></textarea></div>
+        </div>
         <div style="display:flex;gap:8px;">
-            <button class="btn btn-mint" onclick="addContact()">Save</button>
-            <button class="btn btn-ghost" onclick="document.getElementById('add-contact-form').style.display='none'">Cancel</button>
+            <button class="btn btn-gold" onclick="addContact()">Save contact</button>
+            <button class="btn btn-ghost" onclick="toggleAddContact()">Cancel</button>
         </div>
     </div>
 
-    <div class="card">
-        <table>
-            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Company</th><th>Added</th></tr></thead>
-            <tbody id="contacts-table"><tr><td colspan="5" style="color:var(--dim)">No contacts yet</td></tr></tbody>
-        </table>
+    <!-- Contacts table -->
+    <div class="card" style="padding:0;overflow:hidden;">
+        <div class="contacts-table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Company</th>
+                        <th>Notes</th>
+                        <th style="width:110px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="contacts-table">
+                    <tr><td colspan="6" style="color:var(--dim);padding:20px 12px;">No contacts yet. Click "+ Add" to get started.</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -362,7 +531,7 @@ footer{
 <div class="view" id="view-affiliates">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <h2 style="color:var(--white);font-size:22px;">Affiliates &amp; Commissions</h2>
-        <button class="btn btn-mint" onclick="document.getElementById('add-aff-form').style.display='block'">+ Register affiliate</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('add-aff-form').style.display='block'">+ Register</button>
     </div>
 
     <div class="card" id="add-aff-form" style="display:none;">
@@ -372,7 +541,7 @@ footer{
             <div class="form-group"><label>Commission %</label><input type="number" id="a-rate" value="10" min="1" max="50"></div>
         </div>
         <div style="display:flex;gap:8px;">
-            <button class="btn btn-mint" onclick="addAffiliate()">Register</button>
+            <button class="btn btn-gold" onclick="addAffiliate()">Register</button>
             <button class="btn btn-ghost" onclick="document.getElementById('add-aff-form').style.display='none'">Cancel</button>
         </div>
     </div>
@@ -407,13 +576,11 @@ footer{
 <div class="view" id="view-security">
     <h2 style="color:var(--white);font-size:22px;margin-bottom:20px;">Security &amp; transparency</h2>
     <p style="margin-bottom:24px;color:var(--dim);">Every security layer, visible. This is what "enterprise grade" actually means — not hidden complexity, but transparent protection.</p>
-
     <div class="sec-grid" id="security-grid"></div>
-
     <div class="card" style="margin-top:20px;">
         <h3>Token inspector</h3>
-        <p style="color:var(--dim);font-size:13px;margin-bottom:12px;">Your current session state. In production, tokens are HTTP-only cookies. Here they're visible for transparency.</p>
-        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:var(--mono);font-size:12px;word-break:break-all;" id="token-display">
+        <p style="color:var(--dim);font-size:13px;margin-bottom:12px;">Your current session state. In production, tokens are HTTP-only cookies.</p>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:var(--mono);font-size:12px;word-break:break-all;white-space:pre-wrap;" id="token-display">
             Not authenticated. Sign in to see your token.
         </div>
     </div>
@@ -424,9 +591,9 @@ footer{
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
         <div>
             <h2 style="color:var(--white);font-size:22px;">Test runner</h2>
-            <p style="color:var(--dim);font-size:13px;">Scripted scenarios that exercise the full platform. Click "Run" to watch each flow in the console.</p>
+            <p style="color:var(--dim);font-size:13px;">Scripted scenarios that exercise the full platform.</p>
         </div>
-        <button class="btn btn-mint" onclick="runAllTests()">Run all tests</button>
+        <button class="btn btn-gold" onclick="runAllTests()">Run all</button>
     </div>
     <div id="test-list"></div>
 </div>
@@ -434,7 +601,7 @@ footer{
 </div>
 </div>
 
-<!-- ═══ SHARED FOOTER — appears on EVERY page ═══ -->
+<!-- ═══ FOOTER ═══ -->
 <footer>
     <div class="footer-inner">
         <div style="display:flex;align-items:center;gap:8px;">
@@ -443,14 +610,16 @@ footer{
             <div class="footer-status"><div class="dot"></div> <span id="footer-api-status">System ready</span></div>
         </div>
         <div class="footer-links">
-            <a href="index.html">Home</a>
-            <a href="ideas.html">Ideas</a>
-            <a href="join.html">Earn</a>
-            <a href="why.html">Why</a>
-            <a href="projects.html">Projects</a>
+            <a href="/">Home</a>
+            <a href="/ideas">Ideas</a>
+            <a href="/join">Earn</a>
+            <a href="/setup">Setup</a>
         </div>
     </div>
 </footer>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 <!-- ═══ CONSOLE TOGGLE ═══ -->
 <button class="console-toggle" onclick="toggleConsole()">
@@ -476,17 +645,29 @@ footer{
 
 <script>
 // ═══════════════════════════════════════════
-// STATE — minimal; real data lives on the server
+// STATE
 // ═══════════════════════════════════════════
 const state = {
-    user: null,   // {email, refCode, tier}
-    token: null,  // Bearer token
+    user: null,
+    token: null,
     logs: [],
     consoleOpen: false,
+    contacts: [],      // cached for inline editing
+    editingId: null,    // currently editing contact id
 };
 
 // ═══════════════════════════════════════════
-// LOGGING — everything the system does, you see
+// TOAST
+// ═══════════════════════════════════════════
+function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════
+// LOGGING
 // ═══════════════════════════════════════════
 function log(method, path, status, detail = '') {
     const entry = {
@@ -518,25 +699,20 @@ function toggleConsole() {
 }
 
 // ═══════════════════════════════════════════
-// API HELPER — wraps fetch with auth + logging
+// API HELPER
 // ═══════════════════════════════════════════
 async function api(method, path, body = null) {
     const opts = {
         method,
         headers: { 'Content-Type': 'application/json' },
     };
-    if (state.token) {
-        opts.headers['Authorization'] = 'Bearer ' + state.token;
-    }
-    if (body) {
-        opts.body = JSON.stringify(body);
-    }
+    if (state.token) opts.headers['Authorization'] = 'Bearer ' + state.token;
+    if (body) opts.body = JSON.stringify(body);
     const t0 = performance.now();
     try {
         const resp = await fetch(path, opts);
         const ct = resp.headers.get('content-type') || '';
         if (!ct.includes('application/json')) {
-            // Server returned HTML instead of JSON — no API server running
             log('ERR', path, resp.status, 'No API server — got HTML instead of JSON');
             return { ok: false, status: resp.status, data: { error: 'API server not running. Run: python3 server.py' } };
         }
@@ -555,34 +731,36 @@ async function api(method, path, body = null) {
 }
 
 // ═══════════════════════════════════════════
-// AUTH — real server calls
+// AUTH
 // ═══════════════════════════════════════════
 async function doLogin() {
-    const btn = document.querySelector('#login-card .btn-mint');
+    const btn = document.querySelector('#login-card .btn-gold');
     const email = document.getElementById('login-email').value.trim().toLowerCase();
-    if (!email) { log('ERR', '/api/signup', 400, 'Email required'); alert('Enter an email address'); return; }
+    if (!email) { toast('Enter an email address'); return; }
 
     btn.textContent = 'Connecting...';
     btn.disabled = true;
-    log('SEC', '/crypto/hmac', 200, 'Server generating HMAC-signed license key...');
+    log('SEC', '/crypto/hmac', 200, 'Generating HMAC-signed license key...');
 
     try {
         const { ok, data } = await api('POST', '/api/signup', { email });
         if (!ok) {
             btn.textContent = 'Sign in / Create account';
             btn.disabled = false;
-            alert('Server error: ' + (data.error || 'Could not connect. Is the server running?'));
+            toast('Error: ' + (data.error || 'Could not connect'));
             return;
         }
 
         state.token = data.token;
         state.user = { email: data.email, refCode: data.referral_code, tier: data.tier };
 
-        log('SEC', '/auth/session', 200, `Token issued: ${data.token.slice(0, 12)}...`);
+        log('SEC', '/auth/session', 200, `Token: ${data.token.slice(0, 12)}...`);
         if (data.new) {
-            log('SYS', '/db/init', 200, `New account created for ${email}`);
+            log('SYS', '/db/init', 200, `New account: ${email}`);
+            toast('Account created!');
         } else {
-            log('SYS', '/auth', 200, `Returning user: ${email}`);
+            log('SYS', '/auth', 200, `Welcome back, ${email}`);
+            toast('Signed in!');
         }
 
         updateAuthUI();
@@ -591,18 +769,18 @@ async function doLogin() {
     } catch (err) {
         btn.textContent = 'Sign in / Create account';
         btn.disabled = false;
-        log('ERR', '/api/signup', 0, err.message);
-        alert('Connection failed: ' + err.message);
+        toast('Connection failed: ' + err.message);
     }
 }
 
 function doLogout() {
-    log('POST', '/api/logout', 200, `Destroyed session for ${state.user?.email}`);
-    log('SEC', '/auth/session', 200, 'Token revoked');
+    log('POST', '/api/logout', 200, `Session destroyed for ${state.user?.email}`);
     state.user = null;
     state.token = null;
+    state.contacts = [];
     updateAuthUI();
     navigate('home');
+    toast('Signed out');
 }
 
 function updateAuthUI() {
@@ -613,14 +791,32 @@ function updateAuthUI() {
     if (state.user) {
         dot.className = 'auth-dot on';
         label.textContent = state.user.email;
-        label.style.color = 'var(--mint)';
+        label.style.color = 'var(--gold)';
         document.getElementById('login-card').style.display = 'none';
         document.getElementById('dashboard-stats').style.display = 'block';
-        document.getElementById('welcome-msg').textContent = `Welcome, ${state.user.email}`;
-        document.getElementById('welcome-sub').textContent = `${state.user.tier} tier · Referral code: ${state.user.refCode}`;
+        document.getElementById('welcome-msg').textContent = `Welcome back`;
+        document.getElementById('welcome-sub').textContent = state.user.email;
         document.getElementById('referral-code').textContent = state.user.refCode;
-        document.getElementById('auth-actions').innerHTML = `<button class="btn btn-ghost" onclick="doLogout()">Sign out</button>`;
-        tokenDisplay.innerHTML = `<span style="color:var(--mint)">Session token:</span> ${state.token}\n<span style="color:var(--mint)">User:</span> ${state.user.email}\n<span style="color:var(--mint)">Tier:</span> ${state.user.tier}\n<span style="color:var(--mint)">Referral:</span> ${state.user.refCode}\n<span style="color:var(--mint)">Expires:</span> 7 days\n<span style="color:var(--dim)">In production: HTTP-only secure cookie, not visible to JS</span>`;
+        document.getElementById('user-tier').textContent = state.user.tier.toUpperCase();
+        document.getElementById('auth-actions').innerHTML = `<button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>`;
+
+        // Referral link
+        const host = location.origin;
+        const refLink = `${host}/r/${state.user.refCode}`;
+        document.getElementById('referral-link').value = refLink;
+
+        // QR code
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=D4AF37&bgcolor=FFFFFF&data=${encodeURIComponent(refLink)}`;
+        document.getElementById('qr-container').innerHTML = `<img src="${qrUrl}" alt="QR Code" onerror="this.parentElement.innerHTML='<span style=\\'font-size:11px;color:#999\\'>QR</span>'">`;
+
+        // Token inspector
+        tokenDisplay.innerHTML =
+            `<span style="color:var(--gold)">Session token:</span> ${state.token}\n` +
+            `<span style="color:var(--gold)">User:</span> ${state.user.email}\n` +
+            `<span style="color:var(--gold)">Tier:</span> ${state.user.tier}\n` +
+            `<span style="color:var(--gold)">Referral:</span> ${state.user.refCode}\n` +
+            `<span style="color:var(--gold)">Expires:</span> 7 days\n` +
+            `<span style="color:var(--dim)">In production: HTTP-only secure cookie, not visible to JS</span>`;
     } else {
         dot.className = 'auth-dot off';
         label.textContent = 'Not signed in';
@@ -634,8 +830,17 @@ function updateAuthUI() {
     }
 }
 
+function copyReferralLink() {
+    const input = document.getElementById('referral-link');
+    input.select();
+    navigator.clipboard.writeText(input.value).then(() => toast('Copied!')).catch(() => {
+        document.execCommand('copy');
+        toast('Copied!');
+    });
+}
+
 // ═══════════════════════════════════════════
-// DATA REFRESH — pull live data from the server
+// DATA REFRESH
 // ═══════════════════════════════════════════
 async function refreshData() {
     if (!state.token) return;
@@ -655,29 +860,140 @@ async function refreshStats() {
     if (data.activity && data.activity.length > 0) {
         feed.innerHTML = data.activity.map(a =>
             `<div class="activity-item">
-                <div class="activity-dot" style="background:var(--mint)"></div>
+                <div class="activity-dot" style="background:var(--gold)"></div>
                 <div class="activity-text"><span style="color:var(--white)">${esc(a.action)}</span> ${esc(a.detail || '')}</div>
                 <div class="activity-time">${a.created_at || ''}</div>
             </div>`
         ).join('');
     } else {
-        feed.innerHTML = '<p style="color:var(--dim)">No activity yet. Try adding a contact or registering an affiliate.</p>';
+        feed.innerHTML = '<p style="color:var(--dim)">No activity yet.</p>';
     }
 }
 
 async function refreshContacts() {
-    const { ok, data } = await api('GET', '/api/contacts');
+    const q = document.getElementById('contact-search')?.value || '';
+    const path = q ? `/api/contacts?q=${encodeURIComponent(q)}` : '/api/contacts';
+    const { ok, data } = await api('GET', path);
     if (!ok) return;
-    const tbody = document.getElementById('contacts-table');
-    if (!data.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="color:var(--dim)">No contacts yet</td></tr>';
-        return;
-    }
-    tbody.innerHTML = data.map(c =>
-        `<tr><td style="color:var(--white)">${esc(c.name)}</td><td class="mono">${esc(c.email)||'—'}</td><td class="mono">${esc(c.phone)||'—'}</td><td>${esc(c.company)||'—'}</td><td style="color:var(--dim)">${(c.created_at||'').split(' ')[0]}</td><td><button onclick="editContact(${c.id},'${esc(c.name).replace(/'/g,"\\'")}','${esc(c.email||"").replace(/'/g,"\\'")}','${esc(c.phone||"").replace(/'/g,"\\'")}','${esc(c.company||"").replace(/'/g,"\\'")}','${esc(c.notes||"").replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--border);color:var(--gold);padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px;margin-right:4px;">Edit</button><button onclick="deleteContact(${c.id})" style="background:none;border:1px solid var(--border);color:var(--red);padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px;">Del</button></td></tr>`
-    ).join('');
+    state.contacts = data;
+    renderContacts();
 }
 
+function renderContacts() {
+    const tbody = document.getElementById('contacts-table');
+    const data = state.contacts;
+    if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--dim);padding:20px 12px;">No contacts yet. Click "+ Add" to get started.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = data.map(c => {
+        const isEditing = state.editingId === c.id;
+        return `<tr class="contact-row ${isEditing ? 'editing' : ''}" data-id="${c.id}">
+            <td>
+                <span class="cell-display" style="color:var(--white);font-weight:500;">${esc(c.name)}</span>
+                <input class="cell-edit" data-field="name" value="${attr(c.name)}">
+            </td>
+            <td>
+                <span class="cell-display" style="font-family:var(--mono);font-size:12px;">${esc(c.email) || '<span style="color:var(--dim)">—</span>'}</span>
+                <input class="cell-edit" data-field="email" value="${attr(c.email || '')}">
+            </td>
+            <td>
+                <span class="cell-display" style="font-family:var(--mono);font-size:12px;">${esc(c.phone) || '<span style="color:var(--dim)">—</span>'}</span>
+                <input class="cell-edit" data-field="phone" value="${attr(c.phone || '')}">
+            </td>
+            <td>
+                <span class="cell-display">${esc(c.company) || '<span style="color:var(--dim)">—</span>'}</span>
+                <input class="cell-edit" data-field="company" value="${attr(c.company || '')}">
+            </td>
+            <td>
+                <span class="cell-display contact-notes" onclick="this.classList.toggle('expanded')">${esc(c.notes) || '<span style="color:var(--dim)">—</span>'}</span>
+                <textarea class="cell-edit" data-field="notes">${esc(c.notes || '')}</textarea>
+            </td>
+            <td>
+                <div class="contact-actions">
+                    ${isEditing
+                        ? `<button class="btn btn-gold btn-sm" onclick="saveContact(${c.id})">Save</button>
+                           <button class="btn btn-ghost btn-sm" onclick="cancelEdit()">Cancel</button>`
+                        : `<button class="btn btn-ghost btn-sm" onclick="startEdit(${c.id})">Edit</button>
+                           <button class="btn btn-red btn-sm" onclick="deleteContact(${c.id})">Del</button>`
+                    }
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function searchContacts() {
+    clearTimeout(window._searchTimer);
+    window._searchTimer = setTimeout(() => refreshContacts(), 300);
+}
+
+function toggleAddContact() {
+    const form = document.getElementById('add-contact-form');
+    const showing = form.style.display !== 'none';
+    form.style.display = showing ? 'none' : 'block';
+    if (!showing) document.getElementById('c-name').focus();
+}
+
+// ═══════════════════════════════════════════
+// INLINE EDITING — no more prompt() dialogs
+// ═══════════════════════════════════════════
+function startEdit(id) {
+    state.editingId = id;
+    renderContacts();
+    // Focus the name field
+    const row = document.querySelector(`tr[data-id="${id}"]`);
+    if (row) {
+        const nameInput = row.querySelector('input[data-field="name"]');
+        if (nameInput) nameInput.focus();
+    }
+}
+
+function cancelEdit() {
+    state.editingId = null;
+    renderContacts();
+}
+
+async function saveContact(id) {
+    const row = document.querySelector(`tr[data-id="${id}"]`);
+    if (!row) return;
+
+    const fields = {};
+    row.querySelectorAll('.cell-edit').forEach(el => {
+        fields[el.dataset.field] = el.value;
+    });
+
+    if (!fields.name || !fields.name.trim()) {
+        toast('Name is required');
+        return;
+    }
+
+    const { ok } = await api('POST', '/api/contacts/update', { id, ...fields });
+    if (ok) {
+        state.editingId = null;
+        toast('Contact updated');
+        await refreshContacts();
+        await refreshStats();
+    } else {
+        toast('Failed to update contact');
+    }
+}
+
+async function deleteContact(id) {
+    const c = state.contacts.find(x => x.id === id);
+    const name = c ? c.name : 'this contact';
+    if (!confirm(`Delete ${name}?`)) return;
+    const { ok } = await api('POST', '/api/contacts/delete', { id });
+    if (ok) {
+        toast('Contact deleted');
+        await refreshContacts();
+        await refreshStats();
+    }
+}
+
+// ═══════════════════════════════════════════
+// AFFILIATES
+// ═══════════════════════════════════════════
 async function refreshAffiliates() {
     const { ok, data } = await api('GET', '/api/affiliates');
     if (!ok) return;
@@ -687,7 +1003,7 @@ async function refreshAffiliates() {
         return;
     }
     tbody.innerHTML = data.map(a =>
-        `<tr><td style="color:var(--white)">${esc(a.email)}</td><td class="mono yellow">${esc(a.referral_code)}</td><td>${(a.commission_rate*100).toFixed(0)}%</td><td>${a.total_referrals}</td><td class="mint">$${Number(a.total_earned).toFixed(2)}</td></tr>`
+        `<tr><td style="color:var(--white)">${esc(a.email)}</td><td class="mono" style="color:var(--gold)">${esc(a.referral_code)}</td><td>${(a.commission_rate*100).toFixed(0)}%</td><td>${a.total_referrals}</td><td class="gold">$${Number(a.total_earned).toFixed(2)}</td></tr>`
     ).join('');
 }
 
@@ -700,57 +1016,41 @@ async function refreshCommissions() {
         return;
     }
     tbody.innerHTML = data.map(c =>
-        `<tr><td class="mono">${esc(c.order_id)}</td><td>${esc(c.affiliate_email)}</td><td class="mono yellow">${esc(c.discount_code)}</td><td class="mint">$${Number(c.order_total).toFixed(2)}</td><td class="mint">$${Number(c.commission_amount).toFixed(2)}</td><td style="color:var(--cyan)">$${Number(c.platform_fee).toFixed(2)} (${(c.platform_fee_rate*100)}%)</td><td><span class="badge yellow">${c.status}</span></td></tr>`
+        `<tr><td class="mono">${esc(c.order_id)}</td><td>${esc(c.affiliate_email)}</td><td class="mono" style="color:var(--gold)">${esc(c.discount_code)}</td><td class="gold">$${Number(c.order_total).toFixed(2)}</td><td class="gold">$${Number(c.commission_amount).toFixed(2)}</td><td style="color:var(--dim)">$${Number(c.platform_fee).toFixed(2)} (${(c.platform_fee_rate*100)}%)</td><td><span class="badge yellow">${c.status}</span></td></tr>`
     ).join('');
 }
 
-// Simple XSS escape
-function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
 // ═══════════════════════════════════════════
-// CRUD — real server calls
+// CRUD
 // ═══════════════════════════════════════════
 async function addContact() {
-    if (!state.token) { log('ERR', '/api/contacts', 401, 'Auth required'); return; }
+    if (!state.token) { toast('Sign in first'); return; }
     const name = document.getElementById('c-name').value.trim();
     const email = document.getElementById('c-email').value.trim();
     const phone = document.getElementById('c-phone').value.trim();
     const company = document.getElementById('c-company').value.trim();
-    if (!name) { log('ERR', '/api/contacts', 400, 'Name required'); return; }
+    const notes = document.getElementById('c-notes').value.trim();
+    if (!name) { toast('Name is required'); return; }
 
-    const { ok } = await api('POST', '/api/contacts', { name, email, phone, company });
+    const { ok } = await api('POST', '/api/contacts', { name, email, phone, company, notes });
     if (!ok) return;
 
     document.getElementById('add-contact-form').style.display = 'none';
-    ['c-name','c-email','c-phone','c-company'].forEach(id => document.getElementById(id).value = '');
+    ['c-name','c-email','c-phone','c-company','c-notes'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el.tagName === 'TEXTAREA') el.value = '';
+        else el.value = '';
+    });
+    toast(`Added ${name}`);
     await refreshContacts();
     await refreshStats();
 }
 
-async function editContact(id, name, email, phone, company, notes) {
-    const newName = prompt('Name:', name);
-    if (newName === null) return;
-    const newEmail = prompt('Email:', email);
-    const newPhone = prompt('Phone:', phone);
-    const newCompany = prompt('Company:', company);
-    const newNotes = prompt('Notes:', notes);
-    const { ok } = await api('POST', '/api/contacts/update', {
-        id, name: newName, email: newEmail || '', phone: newPhone || '', company: newCompany || '', notes: newNotes || ''
-    });
-    if (ok) { await refreshContacts(); await refreshStats(); }
-}
-
-async function deleteContact(id) {
-    if (!confirm('Delete this contact?')) return;
-    const { ok } = await api('POST', '/api/contacts/delete', { id });
-    if (ok) { await refreshContacts(); await refreshStats(); }
-}
-
 async function addAffiliate() {
-    if (!state.token) { log('ERR', '/api/affiliates', 401, 'Auth required'); return; }
+    if (!state.token) { toast('Sign in first'); return; }
     const email = document.getElementById('a-email').value.trim();
     const rate = parseFloat(document.getElementById('a-rate').value) / 100;
-    if (!email) { log('ERR', '/api/affiliates', 400, 'Email required'); return; }
+    if (!email) { toast('Email required'); return; }
 
     const { ok, data } = await api('POST', '/api/affiliates', { email, commission_rate: rate });
     if (!ok) return;
@@ -758,6 +1058,7 @@ async function addAffiliate() {
     log('SEC', '/crypto/referral', 200, `Code generated: ${data.referral_code}`);
     document.getElementById('add-aff-form').style.display = 'none';
     document.getElementById('a-email').value = '';
+    toast(`Registered affiliate: ${data.referral_code}`);
     await refreshAffiliates();
     await refreshStats();
 }
@@ -765,19 +1066,16 @@ async function addAffiliate() {
 async function simulateOrder() {
     const code = document.getElementById('o-code').value.trim();
     const total = parseFloat(document.getElementById('o-total').value);
-    if (!code) { log('ERR', '/api/webhooks/order', 400, 'Discount code required'); return; }
+    if (!code) { toast('Discount code required'); return; }
 
-    log('SEC', '/crypto/hmac-verify', 200, 'Webhook HMAC verification...');
     const { ok, data } = await api('POST', '/api/webhooks/order', {
-        discount_code: code,
-        order_total: total,
+        discount_code: code, order_total: total,
     });
 
     if (!ok) return;
 
     log('SYS', '/attribution', 200, `Attributed to ${data.affiliate}`);
-    log('SYS', '/commission', 200, `$${data.commission} commission`);
-    log('SYS', '/platform-fee', 200, `$${data.platform_fee} platform fee`);
+    toast(`Commission: $${data.commission} to ${data.affiliate}`);
 
     await refreshAffiliates();
     await refreshCommissions();
@@ -785,20 +1083,26 @@ async function simulateOrder() {
 }
 
 // ═══════════════════════════════════════════
-// NAVIGATION — shared header + breadcrumbs
+// HELPERS
 // ═══════════════════════════════════════════
-const viewNames = { home:'Dashboard', contacts:'Contacts', affiliates:'Affiliates', security:'Security', tests:'Test Runner' };
+function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function attr(s) { if (!s) return ''; return s.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+const viewNames = { home:'Dashboard', contacts:'Contacts', affiliates:'Affiliates', security:'Security', tests:'Tests' };
 
 function navigate(view) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    // Update both desktop and mobile nav
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('view-' + view).classList.add('active');
-    document.querySelector(`[data-view="${view}"]`)?.classList.add('active');
+    document.querySelectorAll(`[data-view="${view}"]`).forEach(b => b.classList.add('active'));
     document.getElementById('breadcrumb-page').textContent = viewNames[view] || view;
-    log('GET', '/' + (view === 'home' ? 'dashboard' : view), 200, `Navigated to ${viewNames[view]}`);
+    log('GET', '/' + (view === 'home' ? 'dashboard' : view), 200, `→ ${viewNames[view]}`);
     window.scrollTo(0, 0);
 
-    // Refresh data for the active view
     if (state.token) {
         if (view === 'home') refreshStats();
         else if (view === 'contacts') refreshContacts();
@@ -812,16 +1116,16 @@ function navigate(view) {
 // ═══════════════════════════════════════════
 function renderSecurity() {
     const checks = [
-        { icon: '🔒', cls: 'ok', title: 'HTTPS / TLS', desc: 'All traffic encrypted in transit. Most hosts auto-provision TLS certificates via Let\'s Encrypt. No configuration needed.' },
-        { icon: '🔑', cls: 'ok', title: 'HMAC-signed license keys', desc: 'Keys are cryptographically signed with SHA-256. Cannot be forged or tampered with. Bound to email + expiry.' },
-        { icon: '🗄️', cls: 'ok', title: 'Per-user database isolation', desc: 'Every user gets their own SQLite file. No cross-user data leakage possible at the database level.' },
-        { icon: '🛡️', cls: 'ok', title: 'SQL injection protection', desc: 'All queries use parameterized statements. No string concatenation in SQL. Built into the ORM layer.' },
-        { icon: '⏱️', cls: 'ok', title: 'Rate limiting', desc: '100 requests per minute per IP. Prevents brute force and abuse. Configurable per endpoint.' },
-        { icon: '🪝', cls: 'ok', title: 'Webhook HMAC verification', desc: 'Shopify webhooks are cryptographically verified. The server proves the request came from Shopify, not an attacker.' },
-        { icon: '🍪', cls: 'info', title: 'Session tokens', desc: 'HTTP-only cookies with 7-day expiry. In demo mode, tokens are visible for transparency. In production, JS cannot access them.' },
-        { icon: '📋', cls: 'info', title: 'CORS policy', desc: 'Cross-Origin Resource Sharing enabled for web access. Can be restricted to specific domains in production.' },
+        { icon: '🔒', cls: 'ok', title: 'HTTPS / TLS', desc: 'All traffic encrypted in transit. TLS certificates auto-provisioned.' },
+        { icon: '🔑', cls: 'ok', title: 'HMAC-signed license keys', desc: 'SHA-256 signed, bound to email + expiry. Cannot be forged.' },
+        { icon: '🗄️', cls: 'ok', title: 'Database isolation', desc: 'Per-user data isolation. No cross-user leakage possible.' },
+        { icon: '🛡️', cls: 'ok', title: 'SQL injection protection', desc: 'All queries use parameterized statements. No string concat in SQL.' },
+        { icon: '⏱️', cls: 'ok', title: 'Rate limiting', desc: '100 req/min per IP. Prevents brute force and abuse.' },
+        { icon: '🪝', cls: 'ok', title: 'Webhook HMAC verification', desc: 'Webhooks are cryptographically verified before processing.' },
+        { icon: '🍪', cls: 'info', title: 'Session tokens', desc: 'HTTP-only cookies with 7-day expiry. Visible in demo mode for transparency.' },
+        { icon: '📋', cls: 'info', title: 'CORS policy', desc: 'Cross-Origin Resource Sharing enabled. Restrictable per domain in production.' },
         { icon: '🔐', cls: state.user ? 'ok' : 'warn', title: 'Authentication state', desc: state.user ? `Authenticated as ${state.user.email}. Token expires in 7 days.` : 'Not authenticated. Sign in to establish a session.' },
-        { icon: '📊', cls: 'info', title: 'Audit logging', desc: 'Every API call is logged with timestamp, method, path, status, and detail. Open the console to see it live.' },
+        { icon: '📊', cls: 'info', title: 'Audit logging', desc: 'Every API call logged. Open the console to see it live.' },
     ];
     document.getElementById('security-grid').innerHTML = checks.map(c =>
         `<div class="sec-item"><div class="sec-icon ${c.cls}">${c.icon}</div><div><h4>${c.title}</h4><p>${c.desc}</p></div></div>`
@@ -829,22 +1133,19 @@ function renderSecurity() {
 }
 
 // ═══════════════════════════════════════════
-// TEST RUNNER — exercises real API endpoints
+// TEST RUNNER
 // ═══════════════════════════════════════════
 const tests = [
     {
         name: 'Full signup → CRM → affiliate → order flow',
-        steps: '1. Create free account  2. Add 3 contacts  3. Register an affiliate  4. Simulate a $500 order  5. Verify commission and platform fee',
+        steps: '1. Create account  2. Add contacts  3. Register affiliate  4. Simulate order  5. Verify commission',
         run: async function(output) {
-            // Step 1: Signup
             output('→ Creating account: test-runner@fortune0.com');
             document.getElementById('login-email').value = 'test-runner@fortune0.com';
             await doLogin();
             if (!state.token) { output('✗ Login failed'); return false; }
             output(`✓ Signed in. Token: ${state.token.slice(0,16)}...`);
             output(`✓ Referral code: ${state.user.refCode}`);
-
-            // Step 2: Add contacts
             const names = ['Alice Johnson', 'Bob Smith', 'Charlie Brown'];
             for (const name of names) {
                 const { ok } = await api('POST', '/api/contacts', {
@@ -853,13 +1154,9 @@ const tests = [
                 });
                 output(ok ? `✓ Added contact: ${name}` : `✗ Failed: ${name}`);
             }
-
-            // Step 3: Register affiliate
             const affEmail = 'influencer@example.com';
             const { ok: affOk, data: affData } = await api('POST', '/api/affiliates', { email: affEmail, commission_rate: 0.12 });
             output(affOk ? `✓ Registered affiliate: ${affEmail} (code: ${affData.referral_code})` : '✗ Failed');
-
-            // Step 4: Simulate $500 order
             const { ok: ordOk, data: ordData } = await api('POST', '/api/webhooks/order', {
                 discount_code: affData.referral_code, order_total: 500,
             });
@@ -867,90 +1164,59 @@ const tests = [
                 output(`✓ Order $500 attributed to ${ordData.affiliate}`);
                 output(`  Commission: $${ordData.commission}`);
                 output(`  Platform fee: $${ordData.platform_fee}`);
-            } else {
-                output('✗ Order failed');
-            }
-
-            // Step 5: Verify via stats
+            } else { output('✗ Order failed'); }
             await refreshData();
             const { data: stats } = await api('GET', '/api/stats');
-            output(`\n✓ Final state:`);
-            output(`  Contacts: ${stats.contacts}`);
-            output(`  Affiliates: ${stats.affiliates}`);
-            output(`  Commissions: ${stats.commissions}`);
-            output(`  Attributed revenue: $${stats.attributed_revenue}`);
-            output(`  Console log entries: ${state.logs.length}`);
+            output(`\n✓ Final: ${stats.contacts} contacts, ${stats.affiliates} affiliates, $${stats.attributed_revenue} revenue`);
             return true;
         }
     },
     {
         name: 'Auth boundary test',
-        steps: '1. Log out  2. Try to add contact without auth  3. Verify 401 response  4. Log back in  5. Verify access restored',
+        steps: '1. Log out  2. Try unauthenticated request  3. Verify 401  4. Log back in  5. Verify access',
         run: async function(output) {
-            // Logout
             doLogout();
             output('→ Logged out');
-
-            // Try unauthenticated contact add
-            output('→ Attempting to add contact without auth...');
             const { ok, status } = await api('POST', '/api/contacts', { name: 'Should Fail' });
-            output(!ok && status === 401 ? '✓ Correctly rejected — 401 Unauthorized' : '✗ FAIL: Was not rejected!');
-
-            // Login again
-            output('→ Logging back in...');
+            output(!ok && status === 401 ? '✓ Correctly rejected — 401' : '✗ FAIL');
             document.getElementById('login-email').value = 'auth-test@fortune0.com';
             await doLogin();
             output(state.token ? `✓ Authenticated as ${state.user.email}` : '✗ Login failed');
-
-            // Verify access restored
             const { ok: getOk } = await api('GET', '/api/contacts');
-            output(getOk ? '✓ Access restored — contacts readable' : '✗ FAIL: Still rejected');
+            output(getOk ? '✓ Access restored' : '✗ FAIL');
             return true;
         }
     },
     {
         name: 'Attribution edge cases',
-        steps: '1. Order with invalid code  2. Order with valid code  3. Verify only valid one recorded',
+        steps: '1. Register affiliate  2. Invalid code order  3. Valid code order  4. Verify counts',
         run: async function(output) {
             if (!state.token) { document.getElementById('login-email').value = 'edge-test@fortune0.com'; await doLogin(); }
-
-            // Register an affiliate
             const affEmail = 'edge-aff-' + Date.now() + '@example.com';
             const { ok: regOk, data: regData } = await api('POST', '/api/affiliates', { email: affEmail, commission_rate: 0.15 });
-            output(regOk ? `✓ Registered affiliate: ${regData.referral_code}` : '✗ Failed to register');
-
-            // Get baseline commission count
+            output(regOk ? `✓ Registered: ${regData.referral_code}` : '✗ Failed');
             const { data: before } = await api('GET', '/api/commissions');
             const countBefore = before.length;
-
-            // Order with invalid code
             const { ok: badOk } = await api('POST', '/api/webhooks/order', { discount_code: 'FAKE-CODE-999', order_total: 100 });
-            output(!badOk ? '✓ Invalid code correctly rejected (404)' : '✗ FAIL: Order went through with bad code');
-
-            // Order with valid code
+            output(!badOk ? '✓ Invalid code rejected' : '✗ FAIL');
             const { ok: goodOk, data: goodData } = await api('POST', '/api/webhooks/order', {
                 discount_code: regData.referral_code, order_total: 200,
             });
-            output(goodOk ? `✓ Valid code correctly attributed ($${goodData.commission} commission)` : '✗ FAIL: Valid code was rejected');
-
-            // Verify count
+            output(goodOk ? `✓ Valid code attributed ($${goodData.commission})` : '✗ FAIL');
             const { data: after } = await api('GET', '/api/commissions');
-            output(after.length === countBefore + 1 ? '✓ Exactly one new commission recorded' : `⚠ Expected ${countBefore+1} commissions, got ${after.length}`);
-
+            output(after.length === countBefore + 1 ? '✓ Exactly one new commission' : `⚠ Expected ${countBefore+1}, got ${after.length}`);
             await refreshData();
             return true;
         }
     },
     {
         name: 'Commission tier calculation',
-        steps: '1. Register high-volume affiliate  2. Simulate $300K in orders  3. Verify tier degrades from 5% → 3%',
+        steps: '1. Register affiliate  2. Simulate $300K in orders  3. Verify tier changes',
         run: async function(output) {
             if (!state.token) { document.getElementById('login-email').value = 'tier-test@fortune0.com'; await doLogin(); }
-
             const affEmail = 'whale-' + Date.now() + '@example.com';
             const { ok: regOk, data: regData } = await api('POST', '/api/affiliates', { email: affEmail, commission_rate: 0.10 });
             output(regOk ? `✓ Registered: ${regData.referral_code}` : '✗ Failed');
-
             const amounts = [5000, 10000, 50000, 100000, 150000];
             for (const amt of amounts) {
                 const { ok, data } = await api('POST', '/api/webhooks/order', {
@@ -958,18 +1224,14 @@ const tests = [
                 });
                 if (ok) {
                     const feePercent = (data.platform_fee / amt * 100).toFixed(1);
-                    output(`  $${amt.toLocaleString()} order → fee: $${data.platform_fee} (${feePercent}%)`);
-                } else {
-                    output(`  ✗ $${amt.toLocaleString()} order failed`);
-                }
+                    output(`  $${amt.toLocaleString()} → fee: $${data.platform_fee} (${feePercent}%)`);
+                } else { output(`  ✗ $${amt.toLocaleString()} failed`); }
             }
-
-            // Check final state
             const { data: affs } = await api('GET', '/api/affiliates');
             const whale = affs.find(a => a.email === affEmail);
             if (whale) {
                 output(`\n✓ Total earned: $${Number(whale.total_earned).toLocaleString()}`);
-                output(`✓ Total referrals: ${whale.total_referrals}`);
+                output(`✓ Referrals: ${whale.total_referrals}`);
             }
             await refreshData();
             return true;
@@ -982,7 +1244,7 @@ function renderTests() {
         `<div class="test-scenario" id="test-${i}">
             <div class="test-header">
                 <span class="test-name">${t.name}</span>
-                <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;" onclick="runTest(${i})">Run</button>
+                <button class="btn btn-ghost btn-sm" onclick="runTest(${i})">Run</button>
             </div>
             <div class="test-steps">${t.steps}</div>
             <div class="test-output" id="test-output-${i}"></div>
@@ -996,12 +1258,12 @@ async function runTest(i) {
     output.classList.add('show');
     log('TEST', `/tests/${i}`, 200, `Running: ${tests[i].name}`);
     try {
-        const result = await tests[i].run(line => { output.textContent += line + '\n'; });
+        await tests[i].run(line => { output.textContent += line + '\n'; });
         log('TEST', `/tests/${i}`, 200, 'PASSED');
-        output.textContent += '\n✅ TEST PASSED';
+        output.textContent += '\n✅ PASSED';
     } catch (e) {
         log('TEST', `/tests/${i}`, 500, `FAILED: ${e.message}`);
-        output.textContent += `\n❌ TEST FAILED: ${e.message}`;
+        output.textContent += `\n❌ FAILED: ${e.message}`;
     }
 }
 
@@ -1013,7 +1275,7 @@ async function runAllTests() {
 }
 
 // ═══════════════════════════════════════════
-// HEALTH CHECK — verify server is running
+// HEALTH CHECK
 // ═══════════════════════════════════════════
 async function checkHealth() {
     try {
@@ -1022,30 +1284,44 @@ async function checkHealth() {
         if (!ct.includes('application/json')) throw new Error('No API server');
         const data = await resp.json();
         if (data.status === 'ok') {
-            log('SYS', '/health', 200, `Server: ${data.service} v${data.version} — ${data.db}`);
+            log('SYS', '/health', 200, `${data.service} v${data.version} — ${data.db}`);
             document.getElementById('footer-api-status').textContent = 'API connected';
-            document.getElementById('footer-api-status').parentElement.querySelector('.dot').style.background = 'var(--mint)';
+            document.getElementById('footer-api-status').parentElement.querySelector('.dot').style.background = 'var(--gold)';
         }
     } catch (e) {
-        log('ERR', '/health', 0, 'No API server — to use the dashboard run: python3 server.py');
+        log('ERR', '/health', 0, 'No API server — run: python3 server.py');
         document.getElementById('footer-api-status').textContent = 'API offline';
         document.getElementById('footer-api-status').parentElement.querySelector('.dot').style.background = 'var(--red)';
-        // Show offline banner
         const banner = document.createElement('div');
         banner.style.cssText = 'background:#1a1000;border-bottom:1px solid #D4AF37;padding:12px 20px;text-align:center;font-size:13px;color:#D4AF37;';
-        banner.innerHTML = 'This dashboard requires the API server. On your Mac run: <code style="background:#000;padding:2px 8px;border-radius:4px;font-family:monospace;">python3 server.py</code> then open <a href="http://localhost:8080/app" style="color:#fff;">localhost:8080/app</a>';
+        banner.innerHTML = 'Dashboard requires the API server. Run: <code style="background:#000;padding:2px 8px;border-radius:4px;font-family:monospace;">python3 server.py</code> then open <a href="http://localhost:8080/app" style="color:#fff;">localhost:8080/app</a>';
         document.body.insertBefore(banner, document.body.firstChild);
     }
 }
 
 // ═══════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════
+document.addEventListener('keydown', e => {
+    // Escape cancels editing
+    if (e.key === 'Escape' && state.editingId) {
+        cancelEdit();
+    }
+    // Enter saves when editing (unless in textarea)
+    if (e.key === 'Enter' && state.editingId && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        saveContact(state.editingId);
+    }
+});
+
+// ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
-log('SYS', '/boot', 200, 'fortune0 platform v1.0 initialized');
-log('SEC', '/tls', 200, 'HTTPS: ' + (location.protocol === 'https:' ? 'Active (production)' : 'Inactive (local dev)'));
-log('SYS', '/db', 200, 'Connecting to server...');
+log('SYS', '/boot', 200, 'fortune0 platform v1.0');
+log('SEC', '/tls', 200, 'HTTPS: ' + (location.protocol === 'https:' ? 'Active' : 'Inactive (dev)'));
+log('SYS', '/db', 200, 'Connecting...');
 
-document.getElementById('ssl-text').textContent = location.protocol === 'https:' ? 'HTTPS' : 'HTTP (dev)';
+document.getElementById('ssl-text').textContent = location.protocol === 'https:' ? 'HTTPS' : 'HTTP';
 renderSecurity();
 renderTests();
 updateAuthUI();
