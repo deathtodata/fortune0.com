@@ -35,6 +35,15 @@ import urllib.request
 import urllib.error
 import urllib.parse
 import math
+import re as _re
+
+# Chart generator (matplotlib + numpy)
+try:
+    from charts import generate_chart, list_chart_types, HAS_MPL
+except ImportError:
+    HAS_MPL = False
+    def generate_chart(*a, **kw): return None
+    def list_chart_types(): return {}
 
 # Optional: PostgreSQL support (for Render/production)
 try:
@@ -190,6 +199,16 @@ CREATE TABLE IF NOT EXISTS credits (
     stripe_charge_id TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_email TEXT NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    visibility TEXT DEFAULT 'private',
+    tier_required TEXT DEFAULT 'free',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 SCHEMA_PG = """
@@ -258,6 +277,16 @@ CREATE TABLE IF NOT EXISTS credits (
     description TEXT,
     stripe_charge_id TEXT,
     created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS notes (
+    id SERIAL PRIMARY KEY,
+    user_email TEXT NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    visibility TEXT DEFAULT 'private',
+    tier_required TEXT DEFAULT 'free',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 """
 
@@ -487,7 +516,7 @@ class Handler(BaseHTTPRequestHandler):
                 total_revenue = total_credits = credits_spent = credits_imported = 0
             conn.close()
             self.send_json({
-                "status": "ok", "service": "fortune0", "version": "1.3.0",
+                "status": "ok", "service": "fortune0", "version": "1.4.0",
                 "db": db_type,
                 "stripe_webhook": "configured" if stripe_configured else "not set",
                 "stripe_payment_link": "configured" if payment_link_set else "not set",
@@ -536,7 +565,6 @@ class Handler(BaseHTTPRequestHandler):
                     for d in domains:
                         name = d["domain"].replace(".com", "").replace(".io", "").replace(".ai", "").replace(".net", "").replace(".org", "").replace(".xyz", "")
                         # Break domain name into words (camelCase and joined words)
-                        import re as _re
                         domain_words = _re.sub(r'([a-z])([A-Z])', r'\1 \2', name).lower()
                         domain_words = domain_words.replace("-", " ").replace(".", " ")
                         # Match: any query word appears in domain name
@@ -882,6 +910,93 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(302)
             self.send_header("Location", f"/u/{code}")
             self.end_headers()
+
+        # ── Chart API: /api/chart/<type> ──
+        elif path.startswith("/api/chart/"):
+            chart_type = path[len("/api/chart/"):]
+            if not chart_type:
+                self.send_json({"error": "Chart type required", "available": list_chart_types()}, 400)
+                return
+
+            # Load domains.json
+            domains_path = os.path.join(SITE_DIR, "domains.json")
+            domains = []
+            if os.path.exists(domains_path):
+                with open(domains_path) as f:
+                    domains = json.load(f)
+
+            # Gather params from query string
+            params = {k: v[0] for k, v in qs.items()}
+
+            # For platform chart, pull stats from DB
+            if chart_type == "platform":
+                try:
+                    conn = get_db()
+                    params["total_users"] = conn.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]
+                    params["active_users"] = conn.execute("SELECT COUNT(*) c FROM users WHERE tier='active'").fetchone()["c"]
+                    params["total_revenue"] = conn.execute("SELECT COALESCE(SUM(order_total),0) s FROM commissions").fetchone()["s"]
+                    params["total_credits"] = conn.execute("SELECT COALESCE(SUM(amount),0) s FROM credits WHERE amount > 0").fetchone()["s"]
+                    conn.close()
+                except Exception:
+                    pass
+
+            png = generate_chart(chart_type, domains, params)
+            if png is None:
+                if not HAS_MPL:
+                    self.send_json({"error": "matplotlib not installed", "hint": "pip install matplotlib numpy"}, 500)
+                else:
+                    self.send_json({"error": f"Unknown chart type: {chart_type}", "available": list_chart_types()}, 400)
+                return
+
+            self.send_response(200)
+            self.send_header("Content-Type", "image/png")
+            self.send_header("Content-Length", len(png))
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(png)
+
+        # ── Chart types listing ──
+        elif path == "/api/charts":
+            self.send_json({
+                "available": list_chart_types(),
+                "matplotlib": HAS_MPL,
+                "usage": "/api/chart/<type>?param1=value1&param2=value2",
+                "generator_params": {
+                    "labels": "comma-separated labels",
+                    "values": "comma-separated numbers",
+                    "chart_type": "bar, line, pie, scatter",
+                    "title": "chart title",
+                    "color": "hex color (e.g. #d4a843)",
+                },
+            })
+
+        # ── Notes: list public notes or user's own notes ──
+        elif path == "/api/notes":
+            sess = self.get_user()
+            visibility = qs.get("visibility", ["public"])[0]
+
+            conn = get_db()
+            if visibility == "public":
+                # Anyone can see public notes
+                rows = conn.execute(
+                    "SELECT n.id, n.title, n.body, n.visibility, n.tier_required, n.created_at, n.updated_at, "
+                    "u.referral_code FROM notes n LEFT JOIN users u ON u.email = n.user_email "
+                    "WHERE n.visibility='public' ORDER BY n.created_at DESC LIMIT 50"
+                ).fetchall()
+                conn.close()
+                self.send_json([dict(r) for r in rows])
+            elif sess:
+                # Authed user sees their own notes
+                rows = conn.execute(
+                    "SELECT * FROM notes WHERE user_email=? ORDER BY created_at DESC",
+                    [sess["email"]]
+                ).fetchall()
+                conn.close()
+                self.send_json([dict(r) for r in rows])
+            else:
+                conn.close()
+                self.send_json({"error": "Auth required for private notes"}, 401)
 
         # ── Static files ──
         elif path == "/":
@@ -1464,6 +1579,83 @@ class Handler(BaseHTTPRequestHandler):
             conn.close()
 
             self.send_json({"purged": True, "records_removed": purged, "total": total})
+
+        # ── Create note ──
+        elif path == "/api/notes":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+
+            title = body.get("title", "").strip()
+            note_body = body.get("body", "").strip()
+            visibility = body.get("visibility", "private")  # private or public
+            tier_required = body.get("tier_required", "free")  # free or active
+
+            if not title or not note_body:
+                self.send_json({"error": "Title and body required"}, 400); return
+            if visibility not in ("private", "public"):
+                self.send_json({"error": "Visibility must be 'private' or 'public'"}, 400); return
+
+            conn = get_db()
+
+            # Check tier — only active users can create public notes
+            if visibility == "public":
+                user = conn.execute("SELECT tier FROM users WHERE email=?", [sess["email"]]).fetchone()
+                user_tier = user["tier"] if user else "free"
+                if user_tier != "active":
+                    conn.close()
+                    self.send_json({"error": "Active tier required to publish public notes"}, 403); return
+
+            conn.execute(
+                "INSERT INTO notes (user_email, title, body, visibility, tier_required) VALUES (?, ?, ?, ?, ?)",
+                [sess["email"], title, note_body, visibility, tier_required]
+            )
+            log_activity(conn, sess["email"], "note_created", f"{visibility}: {title[:50]}")
+            conn.commit()
+            row = conn.execute("SELECT * FROM notes WHERE user_email=? ORDER BY id DESC LIMIT 1", [sess["email"]]).fetchone()
+            conn.close()
+            self.send_json(dict(row), 201)
+
+        # ── Update note ──
+        elif path == "/api/notes/update":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            nid = body.get("id")
+            if not nid:
+                self.send_json({"error": "ID required"}, 400); return
+            conn = get_db()
+            updates = []
+            vals = []
+            for field in ["title", "body", "visibility", "tier_required"]:
+                if field in body:
+                    updates.append(f"{field}=?")
+                    vals.append(body[field])
+            if not updates:
+                conn.close()
+                self.send_json({"error": "No fields to update"}, 400); return
+            updates.append("updated_at=CURRENT_TIMESTAMP" if not USE_PG else "updated_at=NOW()")
+            vals.extend([nid, sess["email"]])
+            conn.execute(f"UPDATE notes SET {','.join(updates)} WHERE id=? AND user_email=?", vals)
+            log_activity(conn, sess["email"], "note_updated", f"Note #{nid}")
+            conn.commit()
+            row = conn.execute("SELECT * FROM notes WHERE id=?", [nid]).fetchone()
+            conn.close()
+            self.send_json(dict(row) if row else {"error": "Not found"}, 200 if row else 404)
+
+        # ── Delete note ──
+        elif path == "/api/notes/delete":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            nid = body.get("id")
+            if not nid:
+                self.send_json({"error": "ID required"}, 400); return
+            conn = get_db()
+            conn.execute("DELETE FROM notes WHERE id=? AND user_email=?", [nid, sess["email"]])
+            log_activity(conn, sess["email"], "note_deleted", f"Note #{nid}")
+            conn.commit(); conn.close()
+            self.send_json({"deleted": True})
 
         # ── Spend credits ──
         elif path == "/api/credits/spend":

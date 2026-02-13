@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charts — fortune0</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root {
+    --bg: #0a0a0a; --card: #141414; --border: #222; --text: #e0e0e0;
+    --dim: #666; --gold: #d4a843; --green: #00ffaa; --red: #ff4444;
+    --blue: #4488ff; --purple: #aa44ff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh;
+}
+.top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+}
+.top-bar a { color: var(--gold); text-decoration: none; font-size: 13px; }
+.top-bar a:hover { text-decoration: underline; }
+.logo { color: var(--gold); font-weight: bold; font-size: 16px; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+h1 { color: var(--gold); font-size: 22px; margin-bottom: 8px; }
+.subtitle { color: var(--dim); font-size: 13px; margin-bottom: 24px; }
+
+/* Chart type grid */
+.chart-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px; margin-bottom: 32px;
+}
+.chart-btn {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px; cursor: pointer;
+    transition: all 0.2s; text-align: center;
+}
+.chart-btn:hover { border-color: var(--gold); transform: translateY(-2px); }
+.chart-btn.active { border-color: var(--gold); background: #1a1a0a; }
+.chart-btn .icon { font-size: 28px; margin-bottom: 8px; }
+.chart-btn .name { color: var(--text); font-size: 12px; font-weight: bold; }
+.chart-btn .desc { color: var(--dim); font-size: 10px; margin-top: 4px; }
+
+/* Generator section */
+.generator {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px; margin-bottom: 24px;
+}
+.gen-title { color: var(--gold); font-size: 14px; margin-bottom: 16px; }
+
+.form-row {
+    display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.form-group { flex: 1; min-width: 200px; }
+.form-group label {
+    display: block; color: var(--dim); font-size: 11px;
+    margin-bottom: 4px; text-transform: uppercase;
+}
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 10px 12px; color: var(--text);
+    font-family: inherit; font-size: 13px;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--gold);
+}
+.form-group textarea { resize: vertical; min-height: 60px; }
+
+.btn {
+    background: var(--gold); color: var(--bg); border: none;
+    padding: 12px 24px; border-radius: 8px; font-family: inherit;
+    font-size: 13px; font-weight: bold; cursor: pointer;
+    transition: all 0.2s;
+}
+.btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.btn-outline {
+    background: transparent; border: 1px solid var(--gold);
+    color: var(--gold);
+}
+.btn-sm { padding: 8px 16px; font-size: 11px; }
+
+/* Chart output */
+.chart-output {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px; text-align: center;
+    min-height: 200px; display: flex; align-items: center;
+    justify-content: center; flex-direction: column;
+}
+.chart-output img {
+    max-width: 100%; height: auto; border-radius: 8px;
+    border: 1px solid var(--border);
+}
+.chart-output .placeholder { color: var(--dim); font-size: 13px; }
+.chart-output .loading { color: var(--gold); }
+
+/* Notes section */
+.notes-section { margin-top: 32px; }
+.note-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px; margin-bottom: 12px;
+}
+.note-card .meta { color: var(--dim); font-size: 11px; margin-bottom: 8px; }
+.note-card .title { color: var(--gold); font-size: 14px; font-weight: bold; }
+.note-card .body { color: var(--text); font-size: 12px; margin-top: 8px; line-height: 1.6; white-space: pre-wrap; }
+.badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: bold; margin-left: 8px;
+}
+.badge-public { background: rgba(0,255,170,0.15); color: var(--green); }
+.badge-private { background: rgba(102,102,102,0.15); color: var(--dim); }
+.badge-active { background: rgba(212,168,67,0.15); color: var(--gold); }
+
+/* Actions row */
+.actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+/* Download row */
+.download-row { margin-top: 12px; display: flex; gap: 8px; justify-content: center; }
+
+@media (max-width: 600px) {
+    .form-row { flex-direction: column; }
+    .chart-grid { grid-template-columns: repeat(2, 1fr); }
+    .container { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+    <span class="logo">fortune0</span>
+    <div>
+        <a href="/app">Dashboard</a> &nbsp;
+        <a href="/search">Search</a> &nbsp;
+        <a href="/">Home</a>
+    </div>
+</div>
+
+<div class="container">
+    <h1>Chart Generator</h1>
+    <p class="subtitle">Plug in numbers, get images. Powered by your domain portfolio data.</p>
+
+    <!-- Chart type selector -->
+    <div class="chart-grid" id="chartGrid"></div>
+
+    <!-- Generator form (shows for custom charts) -->
+    <div class="generator" id="generatorForm" style="display:none;">
+        <div class="gen-title">Custom Generator</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Labels (comma-separated)</label>
+                <input type="text" id="genLabels" value="Product A,Product B,Product C,Product D" placeholder="Label1,Label2,...">
+            </div>
+            <div class="form-group">
+                <label>Values (comma-separated)</label>
+                <input type="text" id="genValues" value="25,40,15,60" placeholder="10,20,30,...">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Chart Type</label>
+                <select id="genType">
+                    <option value="bar">Bar Chart</option>
+                    <option value="line">Line Chart</option>
+                    <option value="pie">Pie Chart</option>
+                    <option value="scatter">Scatter Plot</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="genTitle" value="My Chart" placeholder="Chart title...">
+            </div>
+            <div class="form-group">
+                <label>Color</label>
+                <input type="color" id="genColor" value="#d4a843" style="height:38px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Portfolio params (shows for portfolio chart) -->
+    <div class="generator" id="portfolioForm" style="display:none;">
+        <div class="gen-title">Portfolio Settings</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Top N Domains</label>
+                <input type="number" id="portfolioTop" value="20" min="5" max="50">
+            </div>
+        </div>
+    </div>
+
+    <!-- Generate button -->
+    <div class="actions">
+        <button class="btn" id="generateBtn" onclick="generateChart()">Generate Chart</button>
+        <button class="btn btn-outline btn-sm" onclick="generateAll()">Generate All</button>
+    </div>
+
+    <!-- Chart output -->
+    <div class="chart-output" id="chartOutput" style="margin-top: 16px;">
+        <div class="placeholder">Select a chart type and click Generate</div>
+    </div>
+    <div class="download-row" id="downloadRow" style="display:none;">
+        <button class="btn btn-sm btn-outline" onclick="downloadChart()">Download PNG</button>
+        <button class="btn btn-sm btn-outline" onclick="openInTab()">Open in New Tab</button>
+    </div>
+
+    <!-- Notes Section -->
+    <div class="notes-section">
+        <h2 style="color:var(--gold);font-size:18px;margin-bottom:16px;">Public Notes</h2>
+        <p class="subtitle">Persistent content from active-tier members. Your notes survive across sessions.</p>
+
+        <div class="generator" id="noteForm">
+            <div class="gen-title">Create Note</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="noteTitle" placeholder="Note title...">
+                </div>
+                <div class="form-group" style="min-width:120px;flex:0;">
+                    <label>Visibility</label>
+                    <select id="noteVisibility">
+                        <option value="public">Public</option>
+                        <option value="private">Private</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Body</label>
+                    <textarea id="noteBody" rows="3" placeholder="Write your note..."></textarea>
+                </div>
+            </div>
+            <button class="btn btn-sm" onclick="createNote()">Publish Note</button>
+        </div>
+
+        <div id="notesList"></div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  SESSION STATE
+// ═══════════════════════════════════════════
+const S = {
+    token: sessionStorage.getItem('f0_token') || '',
+    email: sessionStorage.getItem('f0_email') || '',
+    tier: sessionStorage.getItem('f0_tier') || 'free',
+};
+
+const CHART_TYPES = {
+    portfolio: { icon: '📊', name: 'Portfolio', desc: 'Top domains by value' },
+    distribution: { icon: '📈', name: 'Distribution', desc: 'Value histogram' },
+    expiry: { icon: '⏰', name: 'Expiry Timeline', desc: 'When domains expire' },
+    categories: { icon: '🏷️', name: 'Categories', desc: 'Domain categories' },
+    generator: { icon: '🔧', name: 'Custom', desc: 'Plug in your numbers' },
+    platform: { icon: '🖥️', name: 'Dashboard', desc: 'Platform overview' },
+    network: { icon: '🕸️', name: 'Network Map', desc: 'Domain clusters' },
+};
+
+let selectedChart = 'portfolio';
+let lastChartUrl = null;
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+
+function init() {
+    renderChartGrid();
+    selectChart('portfolio');
+    loadNotes();
+}
+
+function renderChartGrid() {
+    const grid = document.getElementById('chartGrid');
+    grid.innerHTML = '';
+    for (const [key, info] of Object.entries(CHART_TYPES)) {
+        const div = document.createElement('div');
+        div.className = 'chart-btn' + (key === selectedChart ? ' active' : '');
+        div.onclick = () => selectChart(key);
+        div.innerHTML = `
+            <div class="icon">${info.icon}</div>
+            <div class="name">${info.name}</div>
+            <div class="desc">${info.desc}</div>
+        `;
+        grid.appendChild(div);
+    }
+}
+
+function selectChart(type) {
+    selectedChart = type;
+    renderChartGrid();
+
+    // Show/hide form sections
+    document.getElementById('generatorForm').style.display = type === 'generator' ? 'block' : 'none';
+    document.getElementById('portfolioForm').style.display = type === 'portfolio' ? 'block' : 'none';
+}
+
+// ═══════════════════════════════════════════
+//  CHART GENERATION
+// ═══════════════════════════════════════════
+
+function buildChartUrl(type) {
+    let url = `/api/chart/${type}`;
+    const params = new URLSearchParams();
+
+    if (type === 'generator') {
+        params.set('labels', document.getElementById('genLabels').value);
+        params.set('values', document.getElementById('genValues').value);
+        params.set('chart_type', document.getElementById('genType').value);
+        params.set('title', document.getElementById('genTitle').value);
+        params.set('color', document.getElementById('genColor').value);
+    } else if (type === 'portfolio') {
+        params.set('top', document.getElementById('portfolioTop').value);
+    }
+
+    const qs = params.toString();
+    return qs ? `${url}?${qs}` : url;
+}
+
+async function generateChart() {
+    const output = document.getElementById('chartOutput');
+    output.innerHTML = '<div class="loading">Generating chart...</div>';
+    document.getElementById('downloadRow').style.display = 'none';
+
+    const url = buildChartUrl(selectedChart);
+
+    try {
+        const resp = await fetch(url);
+        if (!resp.ok) {
+            const err = await resp.json();
+            output.innerHTML = `<div class="placeholder" style="color:var(--red);">${err.error || 'Failed to generate chart'}</div>`;
+            return;
+        }
+        const blob = await resp.blob();
+        const imgUrl = URL.createObjectURL(blob);
+        lastChartUrl = imgUrl;
+
+        output.innerHTML = `<img src="${imgUrl}" alt="${selectedChart} chart">`;
+        document.getElementById('downloadRow').style.display = 'flex';
+    } catch (e) {
+        output.innerHTML = `<div class="placeholder" style="color:var(--red);">Error: ${e.message}</div>`;
+    }
+}
+
+async function generateAll() {
+    const output = document.getElementById('chartOutput');
+    output.innerHTML = '<div class="loading">Generating all charts...</div>';
+
+    const types = Object.keys(CHART_TYPES).filter(t => t !== 'generator');
+    const imgs = [];
+
+    for (const type of types) {
+        const url = buildChartUrl(type);
+        try {
+            const resp = await fetch(url);
+            if (resp.ok) {
+                const blob = await resp.blob();
+                imgs.push({ type, url: URL.createObjectURL(blob) });
+            }
+        } catch (e) {}
+    }
+
+    if (imgs.length === 0) {
+        output.innerHTML = '<div class="placeholder" style="color:var(--red);">No charts generated. Is matplotlib installed?</div>';
+        return;
+    }
+
+    output.innerHTML = imgs.map(i =>
+        `<div style="margin-bottom:16px;">
+            <div style="color:var(--dim);font-size:11px;margin-bottom:4px;">${CHART_TYPES[i.type]?.name || i.type}</div>
+            <img src="${i.url}" alt="${i.type}">
+        </div>`
+    ).join('');
+    document.getElementById('downloadRow').style.display = 'none';
+}
+
+function downloadChart() {
+    if (!lastChartUrl) return;
+    const a = document.createElement('a');
+    a.href = lastChartUrl;
+    a.download = `fortune0-${selectedChart}-${Date.now()}.png`;
+    a.click();
+}
+
+function openInTab() {
+    if (!lastChartUrl) return;
+    window.open(lastChartUrl, '_blank');
+}
+
+// ═══════════════════════════════════════════
+//  NOTES
+// ═══════════════════════════════════════════
+
+async function loadNotes() {
+    const list = document.getElementById('notesList');
+    try {
+        // Load public notes
+        const resp = await fetch('/api/notes?visibility=public');
+        if (!resp.ok) { list.innerHTML = ''; return; }
+        const notes = await resp.json();
+
+        if (!Array.isArray(notes) || notes.length === 0) {
+            list.innerHTML = '<div style="color:var(--dim);font-size:12px;padding:16px;">No public notes yet. Active-tier members can publish notes.</div>';
+            return;
+        }
+
+        list.innerHTML = notes.map(n => `
+            <div class="note-card">
+                <div class="meta">
+                    ${n.referral_code || 'anonymous'} · ${new Date(n.created_at).toLocaleDateString()}
+                    <span class="badge badge-public">public</span>
+                    ${n.tier_required === 'active' ? '<span class="badge badge-active">active</span>' : ''}
+                </div>
+                <div class="title">${esc(n.title)}</div>
+                <div class="body">${esc(n.body)}</div>
+            </div>
+        `).join('');
+    } catch (e) {
+        list.innerHTML = '';
+    }
+}
+
+async function createNote() {
+    const title = document.getElementById('noteTitle').value.trim();
+    const body = document.getElementById('noteBody').value.trim();
+    const visibility = document.getElementById('noteVisibility').value;
+
+    if (!title || !body) { alert('Title and body required'); return; }
+    if (!S.token) { alert('Sign in first to create notes'); return; }
+
+    try {
+        const resp = await fetch('/api/notes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + S.token },
+            body: JSON.stringify({ title, body, visibility }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+            alert(data.error || 'Failed to create note');
+            return;
+        }
+        document.getElementById('noteTitle').value = '';
+        document.getElementById('noteBody').value = '';
+        loadNotes();
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s || '';
+    return d.innerHTML;
+}
+
+init();
+</script>
+</body>
+</html>
