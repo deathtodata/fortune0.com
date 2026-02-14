@@ -3,336 +3,675 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title id="page-title">Domain</title>
+  <title id="page-title">Loading...</title>
+  <meta name="description" id="page-desc" content="An idea waiting to be built. Part of the fortune0 open incubator.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    body {
-      min-height: 100vh;
-      background: #000;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-      text-align: center;
+    :root {
+      --gold: #D4AF37;
+      --gold-rgb: 212, 175, 55;
     }
 
-    .glow {
+    body {
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
       position: fixed;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%);
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .logo:hover { opacity: 0.8; }
+    .logo span { color: var(--gold); }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: rgba(255,255,255,0.4);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: #fff; }
+
+    .nav-btn {
+      padding: 0.5rem 1rem;
+      background: var(--gold);
+      color: #000 !important;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+    .nav-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(var(--gold-rgb), 0.4);
+    }
+
+    /* ── Orbs ── */
+    .orb {
+      position: fixed;
       border-radius: 50%;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      filter: blur(80px);
+      opacity: 0.4;
       pointer-events: none;
       z-index: 0;
     }
 
-    .container {
-      position: relative;
-      z-index: 1;
-      max-width: 600px;
+    .orb-1 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(var(--gold-rgb), 0.25), transparent 70%);
+      top: -150px;
+      right: -150px;
+      animation: float1 20s ease-in-out infinite;
     }
 
-    .domain {
-      font-size: clamp(2.5rem, 10vw, 5rem);
+    .orb-2 {
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(var(--gold-rgb), 0.15), transparent 70%);
+      bottom: -100px;
+      left: -100px;
+      animation: float2 25s ease-in-out infinite;
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(-40px, 40px) scale(1.1); }
+      66% { transform: translate(20px, -20px) scale(0.95); }
+    }
+    @keyframes float2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(60px, -30px) scale(1.1); }
+    }
+
+    /* ── Cursor glow ── */
+    .cursor-glow {
+      position: fixed;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(var(--gold-rgb), 0.12), transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      transform: translate(-50%, -50%);
+      filter: blur(40px);
+      display: none;
+    }
+
+    /* ── Main content ── */
+    .content {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 6rem 2rem 3rem;
+    }
+
+    .hero {
+      text-align: center;
+      max-width: 700px;
+      width: 100%;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(var(--gold-rgb), 0.08);
+      border: 1px solid rgba(var(--gold-rgb), 0.2);
+      border-radius: 100px;
+      color: var(--gold);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeIn 0.8s ease 0.3s forwards;
+    }
+    .badge .dot {
+      width: 6px;
+      height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .domain-name {
+      font-size: clamp(3rem, 12vw, 7rem);
       font-weight: 800;
-      letter-spacing: -0.03em;
-      background: linear-gradient(135deg, #D4AF37 0%, #F4E4BA 50%, #D4AF37 100%);
+      letter-spacing: -0.04em;
+      line-height: 0.9;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #D4AF37 0%, #F4E4BA 40%, #D4AF37 70%, #F4E4BA 100%);
+      background-size: 200% auto;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 1rem;
+      animation: shimmer 4s linear infinite, fadeIn 0.8s ease 0.1s forwards;
+      opacity: 0;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% center; }
+      100% { background-position: -200% center; }
     }
 
     .tagline {
-      font-size: 1.25rem;
-      color: rgba(255,255,255,0.6);
-      margin-bottom: 2rem;
-      line-height: 1.5;
+      font-size: clamp(1.1rem, 3vw, 1.4rem);
+      font-weight: 300;
+      color: rgba(255,255,255,0.55);
+      max-width: 500px;
+      margin: 0 auto 2rem;
+      line-height: 1.6;
+      opacity: 0;
+      animation: fadeIn 0.8s ease 0.5s forwards;
     }
 
-    .prize {
-      display: inline-block;
-      padding: 0.75rem 1.5rem;
-      background: rgba(212,175,55,0.1);
-      border: 1px solid rgba(212,175,55,0.3);
-      border-radius: 100px;
-      color: #D4AF37;
-      font-weight: 600;
-      font-size: 1.1rem;
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
       margin-bottom: 2.5rem;
+      opacity: 0;
+      animation: fadeIn 0.8s ease 0.7s forwards;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 0.25rem;
     }
 
-    .form-box {
+    /* ── Signup form ── */
+    .form-container {
+      opacity: 0;
+      animation: fadeIn 0.8s ease 0.9s forwards;
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .email-form {
+      display: flex;
+      gap: 0;
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 20px;
-      padding: 2rem;
-      margin-bottom: 2rem;
+      border-radius: 60px;
+      padding: 5px;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s;
     }
 
-    .form-title {
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
-      color: rgba(255,255,255,0.8);
+    .email-form:focus-within {
+      border-color: var(--gold);
+      box-shadow: 0 0 40px rgba(var(--gold-rgb), 0.15);
     }
 
-    .input-row {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    input[type="email"] {
+    .email-form input {
       flex: 1;
-      min-width: 200px;
-      padding: 1rem 1.25rem;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      color: #fff;
-      font-size: 1rem;
+      min-width: 0;
+      padding: 0.9rem 1.25rem;
+      font-size: 0.95rem;
       font-family: inherit;
-    }
-
-    input[type="email"]:focus {
-      outline: none;
-      border-color: #D4AF37;
-    }
-
-    input::placeholder {
-      color: rgba(255,255,255,0.3);
-    }
-
-    button {
-      padding: 1rem 2rem;
-      background: #D4AF37;
+      background: transparent;
       border: none;
-      border-radius: 12px;
-      color: #000;
-      font-size: 1rem;
-      font-weight: 700;
+      color: #fff;
+      outline: none;
+    }
+
+    .email-form input::placeholder {
+      color: rgba(255,255,255,0.35);
+    }
+
+    .email-form button {
+      padding: 0.9rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 600;
       font-family: inherit;
+      background: var(--gold);
+      color: #000;
+      border: none;
+      border-radius: 60px;
       cursor: pointer;
       transition: all 0.2s;
+      white-space: nowrap;
     }
 
-    button:hover {
+    .email-form button:hover {
       transform: scale(1.05);
-      box-shadow: 0 0 30px rgba(212,175,55,0.4);
+      box-shadow: 0 0 30px rgba(var(--gold-rgb), 0.5);
     }
 
-    .or-divider {
+    .email-form button:disabled {
+      opacity: 0.6;
+      transform: none;
+      cursor: wait;
+    }
+
+    .form-note {
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
       color: rgba(255,255,255,0.3);
-      margin: 1.5rem 0;
-      font-size: 0.9rem;
     }
 
-    .code-section {
-      display: flex;
-      gap: 0.75rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    input[type="text"] {
-      width: 180px;
-      padding: 1rem;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      color: #fff;
-      font-size: 1.1rem;
-      font-family: inherit;
+    .success-msg {
+      display: none;
+      padding: 1rem 1.5rem;
+      background: rgba(107,203,119,0.08);
+      border: 1px solid rgba(107,203,119,0.2);
+      border-radius: 16px;
+      color: #6BCB77;
+      font-size: 0.95rem;
+      margin-top: 1rem;
       text-align: center;
-      letter-spacing: 0.2em;
+    }
+    .success-msg.show { display: block; }
+
+    /* ── Related domains ── */
+    .related {
+      margin-top: 3rem;
+      opacity: 0;
+      animation: fadeIn 0.8s ease 1.2s forwards;
+    }
+    .related-title {
+      font-size: 0.75rem;
       text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(255,255,255,0.25);
+      margin-bottom: 1rem;
+    }
+    .related-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .related-chip {
+      padding: 0.4rem 0.9rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 100px;
+      color: rgba(255,255,255,0.45);
+      font-size: 0.8rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .related-chip:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(var(--gold-rgb), 0.05);
     }
 
-    input[type="text"]:focus {
-      outline: none;
-      border-color: #D4AF37;
-    }
-
-    .code-btn {
-      background: transparent;
-      border: 1px solid #D4AF37;
-      color: #D4AF37;
-    }
-
-    .code-btn:hover {
-      background: #D4AF37;
-      color: #000;
-    }
-
+    /* ── Footer ── */
     .footer {
-      margin-top: 2rem;
-      color: rgba(255,255,255,0.3);
-      font-size: 0.85rem;
+      margin-top: 4rem;
+      padding: 2rem;
+      text-align: center;
+      opacity: 0;
+      animation: fadeIn 0.8s ease 1.4s forwards;
     }
-
-    .footer a {
-      color: #D4AF37;
+    .footer-text {
+      color: rgba(255,255,255,0.2);
+      font-size: 0.8rem;
+    }
+    .footer-text a {
+      color: var(--gold);
       text-decoration: none;
     }
-
-    .success {
-      display: none;
-      padding: 1rem;
-      background: rgba(107,203,119,0.1);
-      border: 1px solid rgba(107,203,119,0.3);
-      border-radius: 12px;
-      color: #6BCB77;
-      margin-top: 1rem;
+    .footer-text a:hover {
+      text-decoration: underline;
     }
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      margin-top: 0.75rem;
+    }
+    .footer-links a {
+      color: rgba(255,255,255,0.2);
+      text-decoration: none;
+      font-size: 0.75rem;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: rgba(255,255,255,0.5); }
 
-    .success.show { display: block; }
-
-    @media (max-width: 500px) {
-      .input-row { flex-direction: column; }
-      input[type="email"] { width: 100%; }
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
+      header { padding: 1rem 1.25rem; }
+      .nav-links a:not(.nav-btn) { display: none; }
+      .content { padding: 5rem 1.5rem 2rem; }
+      .email-form {
+        flex-direction: column;
+        border-radius: 16px;
+      }
+      .email-form input { text-align: center; }
+      .email-form button { border-radius: 12px; }
+      .stats-row { gap: 1.25rem; }
+      .stat-value { font-size: 1.2rem; }
     }
   </style>
 </head>
 <body>
-  <div class="glow"></div>
+  <header>
+    <a href="/" class="logo">fortune<span>0</span></a>
+    <nav class="nav-links">
+      <a href="/ideas">Ideas</a>
+      <a href="/charts">Analytics</a>
+      <a href="/app" class="nav-btn">Sign In</a>
+    </nav>
+  </header>
 
-  <div class="container">
-    <h1 class="domain" id="domain-name">domain.com</h1>
-    <p class="tagline" id="tagline">This domain is looking for its purpose. Got an idea?</p>
-    <div class="prize">🏆 $5,000 for best pitch</div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="cursor-glow" id="cursor-glow"></div>
 
-    <div class="form-box">
-      <p class="form-title">Get notified when voting opens</p>
-      <form class="input-row" id="notify-form">
-        <input type="email" id="email" placeholder="your@email.com" required>
-        <button type="submit">Notify Me</button>
-      </form>
-
-      <div class="or-divider">— or check subscriber access —</div>
-
-      <div class="code-section">
-        <input type="email" id="access-email" placeholder="your@email.com">
-        <button type="button" class="code-btn" onclick="checkAccess()">Check</button>
+  <div class="content">
+    <div class="hero">
+      <div class="badge" id="badge">
+        <span class="dot"></span>
+        <span id="status-text">Open for ideas</span>
       </div>
 
-      <div class="success" id="success">✓ You're in! Check your email.</div>
+      <h1 class="domain-name" id="domain-name"></h1>
+      <p class="tagline" id="tagline">Loading...</p>
+
+      <div class="stats-row" id="stats-row">
+        <div class="stat">
+          <div class="stat-value" id="stat-value">—</div>
+          <div class="stat-label">Domain Value</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-interest">0</div>
+          <div class="stat-label">Interested</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-expires">—</div>
+          <div class="stat-label">Expires</div>
+        </div>
+      </div>
+
+      <div class="form-container">
+        <form class="email-form" id="signup-form">
+          <input type="email" name="email" id="email-input" placeholder="your@email.com" required>
+          <button type="submit" id="submit-btn">I'm interested</button>
+        </form>
+        <p class="form-note">Get notified when this idea launches. Free to join.</p>
+        <div class="success-msg" id="success-msg"></div>
+      </div>
+
+      <div class="related" id="related-section" style="display:none;">
+        <p class="related-title">More ideas from fortune0</p>
+        <div class="related-grid" id="related-grid"></div>
+      </div>
     </div>
 
-    <p class="footer">
-      Part of <a href="https://fortune0.com">fortune0</a> — where ideas compete to exist
-    </p>
+    <div class="footer">
+      <p class="footer-text">
+        Part of <a href="/">fortune0</a> — the open incubator where ideas compete to exist
+      </p>
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/charts">Analytics</a>
+        <a href="/join">Earn</a>
+        <a href="https://death2data.com">death2data</a>
+      </div>
+    </div>
   </div>
 
   <script>
-    // Get domain from URL param or use current hostname
-    const params = new URLSearchParams(window.location.search);
-    const domain = params.get('d') || window.location.hostname;
+    // ── Extract domain from URL path: /d/domain-name ──
+    const pathParts = window.location.pathname.split('/');
+    const domainSlug = pathParts[2] || '';
 
-    // Config for specific domains (optional customization)
-    const domainConfig = {
-      'toneswitch.com': { tagline: 'Voice AI needs a home. What should this become?' },
-      'vibedevice.com': { tagline: 'The vibe economy needs hardware. What\'s the device?' },
-      'civicresume.com': { tagline: 'Your civic life as a resume. What\'s the product?' },
-      'wrongtab.com': { tagline: '47 tabs open. Can\'t find anything. Sound familiar?' },
-      'scaredofshipping.com': { tagline: 'The fear that kills startups. What\'s the cure?' },
-      'finishthisidea.com': { tagline: 'Half-finished ideas everywhere. What helps them ship?' },
-      'proofofvibe.com': { tagline: 'Proof-of-work for machines. Proof-of-vibe for humans.' },
-      'saveorsink.com': { tagline: 'High stakes. Save it or sink it. What\'s the game?' },
-      'canyouratemyidea.com': { tagline: 'Brutal feedback. No mercy. What\'s the platform?' },
-      'feelslikework.com': { tagline: 'When side projects stop being fun. What helps?' },
-      'kindstamp.com': { tagline: 'Kindness needs proof. What\'s the stamp?' },
-      'deathtobigtech.com': { tagline: 'The rebellion needs a home. Join us.' }
+    // ── Pick up referral code from ?ref= param (QR codes, shared links) ──
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref') || '';
+    if (refCode) {
+      localStorage.setItem('f0_ref', refCode);  // persist across page loads
+    }
+    const activeRef = refCode || localStorage.getItem('f0_ref') || '';
+
+    // ── Smart tagline generator ──
+    const taglines = {
+      'toneswitch': 'Voice AI needs a home. What should this become?',
+      'vibedevice': 'The vibe economy needs hardware. What\'s the device?',
+      'civicresume': 'Your civic life, documented. What\'s the product?',
+      'wrongtab': '47 tabs open. Can\'t find anything. Sound familiar?',
+      'scaredofshipping': 'The fear that kills startups. What\'s the cure?',
+      'finishthisidea': 'Half-finished ideas everywhere. What helps them ship?',
+      'proofofvibe': 'Proof-of-work for machines. Proof-of-vibe for humans.',
+      'saveorsink': 'High stakes. Save it or sink it. What\'s the game?',
+      'canyouratemyidea': 'Brutal feedback. No mercy. What\'s the platform?',
+      'feelslikework': 'When side projects stop being fun. What helps?',
+      'kindstamp': 'Kindness needs proof. What\'s the stamp?',
+      'deathtobigtech': 'The rebellion needs a home. What gets built?',
+      'hollowtown': 'Something\'s missing. What fills the void?',
+      'death2data': 'Private search. No tracking. No ads. Just answers.',
+      'fortune0': 'The open incubator where ideas compete to exist.',
     };
 
-    // Apply config
-    document.getElementById('domain-name').textContent = domain;
-    document.getElementById('page-title').textContent = domain;
+    function generateTagline(slug) {
+      // Check known taglines first
+      const clean = slug.replace(/\.(com|io|ai|net|org|xyz)$/, '');
+      if (taglines[clean]) return taglines[clean];
 
-    if (domainConfig[domain]) {
-      document.getElementById('tagline').textContent = domainConfig[domain].tagline;
+      // Auto-generate from domain name
+      const words = clean.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/-/g, ' ');
+      return `${words.charAt(0).toUpperCase() + words.slice(1)} — what should this become?`;
     }
 
-    // Notify form - posts to Cloudflare Worker
-    document.getElementById('notify-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const btn = e.target.querySelector('button');
-      btn.textContent = 'Submitting...';
-      btn.disabled = true;
+    // ── Days until expiration ──
+    function daysUntil(dateStr) {
+      if (!dateStr) return '—';
+      const exp = new Date(dateStr);
+      const now = new Date();
+      const days = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
+      if (days < 0) return 'Expired';
+      if (days === 0) return 'Today';
+      if (days <= 30) return `${days}d`;
+      const months = Math.round(days / 30);
+      return `${months}mo`;
+    }
 
+    // ── Format number with commas ──
+    function fmt(n) {
+      return n ? n.toLocaleString() : '—';
+    }
+
+    // ── Mouse follower ──
+    const cursorGlow = document.getElementById('cursor-glow');
+    if (window.matchMedia('(pointer: fine)').matches) {
+      cursorGlow.style.display = 'block';
+      let mx = 0, my = 0, cx = 0, cy = 0;
+      document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+      (function anim() {
+        cx += (mx - cx) * 0.06;
+        cy += (my - cy) * 0.06;
+        cursorGlow.style.left = cx + 'px';
+        cursorGlow.style.top = cy + 'px';
+        requestAnimationFrame(anim);
+      })();
+    }
+
+    // ── Load domain data ──
+    async function init() {
+      // Set domain name immediately from slug
+      const displayName = domainSlug.replace(/\.(com|io|ai|net|org|xyz)$/, '');
+      document.getElementById('domain-name').textContent = domainSlug.includes('.') ? domainSlug : displayName;
+      document.getElementById('tagline').textContent = generateTagline(domainSlug);
+      document.getElementById('page-title').textContent = domainSlug.includes('.') ? domainSlug : displayName + '.com';
+
+      // Fetch domain data from API
       try {
-        const res = await fetch('https://fortune0-forms.mattmauersp.workers.dev', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, domain, source: 'domain-notify' })
-        });
+        const res = await fetch(`/api/domain-info/${encodeURIComponent(domainSlug)}`);
         if (res.ok) {
-          document.getElementById('success').classList.add('show');
-          btn.textContent = 'Done!';
-        } else {
-          throw new Error('Failed');
+          const data = await res.json();
+
+          // Update with real data
+          const fullDomain = data.domain || domainSlug;
+          document.getElementById('domain-name').textContent = fullDomain;
+          document.getElementById('page-title').textContent = fullDomain;
+          document.getElementById('page-desc').content = generateTagline(fullDomain) + ' Part of fortune0.';
+
+          // Stats
+          document.getElementById('stat-value').textContent = fmt(data.value);
+          document.getElementById('stat-interest').textContent = data.interest_count || 0;
+          document.getElementById('stat-expires').textContent = daysUntil(data.expires);
+
+          // Status badge
+          const status = data.status || 'open';
+          if (status === 'launched') {
+            document.getElementById('status-text').textContent = 'Launched';
+            document.getElementById('badge').style.borderColor = 'rgba(107,203,119,0.3)';
+            document.getElementById('badge').style.background = 'rgba(107,203,119,0.08)';
+            document.getElementById('badge').style.color = '#6BCB77';
+            document.querySelector('.badge .dot').style.background = '#6BCB77';
+          } else if (status === 'reserved') {
+            document.getElementById('status-text').textContent = 'Reserved';
+          }
+
+          // Store domain for form
+          window._domainFull = fullDomain;
         }
-      } catch (err) {
-        btn.textContent = 'Notify Me';
-        btn.disabled = false;
-        alert('Something went wrong. Try again?');
-      }
-    });
-
-    // Access check via subscriber email
-    async function checkAccess() {
-      const email = document.getElementById('access-email').value.trim();
-      if (!email) {
-        alert('Enter your subscriber email');
-        return;
+      } catch (e) {
+        console.log('Domain info not available, using slug:', domainSlug);
       }
 
-      const btn = document.querySelector('.code-btn');
-      btn.textContent = 'Checking...';
+      // Load related domains
+      try {
+        const res = await fetch('/domains.json');
+        if (res.ok) {
+          const domains = await res.json();
+          // Pick 8 random high-value domains that aren't the current one
+          const others = domains
+            .filter(d => !d.domain.includes(domainSlug.replace(/\..+$/, '')))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 20);
+          // Shuffle and take 8
+          const shuffled = others.sort(() => Math.random() - 0.5).slice(0, 8);
+
+          if (shuffled.length > 0) {
+            const grid = document.getElementById('related-grid');
+            shuffled.forEach(d => {
+              const a = document.createElement('a');
+              a.href = `/d/${d.domain.split('.')[0]}${activeRef ? '?ref=' + activeRef : ''}`;
+              a.className = 'related-chip';
+              a.textContent = d.domain;
+              grid.appendChild(a);
+            });
+            document.getElementById('related-section').style.display = '';
+          }
+        }
+      } catch (e) {}
+
+      // Check if already signed up
+      const saved = localStorage.getItem('f0_email');
+      if (saved) {
+        document.getElementById('email-input').value = saved;
+      }
+    }
+
+    // ── Form submit ──
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email-input').value.trim();
+      const btn = document.getElementById('submit-btn');
+      const domain = window._domainFull || domainSlug;
+
+      btn.textContent = 'Joining...';
       btn.disabled = true;
 
       try {
-        const res = await fetch('https://fortune0-forms.mattmauersp.workers.dev', {
+        const res = await fetch('/api/domain-interest', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'check-access', email })
+          body: JSON.stringify({ email, domain, source: activeRef ? 'qr_referral' : 'landing', ref: activeRef })
         });
         const data = await res.json();
 
-        if (data.access) {
+        if (res.ok) {
           localStorage.setItem('f0_email', email);
-          localStorage.setItem('f0_tier', data.tier);
-          localStorage.setItem('fortune0_email', email); // For search logging
-          window.location.href = `https://fortune0.com/ideas.html`;
+          if (data.token) localStorage.setItem('f0_token', data.token);
+          btn.textContent = "You're in!";
+
+          const msg = document.getElementById('success-msg');
+          const count = data.interest_count || 1;
+          msg.innerHTML = `Welcome! You're person #${count} interested in <strong>${domain}</strong>. We'll notify you when it launches.`;
+          msg.classList.add('show');
+
+          // Update interest count
+          document.getElementById('stat-interest').textContent = count;
         } else {
-          btn.textContent = 'Check';
-          btn.disabled = false;
-          alert('Not found. Subscribe at death2data.com for $1 access.');
+          throw new Error(data.error || 'Failed');
         }
       } catch (err) {
-        btn.textContent = 'Check';
+        btn.textContent = "I'm interested";
         btn.disabled = false;
-        alert('Error checking access. Try again.');
+        const msg = document.getElementById('success-msg');
+        msg.textContent = 'Something went wrong. Try again?';
+        msg.style.borderColor = 'rgba(255,100,100,0.2)';
+        msg.style.background = 'rgba(255,100,100,0.05)';
+        msg.style.color = '#ff6b6b';
+        msg.classList.add('show');
+        setTimeout(() => msg.classList.remove('show'), 3000);
       }
-    }
-
-    // Enter key for email
-    document.getElementById('access-email').addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') checkAccess();
     });
 
-    // Auto-check if they've logged in before
-    const savedEmail = localStorage.getItem('f0_email');
-    if (savedEmail) {
-      document.getElementById('access-email').value = savedEmail;
-    }
+    init();
   </script>
 </body>
 </html>

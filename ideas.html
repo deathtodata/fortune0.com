@@ -776,6 +776,7 @@
     let domains = [];
     let currentFilter = 'all';
     let searchTerm = '';
+    let interestData = {};
 
     // Category detection based on keywords
     const categoryKeywords = {
@@ -795,8 +796,15 @@
 
     async function loadDomains() {
       try {
-        const res = await fetch('/domains.json?t=' + Date.now());
-        domains = await res.json();
+        const [domainsRes, interestRes] = await Promise.all([
+          fetch('/domains.json?t=' + Date.now()),
+          fetch('/api/domain-interest').catch(() => ({ json: () => [] })),
+        ]);
+        domains = await domainsRes.json();
+        const interestList = await interestRes.json();
+        if (Array.isArray(interestList)) {
+          interestList.forEach(r => { interestData[r.domain] = r.signups; });
+        }
 
         // Add category to each domain
         domains = domains.map(d => ({
@@ -917,10 +925,10 @@
           <article class="idea-card">
             <div class="idea-header">
               <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
-                <h2 class="idea-title" style="color: var(--gold); margin: 0;">${d.domain}</h2>
+                <a href="/d/${d.domain.split('.')[0]}" class="idea-title" style="color: var(--gold); margin: 0; text-decoration: none;">${d.domain}</a>
                 <span class="status-badge ${statusInfo.class}">${statusInfo.label}</span>
               </div>
-              <span class="idea-countdown safe">Est. $${d.value || 0}</span>
+              <span class="idea-countdown safe">$${d.value || 0}${interestData[d.domain] ? ' · ' + interestData[d.domain] + ' interested' : ''}</span>
             </div>
             <p class="idea-desc">${getDesc(d)}</p>
             <div class="idea-footer">

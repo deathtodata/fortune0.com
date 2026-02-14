@@ -7,6 +7,6 @@
     "dev:live": "npx live-server --port=3000"
   },
   "keywords": ["incubator", "startup", "open-source"],
-  "author": "Matt <lolztex@gmail.com>",
+  "author": "Matt <matt@death2data.com>",
   "license": "MIT"
 }

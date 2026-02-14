@@ -121,18 +121,18 @@ def main():
 
         # ── 4. Signup ──
         print("\n[4] Signup")
-        status, data = api("POST", "/api/signup", {"email": "matt@fortune0.com"})
+        status, data = api("POST", "/api/signup", {"email": "testuser@example.com"})
         test("POST /api/signup returns 200", status == 200)
         test("Returns token", "token" in data and len(data["token"]) > 10)
         test("Returns referral_code", "referral_code" in data and data["referral_code"].startswith("IK-"))
-        test("Returns email", data.get("email") == "matt@fortune0.com")
+        test("Returns email", data.get("email") == "testuser@example.com")
         test("Is new user", data.get("new") is True)
         token = data.get("token", "")
         refCode = data.get("referral_code", "")
 
         # ── 5. Signup again (returning user) ──
         print("\n[5] Returning user login")
-        status, data = api("POST", "/api/signup", {"email": "matt@fortune0.com"})
+        status, data = api("POST", "/api/signup", {"email": "testuser@example.com"})
         test("Returns 200 for existing user", status == 200)
         test("Not flagged as new", data.get("new") is False)
         test("Same referral code", data.get("referral_code") == refCode)
@@ -142,7 +142,7 @@ def main():
         print("\n[6] User profile")
         status, data = api("GET", "/api/me", token=token)
         test("GET /api/me returns 200", status == 200)
-        test("Email matches", data.get("email") == "matt@fortune0.com")
+        test("Email matches", data.get("email") == "testuser@example.com")
         test("Tier is free", data.get("tier") == "free")
 
         # ── 7. Contacts CRUD ──

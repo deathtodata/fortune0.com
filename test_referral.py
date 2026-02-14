@@ -71,7 +71,7 @@ def main():
 
         # 2. Self-service join
         print("\n[2] Self-service affiliate join")
-        status, data, _ = api("POST", "/api/join", {"email": "creator@test.com"}, follow=True)
+        status, data, _ = api("POST", "/api/join", {"email": "creator@example.com"}, follow=True)
         test("POST /api/join returns 201", status == 201, f"got {status}")
         test("Returns referral_code", "referral_code" in data and data["referral_code"].startswith("IK-"))
         test("Returns short_url", "/r/" in data.get("short_url", ""))
@@ -84,7 +84,7 @@ def main():
 
         # 3. Re-join (returning user)
         print("\n[3] Returning affiliate")
-        status, data, _ = api("POST", "/api/join", {"email": "creator@test.com"}, follow=True)
+        status, data, _ = api("POST", "/api/join", {"email": "creator@example.com"}, follow=True)
         test("Returns 200 for existing", status == 200)
         test("returning = True", data.get("returning") is True)
         test("Same code", data.get("referral_code") == code)
@@ -112,7 +112,7 @@ def main():
         status, data, _ = api("GET", f"/api/affiliate/stats?code={code}", follow=True)
         test("GET /api/affiliate/stats returns 200", status == 200, f"got {status}")
         test("Clicks >= 3", data.get("clicks", 0) >= 3, f"got {data.get('clicks')}")
-        test("Has email", data.get("email") == "creator@test.com")
+        test("Has email", data.get("email") == "creator@example.com")
         test("Has commission_rate", data.get("commission_rate") == 0.10)
 
         # 7. Affiliate shows up in main API
@@ -122,12 +122,12 @@ def main():
 
         # The user account was also created
         status, data, _ = api("GET", "/api/me", token=token, follow=True)
-        test("User account exists via /api/me", status == 200 and data.get("email") == "creator@test.com")
+        test("User account exists via /api/me", status == 200 and data.get("email") == "creator@example.com")
 
         # 8. Full loop: join → get code → simulate order → check earnings
         print("\n[8] Full affiliate earning loop")
         # Register second affiliate
-        status, data2, _ = api("POST", "/api/join", {"email": "hustler@test.com"}, follow=True)
+        status, data2, _ = api("POST", "/api/join", {"email": "hustler@example.com"}, follow=True)
         code2 = data2.get("referral_code", "")
         test("Second affiliate joined", status == 201)
 

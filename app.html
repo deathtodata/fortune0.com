@@ -1284,7 +1284,7 @@ async function refreshCredits() {
     }
 
     // Show admin panel if admin
-    if (state.user && state.user.email === 'lolztex@gmail.com') {
+    if (state.user && state.user.is_admin) {
         document.getElementById('admin-panel').style.display = 'block';
     }
 }
@@ -1451,7 +1451,7 @@ function copyShareBlurb() {
 }
 
 async function purgeTestData() {
-    if (!confirm('Delete all test accounts (@example.com, @fortune0.com) and their data? This cannot be undone.')) return;
+    if (!confirm('Delete all test accounts (@example.com) and their data? This cannot be undone.')) return;
     toast('Purging test data...');
     const { ok, data } = await api('POST', '/api/admin/purge-test-data', {});
     const resultEl = document.getElementById('sync-result');
@@ -1527,8 +1527,8 @@ const tests = [
         name: 'Full signup → CRM → affiliate → order flow',
         steps: '1. Create account  2. Add contacts  3. Register affiliate  4. Simulate order  5. Verify commission',
         run: async function(output) {
-            output('→ Creating account: test-runner@fortune0.com');
-            document.getElementById('login-email').value = 'test-runner@fortune0.com';
+            output('→ Creating account: test-runner@example.com');
+            document.getElementById('login-email').value = 'test-runner@example.com';
             await doLogin();
             if (!state.token) { output('✗ Login failed'); return false; }
             output(`✓ Signed in. Token: ${state.token.slice(0,16)}...`);
@@ -1566,7 +1566,7 @@ const tests = [
             output('→ Logged out');
             const { ok, status } = await api('POST', '/api/contacts', { name: 'Should Fail' });
             output(!ok && status === 401 ? '✓ Correctly rejected — 401' : '✗ FAIL');
-            document.getElementById('login-email').value = 'auth-test@fortune0.com';
+            document.getElementById('login-email').value = 'auth-test@example.com';
             await doLogin();
             output(state.token ? `✓ Authenticated as ${state.user.email}` : '✗ Login failed');
             const { ok: getOk } = await api('GET', '/api/contacts');
@@ -1578,7 +1578,7 @@ const tests = [
         name: 'Attribution edge cases',
         steps: '1. Register affiliate  2. Invalid code order  3. Valid code order  4. Verify counts',
         run: async function(output) {
-            if (!state.token) { document.getElementById('login-email').value = 'edge-test@fortune0.com'; await doLogin(); }
+            if (!state.token) { document.getElementById('login-email').value = 'edge-test@example.com'; await doLogin(); }
             const affEmail = 'edge-aff-' + Date.now() + '@example.com';
             const { ok: regOk, data: regData } = await api('POST', '/api/affiliates', { email: affEmail, commission_rate: 0.15 });
             output(regOk ? `✓ Registered: ${regData.referral_code}` : '✗ Failed');
@@ -1600,7 +1600,7 @@ const tests = [
         name: 'Commission tier calculation',
         steps: '1. Register affiliate  2. Simulate $300K in orders  3. Verify tier changes',
         run: async function(output) {
-            if (!state.token) { document.getElementById('login-email').value = 'tier-test@fortune0.com'; await doLogin(); }
+            if (!state.token) { document.getElementById('login-email').value = 'tier-test@example.com'; await doLogin(); }
             const affEmail = 'whale-' + Date.now() + '@example.com';
             const { ok: regOk, data: regData } = await api('POST', '/api/affiliates', { email: affEmail, commission_rate: 0.10 });
             output(regOk ? `✓ Registered: ${regData.referral_code}` : '✗ Failed');

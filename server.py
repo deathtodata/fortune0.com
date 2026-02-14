@@ -36,6 +36,7 @@ import urllib.error
 import urllib.parse
 import math
 import re as _re
+import uuid
 
 # Optional: PostgreSQL support (for Render/production)
 try:
@@ -63,9 +64,22 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")  # whsec_...
 STRIPE_PAYMENT_LINK = os.environ.get("STRIPE_PAYMENT_LINK", "")  # https://buy.stripe.com/xxxxx
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")  # sk_live_... or sk_test_... for API calls
 SEARXNG_URL = os.environ.get("SEARXNG_URL", "")  # Your own SearXNG instance (e.g. https://d2d-search.onrender.com)
-ADMIN_EMAIL = os.environ.get("F0_ADMIN_EMAIL", "lolztex@gmail.com")  # Admin operations
+ADMIN_EMAIL = os.environ.get("F0_ADMIN_EMAIL", "admin@example.com")  # Set F0_ADMIN_EMAIL env var in production
+IS_PRODUCTION = bool(DATABASE_URL)  # True on Render (has PostgreSQL), False on localhost
+
+# RFC 2606 reserved domains — safe for testing, blocked in production
+RESERVED_DOMAINS = {'example.com', 'example.net', 'example.org'}
 
 os.makedirs(DATA_DIR, exist_ok=True)
+
+def validate_email_environment(email):
+    """Block reserved test emails in production, warn about real emails in dev."""
+    if not email or '@' not in email:
+        return False, "Invalid email"
+    domain = email.split('@')[-1].lower()
+    if IS_PRODUCTION and domain in RESERVED_DOMAINS:
+        return False, "Test emails not allowed in production"
+    return True, "ok"
 
 # Commission tiers (platform fee on attributed revenue)
 COMMISSION_TIERS = [
@@ -191,6 +205,14 @@ CREATE TABLE IF NOT EXISTS credits (
     stripe_charge_id TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS domain_interest (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    domain TEXT NOT NULL,
+    source TEXT DEFAULT 'landing',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(email, domain)
+);
 CREATE TABLE IF NOT EXISTS notes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_email TEXT NOT NULL,
@@ -269,6 +291,14 @@ CREATE TABLE IF NOT EXISTS credits (
     description TEXT,
     stripe_charge_id TEXT,
     created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS domain_interest (
+    id SERIAL PRIMARY KEY,
+    email TEXT NOT NULL,
+    domain TEXT NOT NULL,
+    source TEXT DEFAULT 'landing',
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(email, domain)
 );
 CREATE TABLE IF NOT EXISTS notes (
     id SERIAL PRIMARY KEY,
@@ -458,6 +488,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", mime)
         self.send_header("Content-Length", len(content))
+        self.send_header("Access-Control-Allow-Origin", "*")
         # No caching in dev so edits show up instantly
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.end_headers()
@@ -508,7 +539,7 @@ class Handler(BaseHTTPRequestHandler):
                 total_revenue = total_credits = credits_spent = credits_imported = 0
             conn.close()
             self.send_json({
-                "status": "ok", "service": "fortune0", "version": "1.5.0",
+                "status": "ok", "service": "fortune0", "version": "1.6.0",
                 "db": db_type,
                 "stripe_webhook": "configured" if stripe_configured else "not set",
                 "stripe_payment_link": "configured" if payment_link_set else "not set",
@@ -695,7 +726,8 @@ class Handler(BaseHTTPRequestHandler):
                     SELECT user_email, SUM(amount) as balance FROM credits GROUP BY user_email
                 ) cr ON cr.user_email = a.email
                 WHERE a.email NOT LIKE '%@example.com'
-                  AND a.email NOT LIKE '%@fortune0.com'
+                  AND a.email NOT LIKE '%example.net'
+                  AND a.email NOT LIKE '%example.org'
                 ORDER BY a.total_earned DESC
                 LIMIT 25
             """).fetchall()
@@ -711,8 +743,8 @@ class Handler(BaseHTTPRequestHandler):
                 affs.append(d)
 
             # Platform totals
-            total_users = conn.execute("SELECT COUNT(*) c FROM users WHERE email NOT LIKE '%@example.com' AND email NOT LIKE '%@fortune0.com'").fetchone()["c"]
-            active_users = conn.execute("SELECT COUNT(*) c FROM users WHERE tier='active' AND email NOT LIKE '%@example.com' AND email NOT LIKE '%@fortune0.com'").fetchone()["c"]
+            total_users = conn.execute("SELECT COUNT(*) c FROM users WHERE email NOT LIKE '%@example.com' AND email NOT LIKE '%@example.net' AND email NOT LIKE '%@example.org'").fetchone()["c"]
+            active_users = conn.execute("SELECT COUNT(*) c FROM users WHERE tier='active' AND email NOT LIKE '%@example.com' AND email NOT LIKE '%@example.net' AND email NOT LIKE '%@example.org'").fetchone()["c"]
             total_revenue = conn.execute("SELECT COALESCE(SUM(order_total),0) s FROM commissions WHERE affiliate_email NOT LIKE '%@example.com'").fetchone()["s"]
             total_credits = conn.execute("SELECT COALESCE(SUM(amount),0) s FROM credits WHERE amount > 0 AND user_email NOT LIKE '%@example.com'").fetchone()["s"]
 
@@ -820,6 +852,7 @@ class Handler(BaseHTTPRequestHandler):
             if user:
                 ud = dict(user)
                 ud["credit_balance"] = round(balance_row["bal"], 2)
+                ud["is_admin"] = (sess["email"] == ADMIN_EMAIL)
                 self.send_json(ud)
             else:
                 self.send_json({"error": "User not found"}, 404)
@@ -961,6 +994,21 @@ class Handler(BaseHTTPRequestHandler):
 
                 # Credits from actual Stripe payments
                 stripe_credits = conn.execute("SELECT COUNT(*) c, COALESCE(SUM(amount),0) s FROM credits WHERE source='stripe_import'").fetchone()
+
+                # Domain interest stats
+                try:
+                    domain_interest_total = conn.execute("SELECT COUNT(*) c FROM domain_interest").fetchone()["c"]
+                    top_domains = conn.execute("""
+                        SELECT domain, COUNT(*) as signups
+                        FROM domain_interest
+                        GROUP BY domain
+                        ORDER BY signups DESC
+                        LIMIT 10
+                    """).fetchall()
+                except Exception:
+                    domain_interest_total = 0
+                    top_domains = []
+
             except Exception as e:
                 conn.close()
                 self.send_json({"error": f"Analytics query failed: {e}"}, 500)
@@ -972,6 +1020,10 @@ class Handler(BaseHTTPRequestHandler):
                 "activations_by_day": [dict(r) for r in activations],
                 "searches_by_day": [dict(r) for r in searches],
                 "activity_by_day": [dict(r) for r in all_activity],
+                "domain_interest": {
+                    "total": domain_interest_total,
+                    "top_domains": [dict(r) for r in top_domains],
+                },
                 "totals": {
                     "users": total_users,
                     "active_users": active_users,
@@ -981,6 +1033,7 @@ class Handler(BaseHTTPRequestHandler):
                     "total_payments": total_payments,
                     "stripe_charges": stripe_credits["c"],
                     "stripe_credits_total": round(stripe_credits["s"], 2),
+                    "domain_interest": domain_interest_total,
                 },
             })
 
@@ -1019,6 +1072,81 @@ class Handler(BaseHTTPRequestHandler):
                 conn.close()
                 self.send_json({"error": "Auth required for private notes"}, 401)
 
+        # ── Domain info API: /api/domain-info/<domain> ──
+        elif path.startswith("/api/domain-info/"):
+            domain_slug = path[len("/api/domain-info/"):].strip().lower()
+            # Load domains.json
+            domains_path = os.path.join(SITE_DIR, "domains.json")
+            if not os.path.exists(domains_path):
+                self.send_json({"error": "No domain registry"}, 404); return
+            with open(domains_path) as f:
+                domains = json.load(f)
+            # Find matching domain (support slug with or without TLD)
+            match = None
+            for d in domains:
+                dname = d["domain"].lower()
+                slug_only = dname.split(".")[0]
+                if dname == domain_slug or slug_only == domain_slug:
+                    match = d
+                    break
+            if not match:
+                self.send_json({"error": "Domain not found", "slug": domain_slug}, 404); return
+            # Get interest count
+            conn = get_db()
+            try:
+                interest_count = conn.execute(
+                    "SELECT COUNT(*) c FROM domain_interest WHERE domain=?",
+                    [match["domain"]]
+                ).fetchone()["c"]
+            except Exception:
+                interest_count = 0
+            conn.close()
+            match["interest_count"] = interest_count
+            self.send_json(match)
+
+        # ── Domain interest stats (public) ──
+        elif path == "/api/domain-interest":
+            conn = get_db()
+            try:
+                rows = conn.execute("""
+                    SELECT domain, COUNT(*) as signups
+                    FROM domain_interest
+                    GROUP BY domain
+                    ORDER BY signups DESC
+                    LIMIT 50
+                """).fetchall()
+            except Exception:
+                rows = []
+            conn.close()
+            self.send_json([dict(r) for r in rows])
+
+        # ── QR code generator page: /qr/<domain> ──
+        elif path.startswith("/qr/"):
+            self.send_file(os.path.join(SITE_DIR, "qr.html"))
+
+        # ── Domain landing pages: /d/<domain-name> (portfolio only) ──
+        elif path.startswith("/d/"):
+            slug = path[3:].strip().lower().rstrip("/")
+            # Only serve landing pages for domains in our portfolio
+            domains_path = os.path.join(SITE_DIR, "domains.json")
+            found = False
+            if os.path.exists(domains_path):
+                with open(domains_path) as f:
+                    domains = json.load(f)
+                for d in domains:
+                    dname = d["domain"].lower()
+                    slug_only = dname.split(".")[0]
+                    if dname == slug or slug_only == slug:
+                        found = True
+                        break
+            if found:
+                self.send_file(os.path.join(SITE_DIR, "domain-template.html"))
+            else:
+                # Unknown domain → redirect to ideas browser
+                self.send_response(302)
+                self.send_header("Location", "/ideas")
+                self.end_headers()
+
         # ── Static files ──
         elif path == "/":
             self.send_file(os.path.join(SITE_DIR, "index.html"))
@@ -1053,6 +1181,9 @@ class Handler(BaseHTTPRequestHandler):
             email = body.get("email", "").strip().lower()
             if not email or "@" not in email:
                 self.send_json({"error": "Valid email required"}, 400); return
+            ok, reason = validate_email_environment(email)
+            if not ok:
+                self.send_json({"error": reason}, 400); return
 
             conn = get_db()
             existing = conn.execute("SELECT * FROM users WHERE email=?", [email]).fetchone()
@@ -1072,7 +1203,17 @@ class Handler(BaseHTTPRequestHandler):
             license_key = generate_license_key(email)
             conn.execute("INSERT INTO users (email, referral_code, license_key, tier) VALUES (?, ?, ?, 'free')",
                          [email, ref_code, license_key])
-            log_activity(conn, email, "signup", f"New account: {ref_code}")
+            source_domain = body.get("source_domain", body.get("domain", "direct"))
+            log_activity(conn, email, "signup", f"New account: {ref_code} (via {source_domain})")
+            # Track domain interest if they came from a domain landing page
+            if source_domain and source_domain != "direct":
+                try:
+                    conn.execute(
+                        "INSERT INTO domain_interest (email, domain, source) VALUES (?, ?, 'signup')",
+                        [email, source_domain]
+                    )
+                except Exception:
+                    pass
             conn.commit(); conn.close()
 
             token = create_session(email)
@@ -1582,7 +1723,7 @@ class Handler(BaseHTTPRequestHandler):
 
             conn = get_db()
             # Test patterns to clean
-            test_patterns = ['%@example.com', '%@fortune0.com']
+            test_patterns = ['%@example.com', '%@example.net', '%@example.org']
             purged = {"users": 0, "affiliates": 0, "contacts": 0, "commissions": 0, "credits": 0, "activity": 0}
 
             for pattern in test_patterns:
@@ -1678,6 +1819,90 @@ class Handler(BaseHTTPRequestHandler):
             conn.commit(); conn.close()
             self.send_json({"deleted": True})
 
+        # ── Domain interest signup (no auth required) ──
+        elif path == "/api/domain-interest":
+            email = body.get("email", "").strip().lower()
+            domain = body.get("domain", "").strip().lower()
+            source = body.get("source", "landing")
+            ref = body.get("ref", "").strip()  # referral code from QR / shared link
+
+            if not email or "@" not in email:
+                self.send_json({"error": "Valid email required"}, 400); return
+            ok, reason = validate_email_environment(email)
+            if not ok:
+                self.send_json({"error": reason}, 400); return
+            if not domain:
+                self.send_json({"error": "Domain required"}, 400); return
+
+            conn = get_db()
+
+            # Record domain interest
+            try:
+                conn.execute(
+                    "INSERT INTO domain_interest (email, domain, source) VALUES (?, ?, ?)",
+                    [email, domain, source]
+                )
+            except Exception:
+                pass  # UNIQUE constraint — already interested
+
+            # Also create a user account if they don't have one
+            existing = conn.execute("SELECT * FROM users WHERE email=?", [email]).fetchone()
+            if not existing:
+                ref_code = generate_referral_code(email)
+                license_key = generate_license_key(email)
+                try:
+                    conn.execute(
+                        "INSERT INTO users (email, referral_code, license_key, tier) VALUES (?, ?, ?, 'free')",
+                        [email, ref_code, license_key]
+                    )
+                    log_activity(conn, email, "signup", f"Via domain landing: {domain} (ref: {ref or 'none'})")
+                except Exception:
+                    pass
+            else:
+                ref_code = existing["referral_code"]
+
+            # ── Referral attribution: if they came via a QR code / shared link ──
+            referred_by = None
+            if ref:
+                referrer = conn.execute("SELECT email FROM users WHERE referral_code=?", [ref]).fetchone()
+                if referrer:
+                    referred_by = referrer["email"]
+                    # Log the referral attribution
+                    log_activity(conn, referred_by, "referral_scan", f"{email} signed up for {domain} via QR/link")
+                    log_activity(conn, email, "referred_by", f"Referred by {ref} for {domain}")
+                    # Record commission if referrer is an affiliate
+                    affiliate = conn.execute("SELECT * FROM affiliates WHERE email=?", [referred_by]).fetchone()
+                    if affiliate:
+                        try:
+                            order_id = f"ref-{uuid.uuid4().hex[:12]}"
+                            conn.execute("""INSERT INTO commissions
+                                (affiliate_email, order_id, order_total, commission_amount, commission_rate,
+                                 platform_fee, platform_fee_rate, status, discount_code)
+                                VALUES (?, ?, 1.00, 0.30, 0.30, 0.05, 0.05, 'pending', ?)""",
+                                [referred_by, order_id, f"ref:{ref}"]
+                            )
+                        except Exception:
+                            pass
+
+            log_activity(conn, email, "domain_interest", f"Interested in {domain} ({source}){' ref:' + ref if ref else ''}")
+            conn.commit()
+
+            # Get interest count for this domain
+            count = conn.execute(
+                "SELECT COUNT(*) c FROM domain_interest WHERE domain=?", [domain]
+            ).fetchone()["c"]
+            conn.close()
+
+            token = create_session(email)
+            self.send_json({
+                "registered": True,
+                "email": email,
+                "domain": domain,
+                "interest_count": count,
+                "token": token,
+                "referred_by": ref if referred_by else None,
+            })
+
         # ── Spend credits ──
         elif path == "/api/credits/spend":
             sess = self.get_user()
@@ -1728,7 +1953,8 @@ if __name__ == "__main__":
     print()
     print(f"  Landing:    {Y}http://localhost:{PORT}{R}")
     print(f"  App:        {Y}http://localhost:{PORT}/app{R}")
-    print(f"  Storyboard: {Y}http://localhost:{PORT}/storyboard{R}")
+    print(f"  Charts:     {Y}http://localhost:{PORT}/charts{R}")
+    print(f"  Domain:     {Y}http://localhost:{PORT}/d/civicresume{R}")
     print(f"  Join:       {Y}http://localhost:{PORT}/join{R}")
     print(f"  Health:     {Y}http://localhost:{PORT}/health{R}")
     print()

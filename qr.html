@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code — fortune0</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root { --gold: #D4AF37; --gold-rgb: 212, 175, 55; }
+
+    body {
+      background: #111;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .controls {
+      max-width: 500px;
+      width: 100%;
+      margin-bottom: 2rem;
+    }
+    .controls h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .controls p {
+      color: rgba(255,255,255,0.4);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .field {
+      margin-bottom: 1rem;
+    }
+    .field label {
+      display: block;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.4rem;
+    }
+    .field input, .field select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--gold);
+    }
+    .field select option { background: #111; }
+
+    .url-preview {
+      padding: 0.75rem 1rem;
+      background: rgba(var(--gold-rgb), 0.05);
+      border: 1px solid rgba(var(--gold-rgb), 0.15);
+      border-radius: 10px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--gold);
+      word-break: break-all;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 0.7rem 1.25rem;
+      border-radius: 100px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    .btn-gold {
+      background: var(--gold);
+      color: #000;
+    }
+    .btn-gold:hover { box-shadow: 0 0 20px rgba(var(--gold-rgb), 0.4); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+    }
+    .btn-outline:hover { border-color: rgba(255,255,255,0.4); }
+
+    .error-msg {
+      padding: 0.75rem 1rem;
+      background: rgba(255, 60, 60, 0.1);
+      border: 1px solid rgba(255, 60, 60, 0.3);
+      border-radius: 10px;
+      color: #ff6b6b;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    /* ── Printable card ── */
+    .card-container {
+      perspective: 1000px;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      width: 350px;
+      background: #000;
+      border: 2px solid rgba(var(--gold-rgb), 0.3);
+      border-radius: 24px;
+      padding: 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .card-badge {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      background: rgba(var(--gold-rgb), 0.1);
+      border: 1px solid rgba(var(--gold-rgb), 0.2);
+      border-radius: 100px;
+      color: var(--gold);
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 1rem;
+    }
+
+    .card-domain {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #D4AF37, #F4E4BA, #D4AF37);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-tagline {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 1.5rem;
+      line-height: 1.4;
+    }
+
+    .qr-frame {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1rem;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+    .qr-frame canvas {
+      display: block;
+    }
+
+    .card-scan {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: 1rem;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .card-logo {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: rgba(255,255,255,0.3);
+    }
+    .card-logo span { color: var(--gold); }
+    .card-ref {
+      font-family: monospace;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.2);
+    }
+
+    /* Print styles */
+    @media print {
+      body { background: #fff; padding: 0; }
+      .controls, .btn-row, .url-preview, .error-msg { display: none !important; }
+      .card {
+        border: 2px solid #D4AF37;
+        margin: auto;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .card::before { display: none; }
+      .card-domain {
+        color: #D4AF37 !important;
+        -webkit-text-fill-color: #D4AF37 !important;
+      }
+      .card-tagline { color: #666; }
+      .card-scan { color: #999; }
+      .card-badge { border-color: #D4AF37; color: #D4AF37; }
+    }
+
+    @media (max-width: 500px) {
+      .card { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <h1>QR Code Generator</h1>
+    <p>Create printable QR cards for stickers, postcards, and post boards. Each scan gets tracked back to you.</p>
+
+    <div id="error-box" class="error-msg"></div>
+
+    <div class="field">
+      <label>Domain</label>
+      <select id="domain-select">
+        <option value="">Select a domain...</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Your Referral Code (optional — for attribution)</label>
+      <input type="text" id="ref-input" placeholder="e.g. IK-A1B2C3D4">
+    </div>
+
+    <div class="url-preview" id="url-preview">Select a domain to generate your QR code</div>
+
+    <div class="btn-row">
+      <button class="btn btn-gold" onclick="window.print()">Print Card</button>
+      <button class="btn btn-outline" onclick="downloadCard()">Download PNG</button>
+      <button class="btn btn-outline" onclick="copyUrl()">Copy Link</button>
+    </div>
+  </div>
+
+  <div class="card-container">
+    <div class="card" id="card">
+      <div class="card-badge">Scan to Explore</div>
+      <div class="card-domain" id="card-domain">fortune0</div>
+      <div class="card-tagline" id="card-tagline">Ideas that compete to exist.</div>
+      <div class="qr-frame">
+        <canvas id="qr-canvas"></canvas>
+      </div>
+      <div class="card-scan">Scan with your phone camera</div>
+      <div class="card-footer">
+        <div class="card-logo">fortune<span>0</span></div>
+        <div class="card-ref" id="card-ref"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR code library — inline fallback if CDN fails -->
+  <script>
+    // Minimal QR code generator (inline fallback)
+    // We try CDN first, fall back to canvas-based placeholder
+    window._qrReady = false;
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"
+          onload="window._qrReady = true;"
+          onerror="console.warn('QRious CDN failed, using fallback')"></script>
+  <script>
+    let allDomains = [];
+    const BASE_URL = window.location.origin;
+
+    // Taglines
+    const taglines = {
+      'toneswitch': 'Voice AI needs a home.',
+      'vibedevice': 'The vibe economy needs hardware.',
+      'civicresume': 'Your civic life, documented.',
+      'wrongtab': '47 tabs open. Sound familiar?',
+      'scaredofshipping': 'The fear that kills startups.',
+      'finishthisidea': 'Half-finished ideas everywhere.',
+      'proofofvibe': 'Proof-of-vibe for humans.',
+      'saveorsink': 'Save it or sink it.',
+      'kindstamp': 'Kindness needs proof.',
+      'death2data': 'Private search. No tracking.',
+      'fortune0': 'Ideas that compete to exist.',
+    };
+
+    function getTagline(domain) {
+      const slug = domain.replace(/\..+$/, '');
+      return taglines[slug] || `${slug} — what should this become?`;
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-box');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+
+    function buildUrl() {
+      const domain = document.getElementById('domain-select').value;
+      const ref = document.getElementById('ref-input').value.trim();
+      if (!domain) return '';
+      const slug = domain.split('.')[0];
+      let url = `${BASE_URL}/d/${slug}`;
+      if (ref) url += `?ref=${encodeURIComponent(ref)}`;
+      return url;
+    }
+
+    function generateQR(url) {
+      const canvas = document.getElementById('qr-canvas');
+
+      if (window._qrReady && typeof QRious !== 'undefined') {
+        // Use QRious library
+        new QRious({
+          element: canvas,
+          value: url,
+          size: 200,
+          foreground: '#000',
+          background: '#fff',
+          level: 'M',
+        });
+      } else {
+        // Fallback: draw URL text + placeholder pattern on canvas
+        canvas.width = 200;
+        canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, 200, 200);
+        ctx.fillStyle = '#000';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'center';
+
+        // Draw a simple grid pattern as visual placeholder
+        for (let y = 20; y < 180; y += 8) {
+          for (let x = 20; x < 180; x += 8) {
+            if (Math.random() > 0.5) {
+              ctx.fillRect(x, y, 6, 6);
+            }
+          }
+        }
+        // Corner squares (QR-like markers)
+        ctx.fillStyle = '#000';
+        [20, 148].forEach(x => {
+          [20, 148].forEach(y => {
+            if (x === 148 && y === 148) return;
+            ctx.fillRect(x, y, 32, 32);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(x + 4, y + 4, 24, 24);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x + 8, y + 8, 16, 16);
+          });
+        });
+
+        // Note at bottom
+        ctx.fillStyle = '#999';
+        ctx.font = '9px sans-serif';
+        ctx.fillText('QR library loading...', 100, 195);
+      }
+    }
+
+    function updateCard() {
+      const domain = document.getElementById('domain-select').value;
+      const ref = document.getElementById('ref-input').value.trim();
+      const url = buildUrl();
+
+      if (!domain || !url) {
+        // Show default state
+        document.getElementById('card-domain').textContent = 'fortune0';
+        document.getElementById('card-tagline').textContent = 'Ideas that compete to exist.';
+        document.getElementById('url-preview').textContent = 'Select a domain to generate your QR code';
+        document.getElementById('card-ref').textContent = '';
+        // Generate default QR pointing to homepage
+        generateQR(BASE_URL);
+        return;
+      }
+
+      document.getElementById('card-domain').textContent = domain;
+      document.getElementById('card-tagline').textContent = getTagline(domain);
+      document.getElementById('url-preview').textContent = url;
+      document.getElementById('card-ref').textContent = ref ? `ref: ${ref}` : '';
+
+      generateQR(url);
+    }
+
+    async function loadDomains() {
+      const select = document.getElementById('domain-select');
+
+      try {
+        const res = await fetch('/domains.json');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allDomains = await res.json();
+
+        if (!Array.isArray(allDomains) || allDomains.length === 0) {
+          throw new Error('Empty domain list');
+        }
+
+        // Sort by value descending
+        allDomains.sort((a, b) => (b.value || 0) - (a.value || 0));
+
+        // Clear and populate
+        select.innerHTML = '';
+        allDomains.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.domain;
+          opt.textContent = `${d.domain} ($${d.value || 0})`;
+          select.appendChild(opt);
+        });
+
+        // Check if URL path specifies a domain: /qr/<slug>
+        const pathSlug = window.location.pathname.split('/')[2] || '';
+        if (pathSlug) {
+          for (const opt of select.options) {
+            if (opt.value.startsWith(pathSlug)) {
+              opt.selected = true;
+              break;
+            }
+          }
+        }
+
+        return true;
+      } catch (e) {
+        console.error('Failed to load domains:', e);
+        select.innerHTML = '<option value="">Failed to load domains</option>';
+        showError('Could not load domain list. Check your connection.');
+        return false;
+      }
+    }
+
+    function loadSavedRef() {
+      // Load ref from localStorage if previously saved
+      const savedRef = localStorage.getItem('f0_ref') || '';
+      if (savedRef) {
+        document.getElementById('ref-input').value = savedRef;
+      }
+    }
+
+    async function init() {
+      // Load saved referral code (synchronous, no network call)
+      loadSavedRef();
+
+      // Load domains from domains.json
+      const loaded = await loadDomains();
+
+      // Generate the initial card (even with defaults)
+      updateCard();
+    }
+
+    // Listen for changes
+    document.getElementById('domain-select').addEventListener('change', updateCard);
+    document.getElementById('ref-input').addEventListener('input', function() {
+      // Save ref to localStorage as they type
+      const ref = this.value.trim();
+      if (ref) localStorage.setItem('f0_ref', ref);
+      updateCard();
+    });
+
+    function copyUrl() {
+      const url = buildUrl();
+      if (!url) { showError('Select a domain first'); return; }
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = event.target;
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = orig; }, 1500);
+      }).catch(() => {
+        // Fallback for older browsers
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showError('Copied to clipboard');
+      });
+    }
+
+    async function downloadCard() {
+      const card = document.getElementById('card');
+      const url = buildUrl();
+
+      // Try html2canvas if available, otherwise use canvas export
+      try {
+        // Export just the QR code as PNG
+        const canvas = document.getElementById('qr-canvas');
+        const dataUrl = canvas.toDataURL('image/png');
+        const a = document.createElement('a');
+        const domain = document.getElementById('domain-select').value || 'fortune0';
+        const slug = domain.split('.')[0];
+        a.download = `fortune0-qr-${slug}.png`;
+        a.href = dataUrl;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (e) {
+        // Fallback
+        const link = buildUrl();
+        alert(`To save the full card:\n1. Use "Print Card" → Save as PDF\n2. Or right-click the QR code → Save Image\n\nDirect link:\n${link || BASE_URL}`);
+      }
+    }
+
+    // Start
+    init();
+  </script>
+</body>
+</html>
