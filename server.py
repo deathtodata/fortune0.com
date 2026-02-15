@@ -1221,6 +1221,44 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header("Location", "/ideas")
                 self.end_headers()
 
+        # ── Admin: list all users with license keys (GET) ──
+        elif path == "/api/admin/users":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            if sess["email"] != ADMIN_EMAIL:
+                self.send_json({"error": "Admin only"}, 403); return
+
+            conn = get_db()
+            users = conn.execute("""
+                SELECT u.email, u.tier, u.referral_code, u.license_key,
+                       u.created_at,
+                       COALESCE(SUM(CASE WHEN c.amount > 0 THEN c.amount ELSE 0 END), 0) as credits
+                FROM users u
+                LEFT JOIN credits c ON c.user_email = u.email
+                GROUP BY u.email
+                ORDER BY u.created_at DESC
+            """).fetchall()
+            conn.close()
+
+            user_list = []
+            for u in users:
+                key_status = "none"
+                if u["license_key"]:
+                    _, msg = validate_license_key(u["license_key"])
+                    key_status = msg.lower()
+                user_list.append({
+                    "email": u["email"],
+                    "tier": u["tier"],
+                    "referral_code": u["referral_code"],
+                    "license_key": u["license_key"] or "",
+                    "key_status": key_status,
+                    "credits": round(u["credits"], 2),
+                    "created_at": u["created_at"],
+                })
+
+            self.send_json({"users": user_list, "count": len(user_list)})
+
         # ── Static files ──
         elif path == "/":
             self.send_file(os.path.join(SITE_DIR, "index.html"))
@@ -1823,45 +1861,6 @@ class Handler(BaseHTTPRequestHandler):
             conn.close()
 
             self.send_json({"purged": True, "records_removed": purged, "total": total})
-
-        # ── Admin: list all users with license keys ──
-        elif path == "/api/admin/users":
-            sess = self.get_user()
-            if not sess:
-                self.send_json({"error": "Auth required"}, 401); return
-            if sess["email"] != ADMIN_EMAIL:
-                self.send_json({"error": "Admin only"}, 403); return
-
-            conn = get_db()
-            users = conn.execute("""
-                SELECT u.email, u.tier, u.referral_code, u.license_key,
-                       u.created_at,
-                       COALESCE(SUM(CASE WHEN c.amount > 0 THEN c.amount ELSE 0 END), 0) as credits
-                FROM users u
-                LEFT JOIN credits c ON c.user_email = u.email
-                GROUP BY u.email
-                ORDER BY u.created_at DESC
-            """).fetchall()
-            conn.close()
-
-            user_list = []
-            for u in users:
-                # Check if license key is still valid
-                key_status = "none"
-                if u["license_key"]:
-                    _, msg = validate_license_key(u["license_key"])
-                    key_status = msg.lower()  # "valid", "expired", etc.
-                user_list.append({
-                    "email": u["email"],
-                    "tier": u["tier"],
-                    "referral_code": u["referral_code"],
-                    "license_key": u["license_key"] or "",
-                    "key_status": key_status,
-                    "credits": round(u["credits"], 2),
-                    "created_at": u["created_at"],
-                })
-
-            self.send_json({"users": user_list, "count": len(user_list)})
 
         # ── Admin: renew a user's license key ──
         elif path == "/api/admin/renew-key":
