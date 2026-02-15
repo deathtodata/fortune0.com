@@ -37,6 +37,7 @@ import urllib.parse
 import math
 import re as _re
 import uuid
+from html.parser import HTMLParser
 
 # Optional: PostgreSQL support (for Render/production)
 try:
@@ -135,6 +136,86 @@ def validate_license_key(key):
     except Exception:
         return None, "Bad expiry"
     return payload, "Valid"
+
+# ═══════════════════════════════════════════
+#  WEB SEARCH (DuckDuckGo — no API key needed)
+# ═══════════════════════════════════════════
+
+class _DDGParser(HTMLParser):
+    """Parse DuckDuckGo HTML search results (html.duckduckgo.com).
+    Results use: .result__a for title/link, .result__snippet for snippet."""
+    def __init__(self):
+        super().__init__()
+        self.results = []
+        self._in_link = False
+        self._in_snippet = False
+        self._current = {}
+        self._text = []
+
+    def handle_starttag(self, tag, attrs):
+        attrs_d = dict(attrs)
+        cls = attrs_d.get("class", "")
+        # Title links have class "result__a"
+        if tag == "a" and "result__a" in cls:
+            self._in_link = True
+            self._current = {"url": attrs_d.get("href", ""), "title": "", "snippet": ""}
+            self._text = []
+        # Snippets have class "result__snippet"
+        if tag == "a" and "result__snippet" in cls:
+            self._in_snippet = True
+            self._text = []
+
+    def handle_endtag(self, tag):
+        if tag == "a" and self._in_link:
+            self._in_link = False
+            self._current["title"] = " ".join(self._text).strip()
+            self._text = []
+        if tag == "a" and self._in_snippet:
+            self._in_snippet = False
+            self._current["snippet"] = " ".join(self._text).strip()
+            if self._current.get("url") and self._current.get("title"):
+                self.results.append(self._current)
+            self._current = {}
+            self._text = []
+
+    def handle_data(self, data):
+        if self._in_link or self._in_snippet:
+            self._text.append(data.strip())
+
+def search_ddg(query, count=10):
+    """Search DuckDuckGo HTML — no API key, no dependencies."""
+    try:
+        url = "https://html.duckduckgo.com/html/"
+        data = urllib.parse.urlencode({"q": query}).encode()
+        req = urllib.request.Request(url, data=data, headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Content-Type": "application/x-www-form-urlencoded",
+        })
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            html = resp.read().decode("utf-8", errors="replace")
+        parser = _DDGParser()
+        parser.feed(html)
+        results = []
+        for r in parser.results[:count]:
+            # DDG prefixes URLs with a redirect — extract the actual URL
+            actual_url = r["url"]
+            if "uddg=" in actual_url:
+                try:
+                    actual_url = urllib.parse.unquote(
+                        urllib.parse.parse_qs(urllib.parse.urlparse(actual_url).query).get("uddg", [actual_url])[0]
+                    )
+                except Exception:
+                    pass
+            results.append({
+                "title": r["title"],
+                "url": actual_url,
+                "snippet": r["snippet"],
+                "engine": "duckduckgo",
+            })
+        return results
+    except Exception as e:
+        sys.stderr.write(f"  DDG search failed: {e}\n")
+        return []
 
 # ═══════════════════════════════════════════
 #  DATABASE
@@ -631,58 +712,63 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 sys.stderr.write(f"  Domain registry search failed: {e}\n")
 
-            # ── 2. Web search — Brave API or SearXNG (paid tier only) ──
+            # ── 2. Web search (paid tier only) ──
+            # Priority: Brave API (if key set) → SearXNG (if URL set) → DuckDuckGo (always available)
             web_results = []
             web_locked = False
-            has_web_backend = bool(BRAVE_SEARCH_KEY or SEARXNG_URL)
 
-            if has_web_backend:
-                if sess and user_tier == "active":
-                    # Try Brave Search API first (simpler, no infra needed)
-                    if BRAVE_SEARCH_KEY and not web_results:
-                        try:
-                            brave_url = f"https://api.search.brave.com/res/v1/web/search?q={urllib.parse.quote(q)}&count=10"
-                            req = urllib.request.Request(brave_url, headers={
-                                "Accept": "application/json",
-                                "X-Subscription-Token": BRAVE_SEARCH_KEY,
-                            })
-                            with urllib.request.urlopen(req, timeout=10) as resp:
-                                data = json.loads(resp.read().decode())
-                                for r in data.get("web", {}).get("results", [])[:10]:
-                                    web_results.append({
-                                        "title": r.get("title", ""),
-                                        "url": r.get("url", ""),
-                                        "snippet": r.get("description", ""),
-                                        "engine": "brave",
-                                    })
-                            if web_results:
-                                search_source = "brave" if search_source == "none" else search_source + "+brave"
-                        except Exception as e:
-                            sys.stderr.write(f"  Brave Search failed: {e}\n")
+            if sess and user_tier == "active":
+                # Try Brave Search API first (if configured)
+                if BRAVE_SEARCH_KEY and not web_results:
+                    try:
+                        brave_url = f"https://api.search.brave.com/res/v1/web/search?q={urllib.parse.quote(q)}&count=10"
+                        req = urllib.request.Request(brave_url, headers={
+                            "Accept": "application/json",
+                            "X-Subscription-Token": BRAVE_SEARCH_KEY,
+                        })
+                        with urllib.request.urlopen(req, timeout=10) as resp:
+                            data = json.loads(resp.read().decode())
+                            for r in data.get("web", {}).get("results", [])[:10]:
+                                web_results.append({
+                                    "title": r.get("title", ""),
+                                    "url": r.get("url", ""),
+                                    "snippet": r.get("description", ""),
+                                    "engine": "brave",
+                                })
+                        if web_results:
+                            search_source = "brave" if search_source == "none" else search_source + "+brave"
+                    except Exception as e:
+                        sys.stderr.write(f"  Brave Search failed: {e}\n")
 
-                    # Fallback to SearXNG if configured and Brave didn't return results
-                    if SEARXNG_URL and not web_results:
-                        try:
-                            search_url = f"{SEARXNG_URL.rstrip('/')}/search?q={urllib.parse.quote(q)}&format=json&categories=general"
-                            req = urllib.request.Request(search_url, headers={
-                                "User-Agent": "death2data/1.0 (privacy search)",
-                                "Accept": "application/json",
-                            })
-                            with urllib.request.urlopen(req, timeout=12) as resp:
-                                data = json.loads(resp.read().decode())
-                                for r in data.get("results", [])[:10]:
-                                    web_results.append({
-                                        "title": r.get("title", ""),
-                                        "url": r.get("url", ""),
-                                        "snippet": r.get("content", ""),
-                                        "engine": r.get("engine", ""),
-                                    })
-                            if web_results:
-                                search_source = "searxng" if search_source == "none" else search_source + "+searxng"
-                        except Exception as e:
-                            sys.stderr.write(f"  SearXNG ({SEARXNG_URL}) failed: {e}\n")
-                else:
-                    web_locked = True  # Web search available but user not authed/paid
+                # Try SearXNG if configured and nothing yet
+                if SEARXNG_URL and not web_results:
+                    try:
+                        search_url = f"{SEARXNG_URL.rstrip('/')}/search?q={urllib.parse.quote(q)}&format=json&categories=general"
+                        req = urllib.request.Request(search_url, headers={
+                            "User-Agent": "death2data/1.0 (privacy search)",
+                            "Accept": "application/json",
+                        })
+                        with urllib.request.urlopen(req, timeout=12) as resp:
+                            data = json.loads(resp.read().decode())
+                            for r in data.get("results", [])[:10]:
+                                web_results.append({
+                                    "title": r.get("title", ""),
+                                    "url": r.get("url", ""),
+                                    "snippet": r.get("content", ""),
+                                    "engine": r.get("engine", ""),
+                                })
+                        if web_results:
+                            search_source = "searxng" if search_source == "none" else search_source + "+searxng"
+                    except Exception as e:
+                        sys.stderr.write(f"  SearXNG ({SEARXNG_URL}) failed: {e}\n")
+
+                # DuckDuckGo fallback — always available, no config needed
+                if not web_results:
+                    web_results = search_ddg(q, count=10)
+                    if web_results:
+                        search_source = "duckduckgo" if search_source == "none" else search_source + "+duckduckgo"
+            else:
+                web_locked = True  # Web search available but user not authed/paid
 
             # Remove score field, merge
             for r in results:
