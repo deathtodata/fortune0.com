@@ -580,30 +580,24 @@ class Handler(BaseHTTPRequestHandler):
                 "credits_from_stripe": credits_imported,
             })
 
-        # ── Search (SearXNG proxy — paid tier only) ──
+        # ── Search (domain registry public, web results paid-only) ──
         elif path == "/api/search":
             q = parse_qs(urlparse(self.path).query).get("q", [""])[0].strip()
             if not q:
                 self.send_json({"error": "Query required"}, 400); return
 
-            # PAYWALL: Must be authenticated
+            # Check auth (optional — domain search works without it)
             sess = self.get_user()
-            if not sess:
-                self.send_json({"error": "auth_required", "message": "Sign in to search"}, 401); return
+            user_tier = "anonymous"
+            if sess:
+                conn_tier = get_db()
+                user = conn_tier.execute("SELECT tier FROM users WHERE email=?", [sess["email"]]).fetchone()
+                user_tier = user["tier"] if user else "free"
+                conn_tier.close()
 
-            # PAYWALL: Must have active (paid) tier
-            conn = get_db()
-            user = conn.execute("SELECT tier FROM users WHERE email=?", [sess["email"]]).fetchone()
-            user_tier = user["tier"] if user else "free"
-            if user_tier != "active":
-                conn.close()
-                self.send_json({"error": "activation_required", "message": "Activate your account to search", "tier": user_tier}, 403); return
-
-            # ── Search: domain registry first, then live web if configured ──
+            # ── 1. Domain registry (always available, no auth) ──
             results = []
             search_source = "none"
-
-            # 1. Search the domain registry (domains.json — always available)
             try:
                 domains_path = os.path.join(SITE_DIR, "domains.json")
                 if os.path.exists(domains_path):
@@ -613,10 +607,8 @@ class Handler(BaseHTTPRequestHandler):
                     q_words = q_lower.split()
                     for d in domains:
                         name = d["domain"].replace(".com", "").replace(".io", "").replace(".ai", "").replace(".net", "").replace(".org", "").replace(".xyz", "")
-                        # Break domain name into words (camelCase and joined words)
                         domain_words = _re.sub(r'([a-z])([A-Z])', r'\1 \2', name).lower()
                         domain_words = domain_words.replace("-", " ").replace(".", " ")
-                        # Match: any query word appears in domain name
                         score = 0
                         for w in q_words:
                             if len(w) >= 2 and w in domain_words:
@@ -631,7 +623,6 @@ class Handler(BaseHTTPRequestHandler):
                                 "engine": "registry",
                                 "score": score + d.get("value", 0),
                             })
-                    # Sort by match score + domain value
                     results.sort(key=lambda r: r.get("score", 0), reverse=True)
                     results = results[:10]
                     if results:
@@ -639,39 +630,43 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 sys.stderr.write(f"  Domain registry search failed: {e}\n")
 
-            # 2. Live web search via SearXNG (optional — only if SEARXNG_URL is set)
+            # ── 2. Web search via SearXNG (paid tier only) ──
             web_results = []
+            web_locked = False
             if SEARXNG_URL:
-                try:
-                    search_url = f"{SEARXNG_URL.rstrip('/')}/search?q={urllib.parse.quote(q)}&format=json&categories=general"
-                    req = urllib.request.Request(search_url, headers={
-                        "User-Agent": "death2data/1.0 (privacy search)",
-                        "Accept": "application/json",
-                    })
-                    with urllib.request.urlopen(req, timeout=12) as resp:
-                        data = json.loads(resp.read().decode())
-                        for r in data.get("results", [])[:10]:
-                            web_results.append({
-                                "title": r.get("title", ""),
-                                "url": r.get("url", ""),
-                                "snippet": r.get("content", ""),
-                                "engine": r.get("engine", ""),
-                            })
-                    if web_results:
-                        search_source = "d2d-search" if search_source == "none" else search_source + "+web"
-                except Exception as e:
-                    sys.stderr.write(f"  SearXNG ({SEARXNG_URL}) failed: {e}\n")
+                if sess and user_tier == "active":
+                    try:
+                        search_url = f"{SEARXNG_URL.rstrip('/')}/search?q={urllib.parse.quote(q)}&format=json&categories=general"
+                        req = urllib.request.Request(search_url, headers={
+                            "User-Agent": "death2data/1.0 (privacy search)",
+                            "Accept": "application/json",
+                        })
+                        with urllib.request.urlopen(req, timeout=12) as resp:
+                            data = json.loads(resp.read().decode())
+                            for r in data.get("results", [])[:10]:
+                                web_results.append({
+                                    "title": r.get("title", ""),
+                                    "url": r.get("url", ""),
+                                    "snippet": r.get("content", ""),
+                                    "engine": r.get("engine", ""),
+                                })
+                        if web_results:
+                            search_source = "d2d-search" if search_source == "none" else search_source + "+web"
+                    except Exception as e:
+                        sys.stderr.write(f"  SearXNG ({SEARXNG_URL}) failed: {e}\n")
+                else:
+                    web_locked = True  # SearXNG available but user not authed/paid
 
-            # Merge: registry results first, then web results
-            # Remove score field before sending
+            # Remove score field, merge
             for r in results:
                 r.pop("score", None)
             all_results = results + web_results
 
-            # Log search
-            log_activity(conn, sess["email"], "search", q[:100])
-            conn.commit()
-            conn.close()
+            # Log search if authenticated
+            if sess:
+                conn_log = get_db()
+                log_activity(conn_log, sess["email"], "search", q[:100])
+                conn_log.commit(); conn_log.close()
 
             self.send_json({
                 "query": q,
@@ -680,7 +675,8 @@ class Handler(BaseHTTPRequestHandler):
                 "source": search_source,
                 "registry_matches": len(results),
                 "web_results": len(web_results),
-                "authed": True,
+                "web_locked": web_locked,
+                "authed": bool(sess),
                 "tier": user_tier,
             })
 
