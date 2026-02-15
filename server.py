@@ -65,6 +65,7 @@ STRIPE_PAYMENT_LINK = os.environ.get("STRIPE_PAYMENT_LINK", "")  # https://buy.s
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")  # sk_live_... or sk_test_... for API calls
 SEARXNG_URL = os.environ.get("SEARXNG_URL", "")  # Your own SearXNG instance (e.g. https://d2d-search.onrender.com)
 ADMIN_EMAIL = os.environ.get("F0_ADMIN_EMAIL", "admin@example.com")  # Set F0_ADMIN_EMAIL env var in production
+ADMIN_SECRET = os.environ.get("F0_ADMIN_SECRET", "")  # Admin login passphrase — set on Render
 IS_PRODUCTION = bool(DATABASE_URL)  # True on Render (has PostgreSQL), False on localhost
 
 # RFC 2606 reserved domains — safe for testing, blocked in production
@@ -520,12 +521,36 @@ class Handler(BaseHTTPRequestHandler):
 
         # ── API routes ──
         if path == "/health":
+            # Public health check — only status info, no business data
+            db_type = "postgresql" if USE_PG else "sqlite"
+            db_ok = True
+            try:
+                conn = get_db()
+                conn.execute("SELECT 1").fetchone()
+                conn.close()
+            except Exception:
+                db_ok = False
+            self.send_json({
+                "status": "ok" if db_ok else "degraded",
+                "service": "fortune0",
+                "version": "1.6.0",
+                "db": db_type,
+                "db_connected": db_ok,
+            })
+
+        # ── Admin health: full stats (requires admin auth) ──
+        elif path == "/api/admin/health":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            if sess["email"] != ADMIN_EMAIL:
+                self.send_json({"error": "Admin only"}, 403); return
             db_type = "postgresql" if USE_PG else "sqlite"
             stripe_configured = bool(STRIPE_WEBHOOK_SECRET)
             payment_link_set = bool(STRIPE_PAYMENT_LINK)
-            conn = get_db()
             stripe_api_set = bool(STRIPE_SECRET_KEY)
             searxng_set = bool(SEARXNG_URL)
+            conn = get_db()
             try:
                 user_count = conn.execute("SELECT COUNT(*) c FROM users").fetchone()["c"]
                 affiliate_count = conn.execute("SELECT COUNT(*) c FROM affiliates").fetchone()["c"]
@@ -544,12 +569,12 @@ class Handler(BaseHTTPRequestHandler):
                 "stripe_webhook": "configured" if stripe_configured else "not set",
                 "stripe_payment_link": "configured" if payment_link_set else "not set",
                 "stripe_api": "configured" if stripe_api_set else "not set",
-                "searxng": SEARXNG_URL if searxng_set else "not set (using public fallbacks)",
+                "searxng": "configured" if searxng_set else "not set",
                 "users": user_count,
                 "active_users": active_users,
                 "affiliates": affiliate_count,
-                "real_revenue": active_users,  # $1/mo × active users = actual Stripe revenue
-                "commission_volume": round(total_revenue, 2),  # affiliate attribution demo data
+                "real_revenue": active_users,
+                "commission_volume": round(total_revenue, 2),
                 "total_credits_issued": round(total_credits, 2),
                 "total_credits_spent": round(credits_spent, 2),
                 "credits_from_stripe": credits_imported,
@@ -666,12 +691,21 @@ class Handler(BaseHTTPRequestHandler):
             conn = get_db()
             email = sess["email"]
             contacts = conn.execute("SELECT COUNT(*) c FROM contacts WHERE user_email=?", [email]).fetchone()["c"]
-            affiliates = conn.execute("SELECT COUNT(*) c FROM affiliates").fetchone()["c"]
-            comms = conn.execute("SELECT COUNT(*) c FROM commissions").fetchone()["c"]
-            revenue = conn.execute("SELECT COALESCE(SUM(order_total),0) s FROM commissions").fetchone()["s"]
-            aff_pay = conn.execute("SELECT COALESCE(SUM(commission_amount),0) s FROM commissions").fetchone()["s"]
-            plat_rev = conn.execute("SELECT COALESCE(SUM(platform_fee),0) s FROM commissions").fetchone()["s"]
             recent = conn.execute("SELECT * FROM activity WHERE user_email=? ORDER BY created_at DESC LIMIT 20", [email]).fetchall()
+            if email == ADMIN_EMAIL:
+                # Admin sees platform-wide stats
+                affiliates = conn.execute("SELECT COUNT(*) c FROM affiliates").fetchone()["c"]
+                comms = conn.execute("SELECT COUNT(*) c FROM commissions").fetchone()["c"]
+                revenue = conn.execute("SELECT COALESCE(SUM(order_total),0) s FROM commissions").fetchone()["s"]
+                aff_pay = conn.execute("SELECT COALESCE(SUM(commission_amount),0) s FROM commissions").fetchone()["s"]
+                plat_rev = conn.execute("SELECT COALESCE(SUM(platform_fee),0) s FROM commissions").fetchone()["s"]
+            else:
+                # Regular users see only their own stats
+                affiliates = conn.execute("SELECT COUNT(*) c FROM affiliates WHERE email=?", [email]).fetchone()["c"]
+                comms = conn.execute("SELECT COUNT(*) c FROM commissions WHERE affiliate_email=?", [email]).fetchone()["c"]
+                revenue = conn.execute("SELECT COALESCE(SUM(order_total),0) s FROM commissions WHERE affiliate_email=?", [email]).fetchone()["s"]
+                aff_pay = conn.execute("SELECT COALESCE(SUM(commission_amount),0) s FROM commissions WHERE affiliate_email=?", [email]).fetchone()["s"]
+                plat_rev = conn.execute("SELECT COALESCE(SUM(platform_fee),0) s FROM commissions WHERE affiliate_email=?", [email]).fetchone()["s"]
             conn.close()
             self.send_json({
                 "contacts": contacts, "affiliates": affiliates, "commissions": comms,
@@ -700,7 +734,12 @@ class Handler(BaseHTTPRequestHandler):
             if not sess:
                 self.send_json({"error": "Auth required"}, 401); return
             conn = get_db()
-            rows = conn.execute("SELECT * FROM affiliates ORDER BY total_earned DESC").fetchall()
+            if sess["email"] == ADMIN_EMAIL:
+                # Admin sees all affiliates
+                rows = conn.execute("SELECT * FROM affiliates ORDER BY total_earned DESC").fetchall()
+            else:
+                # Regular users only see their own affiliate record
+                rows = conn.execute("SELECT * FROM affiliates WHERE email=? ORDER BY total_earned DESC", [sess["email"]]).fetchall()
             conn.close()
             self.send_json([dict(r) for r in rows])
 
@@ -709,7 +748,12 @@ class Handler(BaseHTTPRequestHandler):
             if not sess:
                 self.send_json({"error": "Auth required"}, 401); return
             conn = get_db()
-            rows = conn.execute("SELECT * FROM commissions ORDER BY created_at DESC LIMIT 100").fetchall()
+            if sess["email"] == ADMIN_EMAIL:
+                # Admin sees all commissions
+                rows = conn.execute("SELECT * FROM commissions ORDER BY created_at DESC LIMIT 100").fetchall()
+            else:
+                # Regular users only see their own commissions
+                rows = conn.execute("SELECT * FROM commissions WHERE affiliate_email=? ORDER BY created_at DESC LIMIT 100", [sess["email"]]).fetchall()
             conn.close()
             self.send_json([dict(r) for r in rows])
 
@@ -870,9 +914,11 @@ class Handler(BaseHTTPRequestHandler):
             clicks = conn.execute("SELECT COUNT(*) c FROM referral_clicks WHERE referral_code=?", [code]).fetchone()["c"]
             conversions = conn.execute("SELECT COUNT(*) c FROM referral_clicks WHERE referral_code=? AND converted=1", [code]).fetchone()["c"]
             conn.close()
+            # Never expose email publicly — hash it
+            email_hash = hashlib.sha256(aff["email"].encode()).hexdigest()[:8]
             self.send_json({
                 "code": code,
-                "email": aff["email"],
+                "email_hash": email_hash,
                 "clicks": clicks,
                 "conversions": conversions,
                 "conversion_rate": round(conversions / clicks * 100, 1) if clicks > 0 else 0,
@@ -937,8 +983,13 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Location", f"/u/{code}")
             self.end_headers()
 
-        # ── Analytics: time-series platform data ──
+        # ── Analytics: time-series platform data (admin only) ──
         elif path == "/api/analytics":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            if sess["email"] != ADMIN_EMAIL:
+                self.send_json({"error": "Admin only"}, 403); return
             conn = get_db()
             try:
                 # Signups per day (last 30 days)
@@ -1176,7 +1227,7 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path.rstrip("/")
         body = self.read_body()
 
-        # ── Signup (create free account) ──
+        # ── Signup (create NEW accounts only — existing users must use /api/login) ──
         if path == "/api/signup":
             email = body.get("email", "").strip().lower()
             if not email or "@" not in email:
@@ -1188,15 +1239,12 @@ class Handler(BaseHTTPRequestHandler):
             conn = get_db()
             existing = conn.execute("SELECT * FROM users WHERE email=?", [email]).fetchone()
             if existing:
-                # Already exists — just log them in
-                token = create_session(email)
-                log_activity(conn, email, "login", "Returning user")
-                conn.commit(); conn.close()
+                # Account exists — do NOT auto-login, require license key
+                conn.close()
                 self.send_json({
-                    "token": token, "email": email,
-                    "referral_code": existing["referral_code"],
-                    "tier": existing["tier"], "new": False,
-                })
+                    "error": "Account already exists. Sign in with your license key.",
+                    "exists": True,
+                }, 409)
                 return
 
             ref_code = generate_referral_code(email)
@@ -1223,22 +1271,52 @@ class Handler(BaseHTTPRequestHandler):
                 "tier": "free", "new": True,
             })
 
-        # ── Login (with license key) ──
+        # ── Login (license key OR admin secret) ──
         elif path == "/api/login":
             email = body.get("email", "").strip().lower()
             key = body.get("key", "").strip()
-            if not email or not key:
-                self.send_json({"error": "Email and key required"}, 400); return
-            payload, msg = validate_license_key(key)
-            if not payload or msg != "Valid":
-                self.send_json({"error": msg}, 401); return
-            if payload.get("email", "").lower() != email:
-                self.send_json({"error": "Key doesn't match email"}, 401); return
+            if not email:
+                self.send_json({"error": "Email required"}, 400); return
+
+            # Admin can log in with F0_ADMIN_SECRET instead of license key
+            authed = False
+            if email == ADMIN_EMAIL and ADMIN_SECRET and key == ADMIN_SECRET:
+                authed = True
+                auth_method = "Admin secret"
+            elif key:
+                payload, msg = validate_license_key(key)
+                if not payload or msg != "Valid":
+                    self.send_json({"error": msg}, 401); return
+                if payload.get("email", "").lower() != email:
+                    self.send_json({"error": "Key doesn't match email"}, 401); return
+                authed = True
+                auth_method = "License key"
+            else:
+                self.send_json({"error": "Key required"}, 400); return
+
             conn = get_db()
-            log_activity(conn, email, "login", "License key auth")
+            user = conn.execute("SELECT * FROM users WHERE email=?", [email]).fetchone()
+            if not user:
+                # Admin auto-creates their account if it doesn't exist yet
+                if email == ADMIN_EMAIL and authed:
+                    ref_code = generate_referral_code(email)
+                    lk = generate_license_key(email, days=365)
+                    conn.execute("INSERT INTO users (email, referral_code, license_key, tier) VALUES (?, ?, ?, 'active')",
+                                 [email, ref_code, lk])
+                    log_activity(conn, email, "signup", f"Admin account auto-created: {ref_code}")
+                    conn.commit()
+                    user = conn.execute("SELECT * FROM users WHERE email=?", [email]).fetchone()
+                else:
+                    conn.close()
+                    self.send_json({"error": "Account not found"}, 404); return
+            log_activity(conn, email, "login", auth_method)
             conn.commit(); conn.close()
             token = create_session(email)
-            self.send_json({"token": token, "email": email})
+            self.send_json({
+                "token": token, "email": email,
+                "referral_code": user["referral_code"],
+                "tier": user["tier"],
+            })
 
         # ── Add contact ──
         elif path == "/api/contacts":
@@ -1377,14 +1455,13 @@ class Handler(BaseHTTPRequestHandler):
             conn = get_db()
             existing = conn.execute("SELECT * FROM affiliates WHERE email=?", [email]).fetchone()
             if existing:
-                clicks = conn.execute("SELECT COUNT(*) c FROM referral_clicks WHERE referral_code=?", [existing["referral_code"]]).fetchone()["c"]
                 conn.close()
-                d = dict(existing)
-                d["clicks"] = clicks
-                d["short_url"] = f"/r/{existing['referral_code']}"
-                d["profile_url"] = f"/u/{existing['referral_code']}"
-                d["returning"] = True
-                self.send_json(d)
+                # Don't return full data — just confirm they exist and point them to login
+                self.send_json({
+                    "returning": True,
+                    "message": "You already have an affiliate account. Sign in with your license key to see your stats.",
+                    "profile_url": f"/u/{existing['referral_code']}",
+                })
                 return
             conn.execute("INSERT INTO affiliates (email, referral_code, commission_rate) VALUES (?, ?, 0.10)",
                          [email, code])
@@ -1507,30 +1584,11 @@ class Handler(BaseHTTPRequestHandler):
 
         # ── Account recovery (email lookup) ──
         elif path == "/api/recover":
-            email = body.get("email", "").strip().lower()
-            if not email or "@" not in email:
-                self.send_json({"error": "Valid email required"}, 400); return
-
-            conn = get_db()
-            user = conn.execute("SELECT * FROM users WHERE email=?", [email]).fetchone()
-            if not user:
-                conn.close()
-                # Don't reveal whether email exists — just say "check your email"
-                self.send_json({"sent": True})
-                return
-
-            ud = dict(user)
-            token = create_session(email)
-            log_activity(conn, email, "recovery", "Account recovered via email")
-            conn.commit()
-            conn.close()
-
+            # Recovery disabled — no email sending service configured
+            # Don't reveal whether any email exists in the system
             self.send_json({
-                "token": token,
-                "email": email,
-                "referral_code": ud["referral_code"],
-                "tier": ud.get("tier", "free"),
-                "profile_url": f"/u/{ud['referral_code']}",
+                "message": "If this email has an account, your license key was shown at signup. Check your Stripe receipt email or contact support.",
+                "support": "matt@death2data.com",
             })
 
         # ── Get activation link (returns Stripe payment URL with code attached) ──
@@ -1893,14 +1951,11 @@ class Handler(BaseHTTPRequestHandler):
             ).fetchone()["c"]
             conn.close()
 
-            token = create_session(email)
+            # Do NOT create a session — interest signup is not authentication
             self.send_json({
                 "registered": True,
-                "email": email,
                 "domain": domain,
                 "interest_count": count,
-                "token": token,
-                "referred_by": ref if referred_by else None,
             })
 
         # ── Spend credits ──
