@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>fortune0 longtail — keyword clusters & ad angles</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#09090F;--s1:#111118;--s2:#18181F;--card:#1E1E28;--border:#2A2A38;--dim:#555;--text:#9CA3AF;--white:#EAEAEA;--pink:#EC4899;--green:#10B981;--blue:#3B82F6;--amber:#F59E0B;--red:#EF4444;--purple:#8B5CF6;--cyan:#06B6D4;--mono:'Consolas','SF Mono','Fira Code',monospace}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--white);min-height:100vh;-webkit-font-smoothing:antialiased}
+.w{max-width:640px;margin:0 auto;padding:1rem}
+
+/* Header */
+header{text-align:center;padding:1.5rem 0 0.5rem}
+header h1{font-size:1.6rem;font-weight:800;letter-spacing:-1px}
+header h1 span{color:var(--green)}
+.sub{color:var(--text);font-size:0.8rem;margin-top:0.3rem}
+
+/* Stats bar */
+.stats-bar{display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin:1rem 0;font-size:0.7rem;font-family:var(--mono)}
+.stat-pill{background:var(--s1);border:1px solid var(--border);border-radius:100px;padding:0.25rem 0.6rem;color:var(--text)}
+.stat-pill b{color:var(--white)}
+
+/* Search */
+.search-wrap{position:sticky;top:0;z-index:100;background:var(--bg);padding:0.75rem 0;border-bottom:1px solid var(--border)}
+.search-input{width:100%;background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:0.7rem 1rem;color:var(--white);font-size:0.95rem;outline:none;font-family:var(--mono)}
+.search-input:focus{border-color:var(--green)}
+.search-input::placeholder{color:var(--dim)}
+
+/* Filter tabs */
+.filters{display:flex;gap:0.4rem;overflow-x:auto;padding:0.75rem 0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.ftab{flex-shrink:0;padding:0.3rem 0.65rem;border-radius:100px;font-size:0.7rem;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;transition:all 0.15s}
+.ftab.active{background:var(--green);color:#000;border-color:var(--green)}
+.ftab .count{opacity:0.6;margin-left:0.2rem}
+
+/* Sort toggle */
+.sort-row{display:flex;gap:0.4rem;padding:0.4rem 0;font-size:0.65rem}
+.sort-btn{padding:0.2rem 0.5rem;border-radius:4px;background:transparent;border:1px solid var(--border);color:var(--dim);cursor:pointer;font-family:var(--mono)}
+.sort-btn.active{color:var(--amber);border-color:var(--amber)}
+
+/* Domain card */
+.domain-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:0.75rem;transition:border-color 0.15s}
+.domain-card.urgent{border-left:3px solid var(--red)}
+.domain-card.soon{border-left:3px solid var(--amber)}
+
+.dc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem}
+.dc-domain{font-family:var(--mono);font-size:0.95rem;font-weight:700;color:var(--white)}
+.dc-domain a{color:inherit;text-decoration:none}
+.dc-domain a:hover{color:var(--green)}
+.dc-badges{display:flex;gap:0.3rem;flex-shrink:0}
+.badge{font-size:0.55rem;padding:0.15rem 0.4rem;border-radius:3px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.badge-cat{background:rgba(59,130,246,0.15);color:var(--blue)}
+.badge-ai{background:rgba(139,92,246,0.15);color:var(--purple)}
+.badge-easy{background:rgba(16,185,129,0.15);color:var(--green)}
+.badge-med{background:rgba(245,158,11,0.15);color:var(--amber)}
+.badge-hard{background:rgba(239,68,68,0.15);color:var(--red)}
+.badge-expiry{background:rgba(239,68,68,0.1);color:var(--red);font-family:var(--mono)}
+
+.dc-concept{font-size:0.8rem;color:var(--text);margin-bottom:0.6rem;line-height:1.4}
+
+/* Problem / Hook */
+.dc-section{margin-bottom:0.5rem}
+.dc-label{font-size:0.6rem;text-transform:uppercase;letter-spacing:1px;color:var(--dim);font-weight:700;margin-bottom:0.2rem}
+.dc-problem{font-size:0.78rem;color:var(--pink);line-height:1.3}
+.dc-hook{font-size:0.78rem;color:var(--cyan);line-height:1.3;font-style:italic}
+
+/* Longtail keywords */
+.dc-keywords{display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.4rem}
+.kw{font-size:0.65rem;padding:0.2rem 0.45rem;border-radius:4px;background:var(--s1);border:1px solid var(--border);color:var(--text);font-family:var(--mono);cursor:pointer;transition:all 0.15s}
+.kw:hover{border-color:var(--green);color:var(--green)}
+.kw.intent-info{border-left:2px solid var(--blue)}
+.kw.intent-buy{border-left:2px solid var(--green)}
+.kw.intent-compare{border-left:2px solid var(--amber)}
+.kw.intent-solve{border-left:2px solid var(--pink)}
+
+/* Related */
+.dc-related{margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid var(--border)}
+.dc-related-label{font-size:0.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.3rem}
+.dc-related-list{display:flex;flex-wrap:wrap;gap:0.25rem}
+.related-tag{font-size:0.6rem;color:var(--dim);font-family:var(--mono);cursor:pointer;transition:color 0.15s}
+.related-tag:hover{color:var(--green)}
+
+/* Value bar */
+.dc-footer{display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem;padding-top:0.4rem;border-top:1px solid rgba(42,42,56,0.5);font-size:0.65rem;font-family:var(--mono);color:var(--dim)}
+
+/* Category clusters */
+.cluster{margin:1.5rem 0}
+.cluster-head{font-size:1.1rem;font-weight:700;margin-bottom:0.3rem;display:flex;align-items:center;gap:0.5rem}
+.cluster-count{font-size:0.7rem;color:var(--dim);font-family:var(--mono)}
+.cluster-phrases{font-size:0.75rem;color:var(--text);margin-bottom:0.75rem;line-height:1.4}
+
+/* Empty state */
+.empty{text-align:center;padding:3rem 1rem;color:var(--dim)}
+.empty .big{font-size:2rem;margin-bottom:0.5rem}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--s1);border-top:1px solid var(--border);display:flex;justify-content:center;gap:1rem;padding:0.5rem;z-index:200}
+.bottom-nav a{color:var(--dim);text-decoration:none;font-size:0.65rem;text-align:center;padding:0.3rem 0.6rem;border-radius:6px;transition:color 0.15s}
+.bottom-nav a:hover,.bottom-nav a.active{color:var(--green)}
+body{padding-bottom:60px}
+
+/* View toggle */
+.view-toggle{display:flex;gap:0.3rem;margin:0.5rem 0}
+.vt-btn{flex:1;padding:0.4rem;text-align:center;font-size:0.7rem;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--dim);cursor:pointer;border-radius:6px;transition:all 0.15s}
+.vt-btn:first-child{border-radius:6px 0 0 6px}
+.vt-btn:last-child{border-radius:0 6px 6px 0}
+.vt-btn.active{background:var(--s2);color:var(--white);border-color:var(--green)}
+
+/* Cluster view */
+.cluster-grid{display:grid;gap:0.75rem}
+.cluster-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem}
+.cluster-card h3{font-size:0.95rem;margin-bottom:0.4rem;display:flex;align-items:center;gap:0.4rem}
+.cluster-card .domains-list{display:flex;flex-wrap:wrap;gap:0.25rem;margin-top:0.4rem}
+.cluster-domain{font-size:0.65rem;font-family:var(--mono);padding:0.15rem 0.4rem;background:var(--s1);border:1px solid var(--border);border-radius:3px;color:var(--text);cursor:pointer}
+.cluster-domain:hover{color:var(--green);border-color:var(--green)}
+.cluster-ad-angles{margin-top:0.6rem;padding-top:0.5rem;border-top:1px solid var(--border)}
+.ad-angle{font-size:0.75rem;color:var(--cyan);margin-bottom:0.2rem;line-height:1.3}
+.ad-angle::before{content:"→ ";color:var(--dim)}
+</style>
+</head>
+<body>
+
+<div class="w">
+  <header>
+    <h1>fortune0 <span>longtail</span></h1>
+    <div class="sub">230 domains → keyword clusters, ad angles & problem statements</div>
+  </header>
+
+  <div class="stats-bar" id="stats-bar"></div>
+
+  <div class="search-wrap">
+    <input type="text" class="search-input" id="search" placeholder="search domains, keywords, categories...">
+  </div>
+
+  <div class="view-toggle">
+    <button class="vt-btn active" data-view="cards" onclick="setView('cards')">Cards</button>
+    <button class="vt-btn" data-view="clusters" onclick="setView('clusters')">Clusters</button>
+    <button class="vt-btn" data-view="keywords" onclick="setView('keywords')">All Keywords</button>
+  </div>
+
+  <div class="filters" id="filters"></div>
+
+  <div class="sort-row">
+    <button class="sort-btn active" data-sort="urgency" onclick="setSort('urgency')">expiring</button>
+    <button class="sort-btn" data-sort="value" onclick="setSort('value')">value</button>
+    <button class="sort-btn" data-sort="alpha" onclick="setSort('alpha')">a→z</button>
+    <button class="sort-btn" data-sort="keywords" onclick="setSort('keywords')">keywords</button>
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<nav class="bottom-nav">
+  <a href="/fortune0-home">home</a>
+  <a href="/fortune0-ops">ops</a>
+  <a href="/fortune0-seeds">seeds</a>
+  <a href="/fortune0-memes">memes</a>
+  <a href="/fortune0-longtail" class="active">longtail</a>
+</nav>
+
+<script>
+// ── State ──
+let ALL = [];
+let activeCat = 'all';
+let activeSort = 'urgency';
+let activeView = 'cards';
+const NOW = Date.now();
+const DAY = 86400000;
+
+// ── Category config ──
+const CAT_ICONS = {
+  ai:'🤖', tool:'🔧', saas:'📊', fun:'🎮', finance:'💰', community:'🤝',
+  education:'📚', health:'🏥', content:'📝', marketplace:'🏪', privacy:'🔒',
+  local:'📍', media:'📺', creative:'🎨', social:'💬'
+};
+const CAT_COLORS = {
+  ai:'var(--purple)', tool:'var(--blue)', saas:'var(--cyan)', fun:'var(--pink)',
+  finance:'var(--green)', community:'var(--amber)', education:'var(--blue)',
+  health:'var(--red)', content:'var(--text)', marketplace:'var(--amber)',
+  privacy:'var(--green)', local:'var(--amber)', media:'var(--pink)',
+  creative:'var(--purple)', social:'var(--cyan)'
+};
+
+// ── Word splitting ──
+function splitDomain(domain) {
+  const name = domain.replace(/\.(com|ai|io|co|app|net|org)$/i, '');
+  // Try common compound word splits
+  const words = name
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([0-9]+)/g, ' $1 ')
+    .replace(/[-_]/g, ' ')
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(w => w.length > 0);
+
+  // Also try splitting known compound words
+  const splits = [];
+  const compound = name.toLowerCase();
+  // Try splitting at every position for 2-word splits
+  for (let i = 2; i < compound.length - 1; i++) {
+    const w1 = compound.slice(0, i);
+    const w2 = compound.slice(i);
+    if (isWord(w1) && isWord(w2)) {
+      splits.push([w1, w2]);
+    }
+  }
+  // Use best split (longest first word)
+  if (splits.length > 0) {
+    splits.sort((a, b) => b[0].length - a[0].length);
+    return splits[0];
+  }
+  return words;
+}
+
+// Common English words for compound detection
+const DICT = new Set([
+  'the','best','my','your','is','it','a','i','we','do','go','no','so','up','in','on','to','of','at','by','or','an','if',
+  'tone','switch','vibe','device','kind','stamp','hollow','town','wrong','tab','cal','clip','save','sink',
+  'civic','resume','cold','start','kit','brand','aid','hook','clinic','nail','it','tracker','tweet','audit',
+  'blame','chain','vault','daemon','accent','wars','roast','the','brand','sell','this','weight','loss',
+  'deals','tattoo','certify','bite','size','pitch','rate','return','cash','flow','dead','line',
+  'smart','brain','ghost','write','stack','rank','feed','back','loop','side','hustle','hack',
+  'code','review','bug','fix','data','clean','price','check','deal','find','task','list',
+  'time','track','mind','map','word','play','game','plan','life','hack','work','flow','tool',
+  'box','drop','ship','flip','cart','dash','board','log','book','pay','wall','fund','pool',
+  'crowd','source','open','close','lock','key','safe','guard','fire','alarm','alert',
+  'scan','snap','chat','call','text','mail','send','push','pull','sync','link','share','post',
+  'bid','ask','trade','swap','mint','burn','stake','farm','yield','lend','borrow',
+  'pet','vet','pet','food','dog','cat','fish','bird','plant','garden','seed','grow','bloom',
+  'fit','gym','run','walk','bike','swim','yoga','diet','meal','cook','chef','eat','drink',
+  'art','draw','paint','sing','dance','play','read','write','teach','learn','study','test',
+  'home','house','room','rent','buy','move','pack','clean','fix','build','make','craft',
+  'car','drive','park','ride','fly','trip','travel','stay','camp','hike','surf','dive',
+  'job','work','hire','fire','quit','boss','team','lead','manage','plan','meet','talk',
+  'love','date','match','swipe','heart','soul','mood','feel','think','dream','wish','hope',
+  'news','blog','vlog','pod','cast','stream','live','viral','trend','meme','gif','clip',
+  'store','shop','cart','deal','sale','price','cost','free','cheap','rich','poor','debt',
+  'law','rule','vote','poll','sign','flag','war','peace','fight','win','lose','score',
+  'proof','truth','fact','fake','scam','trust','risk','fear','pain','help','care','cure',
+  'fortune','zero','one','two','three','four','five','dollar','cent','million','billion',
+  'death','data','privacy','search','engine','query','index','crawl','scrape','parse',
+  'api','sdk','cli','gui','app','web','site','page','form','input','output','file',
+  'server','client','host','cloud','local','remote','edge','node','mesh','grid','net',
+  'cash','flows','run','rate','burn','profit','margin','revenue','income','expense',
+  'st','pete','pro','pros','fl','ai','re','pre','un','dis','non','anti','super','mega','ultra',
+  'cram','pal','bet','nah','bro','lol','yolo','fomo','diy','asap','tldr','irl','afk',
+  'spot','check','double','triple','cross','over','under','after','before','between',
+  'last','first','next','new','old','big','small','fast','slow','hot','cool','dark','light',
+  'red','blue','green','black','white','gold','silver','pink','grey','gray','orange','purple'
+]);
+function isWord(w) { return w.length >= 2 && DICT.has(w); }
+
+// ── Longtail keyword generation ──
+function generateKeywords(domain, concept, category) {
+  const words = splitDomain(domain);
+  const name = words.join(' ');
+  const kws = [];
+
+  // Intent: informational
+  kws.push({ phrase: `what is ${name}`, intent: 'info' });
+  kws.push({ phrase: `how to ${name.includes(' ') ? name : concept.split(' ').slice(0, 4).join(' ').toLowerCase()}`, intent: 'info' });
+
+  // Intent: commercial
+  kws.push({ phrase: `best ${category} ${words[0]} app`, intent: 'buy' });
+  kws.push({ phrase: `${name} alternative`, intent: 'compare' });
+  kws.push({ phrase: `free ${name} tool`, intent: 'buy' });
+
+  // Intent: problem-solving
+  const conceptWords = concept.toLowerCase().split(/\s+/);
+  const verbs = conceptWords.filter(w => w.endsWith('ing') || w.endsWith('ify') || w.endsWith('ize') || w.endsWith('ate'));
+  if (verbs.length > 0) {
+    kws.push({ phrase: `help me ${verbs[0].replace(/ing$/, '')} ${words.slice(-1)[0]}`, intent: 'solve' });
+  }
+
+  // Category-specific patterns
+  if (category === 'ai') {
+    kws.push({ phrase: `ai ${name} generator`, intent: 'buy' });
+    kws.push({ phrase: `${name} with chatgpt`, intent: 'info' });
+  } else if (category === 'finance') {
+    kws.push({ phrase: `${name} calculator`, intent: 'solve' });
+    kws.push({ phrase: `${name} for beginners`, intent: 'info' });
+  } else if (category === 'tool') {
+    kws.push({ phrase: `${name} chrome extension`, intent: 'buy' });
+    kws.push({ phrase: `${name} online free`, intent: 'buy' });
+  } else if (category === 'fun') {
+    kws.push({ phrase: `${name} game online`, intent: 'buy' });
+    kws.push({ phrase: `play ${name} with friends`, intent: 'solve' });
+  } else if (category === 'health') {
+    kws.push({ phrase: `${name} tracker app`, intent: 'buy' });
+    kws.push({ phrase: `daily ${name} routine`, intent: 'info' });
+  } else if (category === 'education') {
+    kws.push({ phrase: `learn ${name} online`, intent: 'info' });
+    kws.push({ phrase: `${name} course free`, intent: 'buy' });
+  } else if (category === 'community') {
+    kws.push({ phrase: `${name} community`, intent: 'info' });
+    kws.push({ phrase: `join ${name} group`, intent: 'solve' });
+  } else {
+    kws.push({ phrase: `${name} platform`, intent: 'buy' });
+  }
+
+  // Domain itself is a keyword
+  kws.push({ phrase: domain.replace(/\.\w+$/, ''), intent: 'info' });
+
+  return kws;
+}
+
+// ── Problem statement generator ──
+function generateProblem(concept, category) {
+  const c = concept.toLowerCase();
+  if (c.includes('track')) return `People lose track of important ${category} data and have no simple way to monitor it`;
+  if (c.includes('find') || c.includes('search') || c.includes('discover')) return `Finding the right ${category} resources is overwhelming — too many options, not enough signal`;
+  if (c.includes('game') || c.includes('gamif')) return `${category === 'finance' ? 'Financial habits' : 'Engagement'} drops off because the process is boring — needs to feel like play`;
+  if (c.includes('ai') || c.includes('automat')) return `Manual ${category} work eats hours — people need AI to handle the repetitive parts`;
+  if (c.includes('learn') || c.includes('teach') || c.includes('study')) return `Learning is fragmented across too many platforms with no clear path forward`;
+  if (c.includes('connect') || c.includes('match') || c.includes('community')) return `The right people exist but never find each other — connection infrastructure is broken`;
+  if (c.includes('privacy') || c.includes('security') || c.includes('protect')) return `Personal data gets harvested without consent — people need tools they actually control`;
+  if (c.includes('save') || c.includes('budget') || c.includes('money')) return `People know they should save but can't make it stick — it needs to feel rewarding`;
+  if (c.includes('build') || c.includes('create') || c.includes('make')) return `Starting from scratch is the hardest part — people need the first 80% scaffolded`;
+  if (c.includes('rate') || c.includes('review') || c.includes('audit')) return `There's no trusted way to evaluate quality — reviews are gamed, ratings are fake`;
+  return `${concept.charAt(0).toUpperCase() + concept.slice(1).split('.')[0]} — but no one's built it right yet`;
+}
+
+// ── Ad hook generator ──
+function generateHook(domain, concept, category) {
+  const words = splitDomain(domain);
+  const name = words.join(' ');
+  const hooks = [
+    `Stop wasting time. ${name.charAt(0).toUpperCase() + name.slice(1)} does it in seconds.`,
+    `The ${category} tool you didn't know you needed.`,
+    `${concept.split(' ').slice(0, 6).join(' ')}. Try it free.`,
+    `What if ${name} just... worked?`,
+  ];
+  return hooks[Math.floor(domain.length % hooks.length)];
+}
+
+// ── Data loading ──
+async function loadData() {
+  try {
+    const [domainsRes, conceptsRes] = await Promise.all([
+      fetch('/domains.json').then(r => r.json()),
+      fetch('/concepts.json').then(r => r.json())
+    ]);
+
+    ALL = domainsRes.map(d => {
+      const c = conceptsRes[d.domain] || {};
+      const concept = c.concept || '';
+      const category = c.category || 'other';
+      const difficulty = c.difficulty || 'medium';
+      const aiReady = c.aiReady || false;
+      const daysLeft = Math.ceil((new Date(d.expires) - NOW) / DAY);
+      const keywords = generateKeywords(d.domain, concept, category);
+      const problem = generateProblem(concept, category);
+      const hook = generateHook(d.domain, concept, category);
+      const words = splitDomain(d.domain);
+
+      return {
+        domain: d.domain,
+        value: d.value,
+        expires: d.expires,
+        daysLeft,
+        concept,
+        category,
+        difficulty,
+        aiReady,
+        keywords,
+        problem,
+        hook,
+        words,
+        searchText: [d.domain, concept, category, ...keywords.map(k=>k.phrase), problem, hook].join(' ').toLowerCase()
+      };
+    });
+
+    buildFilters();
+    buildStats();
+    render();
+  } catch(e) {
+    // Fallback: try loading from relative paths
+    document.getElementById('results').innerHTML = `<div class="empty"><div class="big">⚠</div>Could not load domain data.<br>Make sure domains.json and concepts.json are in the same directory.<br><br><small style="color:var(--dim)">${e.message}</small></div>`;
+  }
+}
+
+function buildStats() {
+  const cats = {};
+  let expiring = 0, aiCount = 0;
+  ALL.forEach(d => {
+    cats[d.category] = (cats[d.category]||0) + 1;
+    if (d.daysLeft <= 60) expiring++;
+    if (d.aiReady) aiCount++;
+  });
+  const totalKw = ALL.reduce((s,d) => s + d.keywords.length, 0);
+  document.getElementById('stats-bar').innerHTML = `
+    <span class="stat-pill"><b>${ALL.length}</b> domains</span>
+    <span class="stat-pill"><b>${Object.keys(cats).length}</b> categories</span>
+    <span class="stat-pill"><b>${totalKw}</b> keywords</span>
+    <span class="stat-pill" style="color:var(--red)"><b>${expiring}</b> expiring &lt;60d</span>
+    <span class="stat-pill"><b>${aiCount}</b> AI-ready</span>
+  `;
+}
+
+function buildFilters() {
+  const counts = { all: ALL.length };
+  ALL.forEach(d => { counts[d.category] = (counts[d.category]||0) + 1; });
+  const sorted = Object.entries(counts).sort((a,b) => {
+    if (a[0]==='all') return -1; if (b[0]==='all') return 1;
+    return b[1] - a[1];
+  });
+  document.getElementById('filters').innerHTML = sorted.map(([cat, count]) =>
+    `<button class="ftab${cat===activeCat?' active':''}" onclick="setCat('${cat}')">${cat==='all'?'all': (CAT_ICONS[cat]||'📁')+' '+cat}<span class="count">${count}</span></button>`
+  ).join('');
+}
+
+// ── Filtering & sorting ──
+function getFiltered() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  let items = ALL;
+  if (activeCat !== 'all') items = items.filter(d => d.category === activeCat);
+  if (q) items = items.filter(d => d.searchText.includes(q));
+
+  items.sort((a, b) => {
+    if (activeSort === 'urgency') return a.daysLeft - b.daysLeft;
+    if (activeSort === 'value') return b.value - a.value;
+    if (activeSort === 'alpha') return a.domain.localeCompare(b.domain);
+    if (activeSort === 'keywords') return b.keywords.length - a.keywords.length;
+    return 0;
+  });
+  return items;
+}
+
+// ── Rendering ──
+function render() {
+  const items = getFiltered();
+  const el = document.getElementById('results');
+
+  if (items.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="big">∅</div>No domains match your search</div>';
+    return;
+  }
+
+  if (activeView === 'cards') renderCards(el, items);
+  else if (activeView === 'clusters') renderClusters(el, items);
+  else if (activeView === 'keywords') renderKeywords(el, items);
+}
+
+function renderCards(el, items) {
+  el.innerHTML = items.map(d => {
+    const urgencyClass = d.daysLeft <= 14 ? 'urgent' : d.daysLeft <= 60 ? 'soon' : '';
+    const related = ALL.filter(r => r.category === d.category && r.domain !== d.domain).slice(0, 5);
+
+    return `<div class="domain-card ${urgencyClass}">
+      <div class="dc-head">
+        <div class="dc-domain"><a href="/d/${d.domain.split('.')[0]}" target="_blank">${d.domain}</a></div>
+        <div class="dc-badges">
+          <span class="badge badge-cat" style="color:${CAT_COLORS[d.category]||'var(--text)'}">${d.category}</span>
+          ${d.difficulty === 'easy' ? '<span class="badge badge-easy">easy</span>' : d.difficulty === 'hard' ? '<span class="badge badge-hard">hard</span>' : '<span class="badge badge-med">med</span>'}
+          ${d.aiReady ? '<span class="badge badge-ai">AI</span>' : ''}
+          ${d.daysLeft <= 60 ? `<span class="badge badge-expiry">${d.daysLeft}d</span>` : ''}
+        </div>
+      </div>
+      <div class="dc-concept">${d.concept}</div>
+      <div class="dc-section">
+        <div class="dc-label">Problem</div>
+        <div class="dc-problem">${d.problem}</div>
+      </div>
+      <div class="dc-section">
+        <div class="dc-label">Ad Hook</div>
+        <div class="dc-hook">"${d.hook}"</div>
+      </div>
+      <div class="dc-section">
+        <div class="dc-label">Longtail Keywords</div>
+        <div class="dc-keywords">${d.keywords.map(k => `<span class="kw intent-${k.intent}" title="${k.intent}">${k.phrase}</span>`).join('')}</div>
+      </div>
+      ${related.length > 0 ? `<div class="dc-related">
+        <div class="dc-related-label">Related domains</div>
+        <div class="dc-related-list">${related.map(r => `<span class="related-tag" onclick="document.getElementById('search').value='${r.domain}';render()">${r.domain}</span>`).join(' ')}</div>
+      </div>` : ''}
+      <div class="dc-footer">
+        <span>value: $${d.value.toLocaleString()}</span>
+        <span>${d.words.join(' + ')}</span>
+        <span>exp: ${d.expires}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderClusters(el, items) {
+  const cats = {};
+  items.forEach(d => {
+    if (!cats[d.category]) cats[d.category] = [];
+    cats[d.category].push(d);
+  });
+
+  el.innerHTML = Object.entries(cats).sort((a,b) => b[1].length - a[1].length).map(([cat, domains]) => {
+    // Collect unique keywords across category
+    const allKws = {};
+    domains.forEach(d => d.keywords.forEach(k => { allKws[k.phrase] = (allKws[k.phrase]||0) + 1; }));
+    const topKws = Object.entries(allKws).sort((a,b) => b[1]-a[1]).slice(0, 8);
+
+    // Generate category-level ad angles
+    const problems = [...new Set(domains.map(d => d.problem))].slice(0, 3);
+
+    return `<div class="cluster-card">
+      <h3>${CAT_ICONS[cat]||'📁'} ${cat} <span class="cluster-count">${domains.length} domains</span></h3>
+      <div class="dc-keywords">${topKws.map(([phrase]) => `<span class="kw">${phrase}</span>`).join('')}</div>
+      <div class="domains-list" style="margin-top:0.5rem">${domains.map(d =>
+        `<span class="cluster-domain" onclick="document.getElementById('search').value='${d.domain}';setView('cards')">${d.domain}${d.daysLeft<=60?' ⏰':''}</span>`
+      ).join('')}</div>
+      <div class="cluster-ad-angles">
+        <div class="dc-label" style="margin-bottom:0.3rem">Category Ad Angles</div>
+        ${problems.map(p => `<div class="ad-angle">${p}</div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderKeywords(el, items) {
+  // Collect ALL keywords with their domains
+  const kwMap = {};
+  items.forEach(d => {
+    d.keywords.forEach(k => {
+      if (!kwMap[k.phrase]) kwMap[k.phrase] = { intent: k.intent, domains: [] };
+      kwMap[k.phrase].domains.push(d.domain);
+    });
+  });
+
+  const sorted = Object.entries(kwMap).sort((a,b) => b[1].domains.length - a[1].domains.length);
+
+  el.innerHTML = `<div style="font-size:0.7rem;color:var(--dim);margin-bottom:0.5rem;font-family:var(--mono)">${sorted.length} unique keywords from ${items.length} domains</div>` +
+    sorted.map(([phrase, data]) =>
+    `<div style="display:flex;align-items:baseline;gap:0.5rem;padding:0.35rem 0;border-bottom:1px solid var(--border)">
+      <span class="kw intent-${data.intent}" style="flex-shrink:0">${phrase}</span>
+      <span style="font-size:0.6rem;color:var(--dim);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${data.domains.slice(0,4).join(', ')}${data.domains.length>4?' +' +(data.domains.length-4):''}</span>
+      <span style="flex-shrink:0;font-size:0.6rem;font-family:var(--mono);color:${data.domains.length>2?'var(--green)':'var(--dim)'}">${data.domains.length}×</span>
+    </div>`
+  ).join('');
+}
+
+// ── Controls ──
+function setCat(cat) {
+  activeCat = cat;
+  document.querySelectorAll('.ftab').forEach(t => t.classList.toggle('active', t.textContent.includes(cat === 'all' ? 'all' : cat)));
+  buildFilters();
+  render();
+}
+
+function setSort(sort) {
+  activeSort = sort;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === sort));
+  render();
+}
+
+function setView(view) {
+  activeView = view;
+  document.querySelectorAll('.vt-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  render();
+}
+
+document.getElementById('search').addEventListener('input', render);
+
+// ── Init ──
+loadData();
+</script>
+</body>
+</html>

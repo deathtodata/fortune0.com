@@ -82,7 +82,7 @@ a:hover{text-decoration:underline}
 .ticker .domain:hover{border-color:var(--accent);color:var(--accent)}
 .ticker .domain.live{border-color:var(--green);color:var(--green)}
 .ticker-row-2{animation-direction:reverse}
-@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
 
 /* === HOW IT WORKS === */
 .how-section{max-width:720px;margin:0 auto;padding:60px 20px}
@@ -190,6 +190,25 @@ a:hover{text-decoration:underline}
 .partner-role-name{font-size:14px;font-weight:700;margin-bottom:4px}
 .partner-role-cut{font-size:24px;font-weight:800;font-family:var(--mono);color:var(--accent)}
 .partner-role-desc{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* ═══ ACCESSIBILITY: Reduced Motion ═══ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Stop infinite animations completely */
+  .ticker,
+  .ticker-row-2,
+  .live-dot {
+    animation: none !important;
+  }
+}
 </style>
 </head>
 <body>

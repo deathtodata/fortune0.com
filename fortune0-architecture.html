@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 — System Architecture</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0B0B0F;--surface:#14141C;--card:#1C1C28;--border:#2A2A38;--white:#FFF;--dim:#6B7280;--text:#9CA3AF;--gold:#F59E0B;--green:#10B981;--blue:#3B82F6;--purple:#8B5CF6;--red:#EF4444;--orange:#F97316;--cyan:#06B6D4}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--white);padding:2rem}
+.page{max-width:1100px;margin:0 auto}
+h1{font-size:2rem;font-weight:800;margin-bottom:0.25rem}
+h1 span{color:var(--gold)}
+.sub{color:var(--text);margin-bottom:2rem;font-size:0.95rem}
+h2{font-size:1.3rem;font-weight:700;margin:2rem 0 1rem;color:var(--gold);border-bottom:1px solid var(--border);padding-bottom:0.5rem}
+h3{font-size:1rem;font-weight:700;margin:1rem 0 0.5rem;color:var(--white)}
+
+/* Architecture Diagram */
+.arch{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin:1.5rem 0}
+.box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.2rem;position:relative}
+.box.wide{grid-column:span 2}
+.box.full{grid-column:span 3}
+.box-label{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--dim);margin-bottom:0.5rem}
+.box-title{font-size:1.1rem;font-weight:700;margin-bottom:0.5rem}
+.box-desc{font-size:0.85rem;color:var(--text);line-height:1.5}
+.box-accent{position:absolute;top:0;left:0;width:4px;height:100%;border-radius:10px 0 0 10px}
+.tag{display:inline-block;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.7rem;font-weight:700;margin:0.25rem 0.25rem 0 0}
+.tag-green{background:#065F46;color:var(--green)}
+.tag-gold{background:#78350F;color:var(--gold)}
+.tag-blue{background:#1E3A5F;color:var(--blue)}
+.tag-purple{background:#4C1D95;color:var(--purple)}
+.tag-red{background:#7F1D1D;color:var(--red)}
+.tag-cyan{background:#164E63;color:var(--cyan)}
+
+.arrow-row{text-align:center;padding:0.5rem 0;color:var(--dim);font-size:1.2rem}
+.arrow-row span{font-size:0.8rem;color:var(--text);margin:0 1rem}
+
+/* Flow */
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:0.75rem;margin:1rem 0}
+.flow-step{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center;position:relative}
+.flow-step .num{font-size:1.5rem;font-weight:800;margin-bottom:0.25rem}
+.flow-step .label{font-size:0.8rem;color:var(--text)}
+.flow-step::after{content:'→';position:absolute;right:-0.7rem;top:50%;transform:translateY(-50%);color:var(--dim);font-size:1.2rem}
+.flow-step:last-child::after{display:none}
+
+/* Tiers */
+.tier-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0}
+.tier-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.2rem}
+.tier-box h4{font-size:0.95rem;font-weight:700;margin-bottom:0.5rem}
+.tier-box p{font-size:0.85rem;color:var(--text);line-height:1.5}
+.tier-box code{background:var(--card);padding:0.15rem 0.4rem;border-radius:3px;font-size:0.8rem;color:var(--gold)}
+
+.code-block{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:Consolas,monospace;font-size:0.8rem;color:var(--text);line-height:1.6;overflow-x:auto;margin:0.75rem 0}
+.code-block .comment{color:var(--dim)}
+.code-block .highlight{color:var(--gold)}
+.code-block .green{color:var(--green)}
+
+.note{background:#1A1500;border:1px solid #78350F;border-radius:8px;padding:1rem;margin:1rem 0;font-size:0.85rem;color:var(--gold)}
+.note strong{color:var(--white)}
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>fortune<span>0</span> System Architecture</h1>
+<p class="sub">How everything actually connects. The real tech flow.</p>
+
+<!-- ═══ THE BIG PICTURE ═══ -->
+<h2>The Big Picture</h2>
+<p style="color:var(--text);font-size:0.9rem;margin-bottom:1rem">One backend serves ALL products. Individual domains are just frontends pointing at the same API.</p>
+
+<div class="arch">
+  <!-- Row 1: User-facing -->
+  <div class="box full" style="border-color:var(--gold)">
+    <div class="box-accent" style="background:var(--gold)"></div>
+    <div class="box-label">User-Facing Layer (GitHub Pages — FREE)</div>
+    <div class="box-title">230 Domain Frontends</div>
+    <div class="box-desc">
+      Each domain is a static HTML/CSS/JS site on GitHub Pages. No server needed.<br>
+      They all call the SAME backend API for anything dynamic (auth, AI, payments).
+    </div>
+    <div style="margin-top:0.5rem">
+      <span class="tag tag-green">death2data.com</span>
+      <span class="tag tag-gold">fortune0.com</span>
+      <span class="tag tag-purple">sellthismvp.com</span>
+      <span class="tag tag-blue">toneswitch.com</span>
+      <span class="tag tag-cyan">ghostmemeter.com</span>
+      <span class="tag tag-red">+ 225 more</span>
+    </div>
+  </div>
+</div>
+
+<div class="arrow-row">↕ <span>fetch('https://fortune0.com/api/...')</span> ↕</div>
+
+<div class="arch">
+  <!-- Row 2: Backend -->
+  <div class="box" style="border-color:var(--green)">
+    <div class="box-accent" style="background:var(--green)"></div>
+    <div class="box-label">Backend (Render.com — $7/mo)</div>
+    <div class="box-title">fortune0 API Server</div>
+    <div class="box-desc">
+      Python stdlib HTTP server. Already built.<br>
+      Auth, payments, contacts, affiliates, credits.<br>
+      <strong style="color:var(--white)">Every product shares this ONE server.</strong>
+    </div>
+    <div style="margin-top:0.5rem">
+      <span class="tag tag-green">ALREADY RUNNING</span>
+    </div>
+  </div>
+
+  <div class="box" style="border-color:var(--blue)">
+    <div class="box-accent" style="background:var(--blue)"></div>
+    <div class="box-label">Database</div>
+    <div class="box-title">SQLite / PostgreSQL</div>
+    <div class="box-desc">
+      Users, sessions, contacts, commissions, credits, notes.<br>
+      SQLite for dev, PostgreSQL for production.<br>
+      Same schema either way.
+    </div>
+    <div style="margin-top:0.5rem">
+      <span class="tag tag-blue">ALREADY BUILT</span>
+    </div>
+  </div>
+
+  <div class="box" style="border-color:var(--purple)">
+    <div class="box-accent" style="background:var(--purple)"></div>
+    <div class="box-label">AI Layer</div>
+    <div class="box-title">Ollama / Claude API</div>
+    <div class="box-desc">
+      Ollama for private/local AI (death2data).<br>
+      Claude or OpenAI API for products that need quality.<br>
+      Backend proxies requests — frontend never sees API keys.
+    </div>
+    <div style="margin-top:0.5rem">
+      <span class="tag tag-purple">ADD TO SERVER</span>
+    </div>
+  </div>
+</div>
+
+<div class="arrow-row">↕ <span>Stripe webhooks + MCP tools</span> ↕</div>
+
+<div class="arch">
+  <div class="box" style="border-color:var(--orange)">
+    <div class="box-accent" style="background:var(--orange)"></div>
+    <div class="box-label">Payments</div>
+    <div class="box-title">Stripe</div>
+    <div class="box-desc">
+      Checkout links per product.<br>
+      Webhooks → credits system.<br>
+      $1 = 100 credits.
+    </div>
+    <span class="tag tag-green">ALREADY BUILT</span>
+  </div>
+
+  <div class="box" style="border-color:var(--cyan)">
+    <div class="box-accent" style="background:var(--cyan)"></div>
+    <div class="box-label">Plugins</div>
+    <div class="box-title">MCP Server</div>
+    <div class="box-desc">
+      Claude Desktop can talk to fortune0 directly.<br>
+      signup, stats, contacts, affiliates.<br>
+      Same SQLite as the main server.
+    </div>
+    <span class="tag tag-green">ALREADY BUILT</span>
+  </div>
+
+  <div class="box" style="border-color:var(--gold)">
+    <div class="box-accent" style="background:var(--gold)"></div>
+    <div class="box-label">Data</div>
+    <div class="box-title">Spreadsheet + JSON</div>
+    <div class="box-desc">
+      Master spreadsheet = database.<br>
+      concepts.json + domains.json = site data.<br>
+      mvp-generator.py reads this to build products.
+    </div>
+    <span class="tag tag-gold">SOURCE OF TRUTH</span>
+  </div>
+</div>
+
+
+<!-- ═══ HOW A PRODUCT WORKS ═══ -->
+<h2>How a Product Actually Works (End to End)</h2>
+
+<div class="flow">
+  <div class="flow-step">
+    <div class="num" style="color:var(--gold)">1</div>
+    <div class="label">User visits<br><strong style="color:var(--white)">toneswitch.com</strong></div>
+  </div>
+  <div class="flow-step">
+    <div class="num" style="color:var(--green)">2</div>
+    <div class="label">GitHub Pages<br><strong style="color:var(--white)">serves HTML</strong></div>
+  </div>
+  <div class="flow-step">
+    <div class="num" style="color:var(--blue)">3</div>
+    <div class="label">JS calls<br><strong style="color:var(--white)">fortune0.com/api</strong></div>
+  </div>
+  <div class="flow-step">
+    <div class="num" style="color:var(--purple)">4</div>
+    <div class="label">API runs<br><strong style="color:var(--white)">Ollama or Claude</strong></div>
+  </div>
+  <div class="flow-step">
+    <div class="num" style="color:var(--green)">5</div>
+    <div class="label">Result back<br><strong style="color:var(--white)">to user</strong></div>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Key insight:</strong> The frontend (HTML file) is dumb. It just collects input and shows output.
+  ALL the smart stuff (AI, auth, payments) happens on the fortune0 Render backend.
+  This means you can ship 230 products with ONE server.
+</div>
+
+
+<!-- ═══ TWO TIERS ═══ -->
+<h2>Two Types of Products</h2>
+
+<div class="tier-grid">
+  <div class="tier-box" style="border-color:var(--green)">
+    <h4 style="color:var(--green)">Tier A: Free Tools (No Backend)</h4>
+    <p>
+      Pure client-side JavaScript. Everything runs in the browser.<br><br>
+      <strong style="color:var(--white)">Good for:</strong> Calculators, quizzes, generators, analyzers<br>
+      <strong style="color:var(--white)">Hosting:</strong> GitHub Pages (free)<br>
+      <strong style="color:var(--white)">Auth:</strong> None needed<br>
+      <strong style="color:var(--white)">AI:</strong> None (or user provides their own API key)<br>
+      <strong style="color:var(--white)">Revenue:</strong> Ads, affiliate links, or upgrade to Tier B<br><br>
+      <strong style="color:var(--white)">Example:</strong> The MVP generator templates we just made
+    </p>
+  </div>
+
+  <div class="tier-box" style="border-color:var(--purple)">
+    <h4 style="color:var(--purple)">Tier B: Paid Products (Shared Backend)</h4>
+    <p>
+      Frontend on GitHub Pages, but calls fortune0 API for AI + auth.<br><br>
+      <strong style="color:var(--white)">Good for:</strong> AI tools, subscription products, anything with logins<br>
+      <strong style="color:var(--white)">Hosting:</strong> GitHub Pages (free) + fortune0 API (shared)<br>
+      <strong style="color:var(--white)">Auth:</strong> Bearer token via <code>/api/signup</code> + <code>/api/login</code><br>
+      <strong style="color:var(--white)">AI:</strong> Ollama or Claude via <code>/api/ai/complete</code><br>
+      <strong style="color:var(--white)">Revenue:</strong> Stripe checkout → credits system<br><br>
+      <strong style="color:var(--white)">Example:</strong> death2data.com (already works this way)
+    </p>
+  </div>
+</div>
+
+
+<!-- ═══ LOGIN FLOW ═══ -->
+<h2>How Logins Work</h2>
+<p style="color:var(--text);font-size:0.9rem;margin-bottom:1rem">Already built in server.py. Passwordless — just email.</p>
+
+<div class="code-block">
+<span class="comment">// Frontend: User signs up on any product</span>
+<br>const res = await fetch('<span class="highlight">https://fortune0.com/api/signup</span>', {
+<br>&nbsp;&nbsp;method: 'POST',
+<br>&nbsp;&nbsp;body: JSON.stringify({ email: 'user@example.com' })
+<br>});
+<br>const { <span class="green">token</span>, referral_code, license_key } = await res.json();
+<br>
+<br><span class="comment">// Store token — works across ALL fortune0 products</span>
+<br>localStorage.setItem('<span class="highlight">f0_token</span>', <span class="green">token</span>);
+<br>
+<br><span class="comment">// Any future API call just sends the token</span>
+<br>fetch('https://fortune0.com/api/stats', {
+<br>&nbsp;&nbsp;headers: { 'Authorization': 'Bearer ' + <span class="green">token</span> }
+<br>});
+</div>
+
+<div class="note">
+  <strong>One login, all products.</strong> User signs up on toneswitch.com, their token works on ghostmemeter.com, sellthismvp.com — everything. Same database, same session.
+</div>
+
+
+<!-- ═══ OLLAMA ═══ -->
+<h2>Where Ollama Fits</h2>
+
+<div class="tier-grid">
+  <div class="tier-box" style="border-color:var(--purple)">
+    <h4 style="color:var(--purple)">Development (Your Machine)</h4>
+    <p>
+      Ollama runs locally on your Mac.<br>
+      Products call <code>localhost:11434/api/generate</code>.<br>
+      Free. Private. Fast for testing.<br><br>
+      <strong style="color:var(--white)">Use for:</strong> Building and testing AI features before deploying.
+    </p>
+  </div>
+
+  <div class="tier-box" style="border-color:var(--green)">
+    <h4 style="color:var(--green)">Production (Render Backend)</h4>
+    <p>
+      Add an <code>/api/ai/complete</code> route to server.py.<br>
+      Proxies to Claude API (or self-hosted Ollama on a VPS).<br>
+      Frontend never sees API keys.<br><br>
+      <strong style="color:var(--white)">Cost:</strong> ~$0.01-0.10 per request via Claude Haiku.
+    </p>
+  </div>
+</div>
+
+<div class="code-block">
+<span class="comment"># Add this to server.py — one endpoint serves AI for ALL products</span>
+<br>
+<br>@route('/api/ai/complete', methods=['POST'])
+<br>def ai_complete():
+<br>&nbsp;&nbsp;user = get_user()  <span class="comment"># Auth required</span>
+<br>&nbsp;&nbsp;if not user: return 401
+<br>&nbsp;&nbsp;
+<br>&nbsp;&nbsp;data = json.loads(request_body)
+<br>&nbsp;&nbsp;<span class="highlight">product</span> = data.get('product')  <span class="comment"># Which domain is calling</span>
+<br>&nbsp;&nbsp;<span class="highlight">prompt</span> = data.get('prompt')    <span class="comment"># What the user asked</span>
+<br>&nbsp;&nbsp;
+<br>&nbsp;&nbsp;<span class="comment"># Route to right AI based on product</span>
+<br>&nbsp;&nbsp;if product in ['death2data.com']:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;result = call_ollama(prompt)     <span class="comment"># Privacy products use local AI</span>
+<br>&nbsp;&nbsp;else:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;result = call_claude(prompt)     <span class="comment"># Everything else uses Claude</span>
+<br>&nbsp;&nbsp;
+<br>&nbsp;&nbsp;<span class="comment"># Deduct credits</span>
+<br>&nbsp;&nbsp;deduct_credits(user, 1)
+<br>&nbsp;&nbsp;return json.dumps({ 'result': result })
+</div>
+
+
+<!-- ═══ MCP / PLUGINS ═══ -->
+<h2>Plugins & MCP</h2>
+<p style="color:var(--text);font-size:0.9rem;margin-bottom:1rem">Already built. mcp_server.py lets AI tools (Claude Desktop, Claude Code) talk to fortune0 directly.</p>
+
+<div class="arch" style="grid-template-columns:1fr 1fr">
+  <div class="box" style="border-color:var(--cyan)">
+    <div class="box-accent" style="background:var(--cyan)"></div>
+    <div class="box-label">What's Built</div>
+    <div class="box-title">Current MCP Tools</div>
+    <div class="box-desc">
+      <code>signup(email)</code> — Create accounts<br>
+      <code>get_stats(email)</code> — Dashboard data<br>
+      <code>add_contact()</code> — CRM operations<br>
+      <code>join_affiliate()</code> — Affiliate program<br>
+      <code>referral_stats()</code> — Track referrals<br>
+      <code>platform_health()</code> — System status
+    </div>
+  </div>
+
+  <div class="box" style="border-color:var(--gold)">
+    <div class="box-accent" style="background:var(--gold)"></div>
+    <div class="box-label">What to Add</div>
+    <div class="box-title">New MCP Tools Needed</div>
+    <div class="box-desc">
+      <code>generate_mvp(domain)</code> — Build a product<br>
+      <code>deploy_domain(domain)</code> — Push to GitHub Pages<br>
+      <code>check_score(domain)</code> — Get valuation score<br>
+      <code>run_seo(domain)</code> — Get SEO keywords<br>
+      <code>query_research(topic)</code> — Search with Ollama<br>
+      <code>publish_content(domain, post)</code> — Blog post
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ THE FULL PIPELINE ═══ -->
+<h2>The Full Pipeline (What We're Building)</h2>
+
+<div class="flow">
+  <div class="flow-step" style="background:#1A1500;border-color:var(--gold)">
+    <div class="num" style="color:var(--gold)">📊</div>
+    <div class="label"><strong style="color:var(--gold)">Spreadsheet</strong><br>Source of truth<br>Concepts + Scores</div>
+  </div>
+  <div class="flow-step" style="background:#1A0A20;border-color:var(--purple)">
+    <div class="num" style="color:var(--purple)">🤖</div>
+    <div class="label"><strong style="color:var(--purple)">Generator</strong><br>mvp-generator.py<br>or Claude Code</div>
+  </div>
+  <div class="flow-step" style="background:#0A1A15;border-color:var(--green)">
+    <div class="num" style="color:var(--green)">📄</div>
+    <div class="label"><strong style="color:var(--green)">HTML File</strong><br>Single file MVP<br>No dependencies</div>
+  </div>
+  <div class="flow-step" style="background:#0A1520;border-color:var(--blue)">
+    <div class="num" style="color:var(--blue)">🚀</div>
+    <div class="label"><strong style="color:var(--blue)">GitHub Pages</strong><br>git push = live<br>Custom domain</div>
+  </div>
+  <div class="flow-step" style="background:#1A1000;border-color:var(--orange)">
+    <div class="num" style="color:var(--orange)">💰</div>
+    <div class="label"><strong style="color:var(--orange)">Revenue</strong><br>Stripe checkout<br>Credits system</div>
+  </div>
+</div>
+
+<div class="note" style="background:#0A1A10;border-color:#065F46">
+  <strong>The magic:</strong> You already have steps 1-2 (spreadsheet + generator), a working example of step 3-5 (death2data), and the backend infrastructure (server.py + Stripe + auth + MCP). The pieces exist — they just need to be connected.
+</div>
+
+
+<!-- ═══ WHAT TO BUILD NEXT ═══ -->
+<h2>What Needs to Happen Next (In Order)</h2>
+
+<div style="margin:1rem 0">
+  <div class="flow-step" style="display:block;text-align:left;padding:1rem;margin:0.5rem 0;border-color:var(--green);background:var(--card)">
+    <strong style="color:var(--green)">1. Add /api/ai/complete to server.py</strong>
+    <p style="color:var(--text);font-size:0.85rem;margin-top:0.3rem">One endpoint that proxies to Ollama or Claude. Every product uses this. ~30 lines of code.</p>
+  </div>
+  <div class="flow-step" style="display:block;text-align:left;padding:1rem;margin:0.5rem 0;border-color:var(--gold);background:var(--card)">
+    <strong style="color:var(--gold)">2. Update MVP templates to use the shared API</strong>
+    <p style="color:var(--text);font-size:0.85rem;margin-top:0.3rem">Replace fake setTimeout results with real fetch() calls to fortune0.com/api/ai/complete.</p>
+  </div>
+  <div class="flow-step" style="display:block;text-align:left;padding:1rem;margin:0.5rem 0;border-color:var(--blue);background:var(--card)">
+    <strong style="color:var(--blue)">3. Deploy first product (sellthismvp.com)</strong>
+    <p style="color:var(--text);font-size:0.85rem;margin-top:0.3rem">Push index.html to GitHub repo, add CNAME record, verify it works live.</p>
+  </div>
+  <div class="flow-step" style="display:block;text-align:left;padding:1rem;margin:0.5rem 0;border-color:var(--purple);background:var(--card)">
+    <strong style="color:var(--purple)">4. Add generate_mvp + deploy MCP tools</strong>
+    <p style="color:var(--text);font-size:0.85rem;margin-top:0.3rem">So Claude Code can build AND deploy products from the spreadsheet data in one command.</p>
+  </div>
+  <div class="flow-step" style="display:block;text-align:left;padding:1rem;margin:0.5rem 0;border-color:var(--cyan);background:var(--card)">
+    <strong style="color:var(--cyan)">5. ARK research integration</strong>
+    <p style="color:var(--text);font-size:0.85rem;margin-top:0.3rem">Use Ollama to process ARK PDFs (2017-2026), extract pain points, enhance domain concepts with real market data.</p>
+  </div>
+</div>
+
+<p style="color:var(--dim);font-size:0.8rem;margin-top:2rem;text-align:center;padding:1rem;border-top:1px solid var(--border)">
+  fortune0 architecture · February 2026 · This is how 230 domains run on one server
+</p>
+
+</div>
+</body>
+</html>

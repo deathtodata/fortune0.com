@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 — Dimensional Product Model</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#09090F;--surface:#111118;--card:#18181F;--border:#252530;--dim:#555;--text:#999;--white:#eee;--d1:#3B82F6;--d2:#8B5CF6;--d3:#F59E0B;--dm:#EC4899;--green:#10B981}
+body{font-family:Consolas,'Courier New',monospace;background:var(--bg);color:var(--white);min-height:100vh;overflow-x:hidden}
+.wrap{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
+
+/* Header */
+header{text-align:center;padding:2rem 0 3rem}
+header h1{font-size:1.8rem;font-weight:800;letter-spacing:-0.5px}
+header h1 em{font-style:normal;color:var(--dm)}
+header p{color:var(--text);margin-top:0.5rem;font-family:system-ui,sans-serif;font-size:0.9rem}
+
+/* Dimension Pillars */
+.pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin:2rem 0}
+.pillar{background:var(--surface);padding:1.5rem 1rem;cursor:pointer;transition:background 0.2s}
+.pillar:hover,.pillar.active{background:var(--card)}
+.pillar h2{font-size:0.75rem;text-transform:uppercase;letter-spacing:2px;margin-bottom:0.5rem}
+.pillar.d1 h2{color:var(--d1)}
+.pillar.d2 h2{color:var(--d2)}
+.pillar.d3 h2{color:var(--d3)}
+.pillar.dm h2{color:var(--dm)}
+.pillar .label{font-size:1.4rem;font-weight:800;margin-bottom:0.75rem}
+.pillar .sub{font-size:0.75rem;color:var(--text);line-height:1.5;font-family:system-ui,sans-serif}
+.pillar .count{font-size:2rem;font-weight:800;margin-top:0.75rem;opacity:0.3}
+
+/* Detail Panel */
+.detail{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;margin:1.5rem 0;display:none}
+.detail.show{display:block}
+.detail h3{font-size:0.75rem;text-transform:uppercase;letter-spacing:2px;margin-bottom:1rem}
+.detail.d1 h3{color:var(--d1)}
+.detail.d2 h3{color:var(--d2)}
+.detail.d3 h3{color:var(--d3)}
+.detail.dm h3{color:var(--dm)}
+
+/* Tech Stack Row */
+.tech-row{display:flex;gap:0.5rem;flex-wrap:wrap;margin:1rem 0}
+.tech{font-size:0.7rem;padding:0.3rem 0.6rem;background:var(--card);border:1px solid var(--border);border-radius:4px;color:var(--text)}
+
+/* Product Grid */
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.5rem;margin-top:1rem}
+.product{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:0.75rem;font-size:0.75rem;transition:all 0.15s}
+.product:hover{border-color:var(--dim)}
+.product .name{font-weight:700;color:var(--white);margin-bottom:0.25rem}
+.product .concept{color:var(--text);font-family:system-ui,sans-serif;line-height:1.4}
+.product .dims{margin-top:0.4rem;display:flex;gap:0.25rem}
+.product .dim-dot{width:8px;height:8px;border-radius:50%}
+
+/* Flow Diagram */
+.flow{margin:2rem 0}
+.flow-title{font-size:0.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:1rem}
+.flow-steps{display:flex;align-items:stretch;gap:0}
+.flow-step{flex:1;background:var(--surface);border:1px solid var(--border);padding:1rem;position:relative}
+.flow-step:first-child{border-radius:8px 0 0 8px}
+.flow-step:last-child{border-radius:0 8px 8px 0}
+.flow-step .step-num{font-size:0.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+.flow-step .step-label{font-size:0.85rem;font-weight:700;margin:0.4rem 0}
+.flow-step .step-detail{font-size:0.7rem;color:var(--text);font-family:system-ui,sans-serif;line-height:1.4}
+.flow-step:not(:last-child)::after{content:'→';position:absolute;right:-8px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:1.2rem;z-index:1}
+
+/* Taste Framework */
+.taste{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;margin:2rem 0}
+.taste h3{font-size:0.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--green);margin-bottom:1rem}
+.taste-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-radius:8px;overflow:hidden;margin-top:1rem}
+.taste-cell{background:var(--card);padding:1rem}
+.taste-cell h4{font-size:0.8rem;font-weight:700;margin-bottom:0.5rem}
+.taste-cell p{font-size:0.75rem;color:var(--text);font-family:system-ui,sans-serif;line-height:1.5}
+.taste-cell.good h4{color:var(--green)}
+.taste-cell.bad h4{color:#EF4444}
+
+/* License Section */
+.licenses{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;margin:2rem 0}
+.licenses h3{font-size:0.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:1rem}
+.license-row{display:grid;grid-template-columns:120px 80px 1fr;gap:1rem;padding:0.6rem 0;border-bottom:1px solid var(--border);font-size:0.75rem;align-items:center}
+.license-row:last-child{border-bottom:none}
+.license-row .tool{font-weight:700;color:var(--white)}
+.license-row .badge{padding:0.15rem 0.5rem;border-radius:3px;font-size:0.65rem;text-align:center;font-weight:600}
+.badge.mit{background:#10B98120;color:var(--green)}
+.badge.lgpl{background:#F59E0B20;color:var(--d3)}
+.badge.free{background:#3B82F620;color:var(--d1)}
+.license-row .note{color:var(--text);font-family:system-ui,sans-serif}
+
+/* Footer */
+footer{text-align:center;padding:2rem 0;border-top:1px solid var(--border);margin-top:3rem}
+footer p{font-size:0.7rem;color:var(--dim)}
+footer a{color:var(--d2);text-decoration:none}
+
+@media(max-width:700px){
+  .pillars{grid-template-columns:1fr 1fr}
+  .flow-steps{flex-direction:column}
+  .flow-step::after{display:none}
+  .flow-step{border-radius:0!important}
+  .taste-grid{grid-template-columns:1fr}
+  .products{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>fortune0 <em>Dimensions</em></h1>
+  <p>Every product exists across layers. Text → Visual → Interactive → Motion.</p>
+  <p style="color:var(--dim);font-size:0.8rem;margin-top:0.25rem">230 domains × 4 dimensions = how we ship and teach taste</p>
+</header>
+
+<!-- DIMENSION PILLARS -->
+<div class="pillars" id="pillars">
+  <div class="pillar d1" onclick="showDetail('d1')">
+    <h2>1D</h2>
+    <div class="label">Text</div>
+    <div class="sub">Copy, SEO keywords, API responses, documentation, blog posts</div>
+    <div class="count" id="count1d">230</div>
+  </div>
+  <div class="pillar d2" onclick="showDetail('d2')">
+    <h2>2D</h2>
+    <div class="label">Visual</div>
+    <div class="sub">Wordmaps, diagrams, social cards, infographics, brand assets</div>
+    <div class="count" id="count2d">230</div>
+  </div>
+  <div class="pillar d3" onclick="showDetail('d3')">
+    <h2>3D</h2>
+    <div class="label">Interactive</div>
+    <div class="sub">Web MVPs, tools, dashboards, games, real-time experiences</div>
+    <div class="count" id="count3d">30</div>
+  </div>
+  <div class="pillar dm" onclick="showDetail('dm')">
+    <h2>Motion</h2>
+    <div class="label">Audio/Video</div>
+    <div class="sub">Whisper transcription, ffmpeg processing, animation, voice UI</div>
+    <div class="count" id="countdm">12</div>
+  </div>
+</div>
+
+<!-- DETAIL PANELS -->
+<div class="detail d1" id="detail-d1">
+  <h3>1D: Text Layer — Every Domain Has This</h3>
+  <p style="color:var(--text);font-family:system-ui,sans-serif;font-size:0.85rem;line-height:1.6;margin-bottom:1rem">
+    The foundation. Every single domain starts here. The concept description IS the 1D product.
+    SEO longtail keywords drive traffic. API text responses power the tools. This is where
+    Ollama + Claude generate value — transforming user input into structured text output.
+  </p>
+  <div class="tech-row">
+    <span class="tech">concepts.json</span>
+    <span class="tech">SEO keywords</span>
+    <span class="tech">Ollama / Claude API</span>
+    <span class="tech">Blog posts</span>
+    <span class="tech">Meta descriptions</span>
+    <span class="tech">JSON-LD schema</span>
+  </div>
+  <p style="color:var(--dim);font-size:0.75rem;margin-top:1rem">Example: toneswitch.com → input "make this email professional" → output rewritten text</p>
+</div>
+
+<div class="detail d2" id="detail-d2">
+  <h3>2D: Visual Layer — Static Output</h3>
+  <p style="color:var(--text);font-family:system-ui,sans-serif;font-size:0.85rem;line-height:1.6;margin-bottom:1rem">
+    This is where the wordmap lives — and where it broke. The fix: generate visuals FROM the text layer
+    programmatically. SVG wordmaps, OG social cards, architecture diagrams, brand color palettes.
+    Every domain gets auto-generated 2D assets from its 1D data. Canvas API + SVG, no Photoshop.
+  </p>
+  <div class="tech-row">
+    <span class="tech">Canvas API</span>
+    <span class="tech">SVG generation</span>
+    <span class="tech">OG image cards</span>
+    <span class="tech">p5.js (static)</span>
+    <span class="tech">Mermaid diagrams</span>
+    <span class="tech">Color theming</span>
+  </div>
+  <p style="color:var(--dim);font-size:0.75rem;margin-top:1rem">Example: Auto-generate wordmap of fortune0 portfolio by category, color-coded, from concepts.json</p>
+</div>
+
+<div class="detail d3" id="detail-d3">
+  <h3>3D: Interactive Layer — The MVPs</h3>
+  <p style="color:var(--text);font-family:system-ui,sans-serif;font-size:0.85rem;line-height:1.6;margin-bottom:1rem">
+    Working web tools. Input → processing → output. The 30 BUILD NOW domains get real interactivity.
+    GitHub Pages serves the HTML, fortune0.com/api handles the heavy lifting (auth, AI, payments).
+    Single-file HTML, zero dependencies, zero build step.
+  </p>
+  <div class="tech-row">
+    <span class="tech">GitHub Pages</span>
+    <span class="tech">fortune0 API</span>
+    <span class="tech">Bearer auth</span>
+    <span class="tech">Stripe credits</span>
+    <span class="tech">WebSocket (future)</span>
+    <span class="tech">localStorage</span>
+  </div>
+  <div class="products" id="products3d"></div>
+</div>
+
+<div class="detail dm" id="detail-dm">
+  <h3>Motion: Audio/Video Layer — Time-Based</h3>
+  <p style="color:var(--text);font-family:system-ui,sans-serif;font-size:0.85rem;line-height:1.6;margin-bottom:1rem">
+    The richest layer. Whisper turns speech → text (MIT license, free commercial use).
+    ffmpeg processes any media format (LGPL, dynamic link for commercial). Together they enable
+    voice-first products, video analysis, podcast transcription, animated content.
+    Client-side via whisper.cpp WASM or server-side via faster-whisper on the $7 Render box.
+  </p>
+  <div class="tech-row">
+    <span class="tech">Whisper (MIT)</span>
+    <span class="tech">faster-whisper</span>
+    <span class="tech">whisper.cpp WASM</span>
+    <span class="tech">ffmpeg (LGPL)</span>
+    <span class="tech">Web Audio API</span>
+    <span class="tech">MediaRecorder</span>
+    <span class="tech">p5.js animation</span>
+    <span class="tech">CSS @keyframes</span>
+  </div>
+  <div class="products" id="productsdm"></div>
+</div>
+
+<!-- PIPELINE: HOW DIMENSIONS STACK -->
+<div class="flow">
+  <div class="flow-title">The Pipeline: How Dimensions Stack</div>
+  <div class="flow-steps">
+    <div class="flow-step" style="border-left-color:var(--d1)">
+      <div class="step-num" style="color:var(--d1)">1D · Text</div>
+      <div class="step-label">concepts.json</div>
+      <div class="step-detail">Domain name + concept + category + SEO keywords. The spreadsheet is the database. Everything starts as text.</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num" style="color:var(--d2)">2D · Visual</div>
+      <div class="step-label">Auto-generate</div>
+      <div class="step-detail">Python/Node scripts read 1D data → generate SVG wordmaps, OG cards, diagrams. No manual design needed.</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num" style="color:var(--d3)">3D · Interactive</div>
+      <div class="step-label">mvp-generator.py</div>
+      <div class="step-detail">Template engine reads 1D data → generates single-file HTML tools. Push to GitHub Pages. Connect to fortune0 API.</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num" style="color:var(--dm)">Motion · A/V</div>
+      <div class="step-label">Whisper + ffmpeg</div>
+      <div class="step-detail">Products that need audio/video: Whisper transcribes, ffmpeg processes. Server endpoint or WASM client-side.</div>
+    </div>
+  </div>
+</div>
+
+<!-- TEACHING TASTE -->
+<div class="taste">
+  <h3>Teaching Taste — The Cringeproof Framework</h3>
+  <p style="color:var(--text);font-family:system-ui,sans-serif;font-size:0.85rem;line-height:1.6;margin-bottom:1rem">
+    Every fortune0 product teaches users to distinguish quality from noise.
+    Cringeproof literally scores social skills. TweetAudit scores tweet quality.
+    ToneSwitch teaches writing tone. The product IS the lesson.
+    Across all four dimensions:
+  </p>
+  <div class="taste-grid">
+    <div class="taste-cell good">
+      <h4>1D: Good taste in text</h4>
+      <p>Clear copy, specific value props, honest descriptions. "AI pitch deck generator" not "Revolutionary synergistic platform."</p>
+    </div>
+    <div class="taste-cell bad">
+      <h4>1D: Bad taste in text</h4>
+      <p>Buzzword soup, vague claims, keyword stuffing. The stuff that makes people cringe and bounce.</p>
+    </div>
+    <div class="taste-cell good">
+      <h4>2D: Good taste in visuals</h4>
+      <p>Clean wordmaps with real data. Category colors that mean something. Diagrams that explain, not decorate.</p>
+    </div>
+    <div class="taste-cell bad">
+      <h4>2D: Bad taste in visuals</h4>
+      <p>The wordmap that got fucked up. Too many nodes, no hierarchy, colors that clash, impossible to read.</p>
+    </div>
+    <div class="taste-cell good">
+      <h4>3D: Good taste in interaction</h4>
+      <p>Single input, clear output. No signup wall. No loading spinners hiding nothing. Real value in 3 seconds.</p>
+    </div>
+    <div class="taste-cell bad">
+      <h4>3D: Bad taste in interaction</h4>
+      <p>Fake processing delays, random scores, generic "insights." The template scaffolds before they become real products.</p>
+    </div>
+    <div class="taste-cell good">
+      <h4>Motion: Good taste in A/V</h4>
+      <p>Whisper transcription that actually helps. Short demo videos. Animations that show data, not just move.</p>
+    </div>
+    <div class="taste-cell bad">
+      <h4>Motion: Bad taste in A/V</h4>
+      <p>Auto-play videos, stock footage, unnecessary transitions, voice-over that says nothing. Motion for motion's sake.</p>
+    </div>
+  </div>
+</div>
+
+<!-- LICENSES -->
+<div class="licenses">
+  <h3>Licenses — What We Can Ship Commercially</h3>
+  <div class="license-row">
+    <span class="tool">Whisper</span>
+    <span class="badge mit">MIT</span>
+    <span class="note">Fully free for commercial use. Include copyright notice. No restrictions.</span>
+  </div>
+  <div class="license-row">
+    <span class="tool">faster-whisper</span>
+    <span class="badge mit">MIT</span>
+    <span class="note">4× faster than OpenAI Whisper on CPU. Runs on $7/mo server.</span>
+  </div>
+  <div class="license-row">
+    <span class="tool">whisper.cpp</span>
+    <span class="badge mit">MIT</span>
+    <span class="note">C++ port. Compiles to WASM for browser-side transcription. Zero server cost.</span>
+  </div>
+  <div class="license-row">
+    <span class="tool">ffmpeg</span>
+    <span class="badge lgpl">LGPL 2.1</span>
+    <span class="note">Dynamic link only for commercial. Don't compile with --enable-gpl. Attribution required.</span>
+  </div>
+  <div class="license-row">
+    <span class="tool">Ollama</span>
+    <span class="badge mit">MIT</span>
+    <span class="note">Local LLM runner. Models have their own licenses (Llama: Meta Community License).</span>
+  </div>
+  <div class="license-row">
+    <span class="tool">p5.js</span>
+    <span class="badge lgpl">LGPL 2.1</span>
+    <span class="note">Creative coding. Great for wordmaps, generative art, animations.</span>
+  </div>
+  <div class="license-row">
+    <span class="tool">GitHub Pages</span>
+    <span class="badge free">FREE</span>
+    <span class="note">Static hosting. 100GB/mo bandwidth. Custom domains. No server cost.</span>
+  </div>
+  <div class="license-row">
+    <span class="tool">Render</span>
+    <span class="badge free">$7/mo</span>
+    <span class="note">fortune0 API backend. 512MB RAM. Shared backend for ALL 230 domains.</span>
+  </div>
+</div>
+
+<!-- MOTION-READY PRODUCTS -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;margin:2rem 0">
+  <h3 style="font-size:0.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--dm);margin-bottom:1rem">Motion-Ready Products — Where Whisper + ffmpeg Ship First</h3>
+  <div id="motion-products" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:0.75rem"></div>
+</div>
+
+<footer>
+  <p>fortune0 dimensional model · <a href="https://fortune0.com">fortune0.com</a> · <a href="https://death2data.com">privacy-first</a></p>
+</footer>
+
+</div>
+
+<script>
+// BUILD NOW domains with dimensional mapping
+const domains = [
+  {name:'sellthismvp.com',concept:'AI pitch deck generator',cat:'ai',dims:[1,1,1,0],motion:'Generate pitch video from slides'},
+  {name:'toneswitch.com',concept:'AI writing tone adjuster',cat:'ai',dims:[1,1,1,1],motion:'Voice input → tone-shifted text output'},
+  {name:'ghostmemeter.com',concept:'Ghost message detector',cat:'ai',dims:[1,1,1,0]},
+  {name:'ipomyidea.com',concept:'Startup idea valuation tool',cat:'ai',dims:[1,1,1,0]},
+  {name:'tweetaudit.com',concept:'Tweet quality scorer',cat:'ai',dims:[1,1,1,0]},
+  {name:'knowwhatstuck.com',concept:'Content virality analyzer',cat:'ai',dims:[1,1,1,1],motion:'Analyze video content engagement via ffmpeg thumbnails'},
+  {name:'death2data.com',concept:'Privacy-first search engine',cat:'ai',dims:[1,1,1,0]},
+  {name:'whoswronghere.com',concept:'AI argument referee',cat:'ai',dims:[1,1,1,1],motion:'Voice argument recording → Whisper transcription → AI verdict'},
+  {name:'adrgen.com',concept:'AI ad creative generator',cat:'ai',dims:[1,1,1,1],motion:'Generate video ads from text briefs via ffmpeg'},
+  {name:'howmucharemyideasworth.com',concept:'Idea valuation calculator',cat:'ai',dims:[1,1,1,0]},
+  {name:'howwasthevibe.com',concept:'Event/meeting vibe scorer',cat:'ai',dims:[1,1,1,1],motion:'Record meeting audio → Whisper → vibe analysis'},
+  {name:'soulfra.ai',concept:'Soul-centered AI framework',cat:'ai',dims:[1,1,1,1],motion:'Voice journaling → Whisper transcription → AI reflection'},
+  {name:'vibe-browser.com',concept:'Mood-based web browsing',cat:'ai',dims:[1,1,1,0]},
+  {name:'calclip.com',concept:'Calendar clip tool',cat:'tool',dims:[1,1,1,0]},
+  {name:'thevibetool.com',concept:'Vibe measurement tool',cat:'ai',dims:[1,1,1,1],motion:'Audio ambiance analysis → vibe score'},
+  {name:'vibesandvalues.com',concept:'Personal values alignment quiz',cat:'community',dims:[1,1,1,0]},
+  {name:'vibestamped.com',concept:'Timestamp moments with vibes',cat:'fun',dims:[1,1,1,1],motion:'Record audio snippets → timestamp + transcribe'},
+  {name:'deathtomoney.com',concept:'Financial freedom calculator',cat:'finance',dims:[1,1,1,0]},
+  {name:'brandaidkit.com',concept:'Brand identity toolkit',cat:'tool',dims:[1,1,1,1],motion:'Voice brief → brand deck generation'},
+  {name:'stpetepros.com',concept:'St Pete professional directory',cat:'local',dims:[1,1,1,0]},
+  {name:'calriven.com',concept:'Calendar analytics platform',cat:'saas',dims:[1,1,1,0]},
+  {name:'dollarsentence.com',concept:'$1 writing service',cat:'content',dims:[1,1,1,0]},
+  {name:'deluludrop.com',concept:'Delusion reality checker',cat:'fun',dims:[1,1,1,0]},
+  {name:'onedollarnotebook.com',concept:'$1 digital notebook',cat:'content',dims:[1,1,1,0]},
+  {name:'oofbuddy.com',concept:'Mistake-sharing platform',cat:'community',dims:[1,1,1,0]},
+  {name:'thebestcashflows.com',concept:'Cash flow analysis tool',cat:'finance',dims:[1,1,1,0]},
+  {name:'nailedittracker.com',concept:'Achievement tracking app',cat:'tool',dims:[1,1,1,0]},
+  {name:'deathtobigtech.com',concept:'Big tech alternative finder',cat:'tool',dims:[1,1,1,0]},
+  {name:'cringeproof.com',concept:'Social anxiety training with exposure therapy',cat:'health',dims:[1,1,1,1],motion:'Record yourself speaking → Whisper → cringe score + coaching'},
+  {name:'thebestintro.com',concept:'Introduction quality scorer',cat:'ai',dims:[1,1,1,1],motion:'Record your intro → Whisper → score + suggestions'}
+];
+
+// Populate 3D products
+const p3d = document.getElementById('products3d');
+domains.forEach(d => {
+  if (d.dims[2]) {
+    p3d.innerHTML += `<div class="product">
+      <div class="name">${d.name}</div>
+      <div class="concept">${d.concept}</div>
+      <div class="dims">
+        ${d.dims[0]?'<div class="dim-dot" style="background:var(--d1)" title="1D Text"></div>':''}
+        ${d.dims[1]?'<div class="dim-dot" style="background:var(--d2)" title="2D Visual"></div>':''}
+        ${d.dims[2]?'<div class="dim-dot" style="background:var(--d3)" title="3D Interactive"></div>':''}
+        ${d.dims[3]?'<div class="dim-dot" style="background:var(--dm)" title="Motion A/V"></div>':''}
+      </div>
+    </div>`;
+  }
+});
+
+// Populate Motion products
+const pdm = document.getElementById('productsdm');
+const motionProducts = document.getElementById('motion-products');
+domains.filter(d => d.dims[3]).forEach(d => {
+  const card = `<div class="product">
+    <div class="name">${d.name}</div>
+    <div class="concept">${d.concept}</div>
+    <div style="color:var(--dm);font-size:0.7rem;margin-top:0.4rem;font-family:system-ui,sans-serif">→ ${d.motion||''}</div>
+  </div>`;
+  pdm.innerHTML += card;
+  motionProducts.innerHTML += card;
+});
+
+// Update counts
+document.getElementById('count3d').textContent = domains.filter(d=>d.dims[2]).length;
+document.getElementById('countdm').textContent = domains.filter(d=>d.dims[3]).length;
+
+// Detail panel toggle
+let activeDetail = null;
+function showDetail(dim) {
+  document.querySelectorAll('.detail').forEach(d => d.classList.remove('show'));
+  document.querySelectorAll('.pillar').forEach(p => p.classList.remove('active'));
+
+  const panel = document.getElementById('detail-' + dim);
+  if (activeDetail === dim) {
+    activeDetail = null;
+    return;
+  }
+  panel.classList.add('show');
+  document.querySelector('.pillar.' + dim).classList.add('active');
+  activeDetail = dim;
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+</script>
+</body>
+</html>

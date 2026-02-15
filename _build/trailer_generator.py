@@ -10,6 +10,7 @@ from moviepy import ImageSequenceClip
 import math
 import random
 import os
+from pathlib import Path
 
 # Config
 WIDTH, HEIGHT = 1280, 720
@@ -23,15 +24,79 @@ WHITE = (255, 255, 255)
 RED = (255, 50, 50)
 CYAN = (50, 255, 255)
 
-# Font
-FONT_BOLD = "/usr/share/fonts/truetype/google-fonts/Poppins-Bold.ttf"
-FONT_FALLBACK = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+# Configurable output directory
+OUTPUT_DIR = os.environ.get(
+    'FORTUNE0_VIDEO_OUTPUT',
+    str(Path.home() / 'fortune0-videos')
+)
+
+def ensure_output_dir(path=None):
+    """Create output directory if it doesn't exist"""
+    target = path or OUTPUT_DIR
+    Path(target).mkdir(parents=True, exist_ok=True)
+    return target
+
+def find_font(preferred_names, fallback_names):
+    """Find first available font from preference list"""
+    import platform
+
+    # macOS font paths
+    if platform.system() == 'Darwin':
+        search_paths = [
+            Path.home() / 'Library/Fonts',
+            Path('/Library/Fonts'),
+            Path('/System/Library/Fonts'),
+        ]
+
+        # Try preferred fonts first
+        for font_name in preferred_names:
+            for base_path in search_paths:
+                for ext in ['.ttf', '.ttc', '.otf']:
+                    font_path = base_path / f"{font_name}{ext}"
+                    if font_path.exists():
+                        return str(font_path)
+
+        # Try fallback fonts
+        for font_name in fallback_names:
+            for base_path in search_paths:
+                for ext in ['.ttf', '.ttc', '.otf']:
+                    font_path = base_path / f"{font_name}{ext}"
+                    if font_path.exists():
+                        return str(font_path)
+
+    # Linux font paths
+    else:
+        search_paths = ['/usr/share/fonts/truetype', '/usr/share/fonts/opentype']
+        for font_name in preferred_names + fallback_names:
+            for base_path in search_paths:
+                for root, dirs, files in os.walk(base_path):
+                    for f in files:
+                        if font_name.lower() in f.lower() and f.endswith(('.ttf', '.otf')):
+                            return os.path.join(root, f)
+
+    return None
+
+# Detect fonts at module load
+FONT_BOLD = find_font(
+    preferred_names=['Poppins-Bold', 'Helvetica-Bold', 'Arial-Bold'],
+    fallback_names=['DejaVuSans-Bold', 'LiberationSans-Bold', 'Helvetica', 'Arial']
+)
+
+FONT_CONDENSED = find_font(
+    preferred_names=['Poppins-Medium', 'HelveticaNeue-Medium', 'Arial-Narrow'],
+    fallback_names=['DejaVuSansCondensed-Bold', 'LiberationSans-Narrow-Bold']
+)
 
 def get_font(size):
-    try:
-        return ImageFont.truetype(FONT_BOLD, size)
-    except:
-        return ImageFont.truetype(FONT_FALLBACK, size)
+    """Get font at specified size with error handling"""
+    if FONT_BOLD:
+        try:
+            return ImageFont.truetype(FONT_BOLD, size)
+        except Exception as e:
+            print(f"Warning: Failed to load font {FONT_BOLD}: {e}")
+
+    print("Warning: Using default font (may not render properly)")
+    return ImageFont.load_default()
 
 def add_scanlines(img, intensity=0.1, spacing=3):
     """CRT scanlines"""
@@ -120,9 +185,26 @@ def ease_out_back(t):
 
 
 class TrailerGenerator:
+    MAX_FRAMES_WARNING = 1000
+    MAX_FRAMES_ERROR = 5000
+
     def __init__(self, seed=42):
         random.seed(seed)
         self.frames = []
+
+    def _check_memory(self):
+        """Check if we're using too much memory"""
+        frame_count = len(self.frames)
+
+        if frame_count > self.MAX_FRAMES_ERROR:
+            raise MemoryError(
+                f"Too many frames buffered ({frame_count}). "
+                f"Reduce duration or split into multiple videos."
+            )
+
+        if frame_count > self.MAX_FRAMES_WARNING:
+            est_memory_mb = (frame_count * WIDTH * HEIGHT * 3) // (1024 * 1024)
+            print(f"Warning: {frame_count} frames buffered (~{est_memory_mb}MB)")
 
     def add_black(self, duration=0.5):
         """Add black frames"""
@@ -130,6 +212,7 @@ class TrailerGenerator:
             img = black_frame()
             img = add_noise(img, 0.02)
             self.frames.append(np.array(img))
+        self._check_memory()
 
     def add_flash(self, duration=0.1, color=WHITE):
         """Add flash transition"""
@@ -139,6 +222,7 @@ class TrailerGenerator:
             intensity = 1 - t  # Fade out
             img = flash_frame(intensity, color)
             self.frames.append(np.array(img))
+        self._check_memory()
 
     def add_text_slam(self, text, duration=1.5, size=120, color=WHITE, subtext=None, subtext_size=28):
         """Text slams in from right"""
@@ -193,6 +277,7 @@ class TrailerGenerator:
                 img = add_chromatic_aberration(img, random.randint(3, 8))
 
             self.frames.append(np.array(img))
+        self._check_memory()
 
     def add_ring_reveal(self, duration=2.0, text_after=None, text_size=48):
         """The fortune0 zero mark reveals and fills with gold"""
@@ -253,6 +338,7 @@ class TrailerGenerator:
                 img = add_chromatic_aberration(img, 4)
 
             self.frames.append(np.array(img))
+        self._check_memory()
 
     def add_domain_intro(self, domain, tagline=None, duration=2.5, color=WHITE):
         """Domain name with optional tagline"""
@@ -297,14 +383,56 @@ class TrailerGenerator:
             img = add_noise(img, 0.02)
 
             self.frames.append(np.array(img))
+        self._check_memory()
 
     def render(self, output_path):
-        """Render to MP4"""
-        print(f"Rendering {len(self.frames)} frames...")
-        clip = ImageSequenceClip(self.frames, fps=FPS)
-        clip.write_videofile(output_path, fps=FPS, codec='libx264', audio=False)
-        print(f"Done: {output_path}")
-        return output_path
+        """Render to MP4 with error handling and validation"""
+        try:
+            print(f"Rendering {len(self.frames)} frames...")
+
+            # Check disk space
+            import shutil
+            stat = shutil.disk_usage(os.path.dirname(output_path) or '.')
+            required_space = len(self.frames) * WIDTH * HEIGHT * 3
+            if stat.free < required_space * 1.2:
+                raise IOError(f"Insufficient disk space. Need ~{required_space // 1024 // 1024}MB")
+
+            # Render video
+            clip = ImageSequenceClip(self.frames, fps=FPS)
+            clip.write_videofile(
+                output_path,
+                fps=FPS,
+                codec='libx264',
+                audio=False,
+                preset='medium',
+                logger='bar'
+            )
+
+            # Validate output
+            if not os.path.exists(output_path):
+                raise IOError(f"Rendering failed - output file not created: {output_path}")
+
+            file_size = os.path.getsize(output_path)
+            if file_size < 1024:
+                raise IOError(f"Output file suspiciously small: {file_size} bytes")
+
+            print(f"✓ Done: {output_path} ({file_size // 1024}KB)")
+            return output_path
+
+        except KeyboardInterrupt:
+            print("\n✗ Rendering cancelled by user")
+            if os.path.exists(output_path):
+                os.remove(output_path)
+            raise
+
+        except Exception as e:
+            print(f"\n✗ Rendering failed: {e}")
+            if os.path.exists(output_path):
+                os.remove(output_path)
+            raise
+
+        finally:
+            self.frames = []
 
 
 # ============================================
@@ -348,7 +476,7 @@ def make_fortune0_trailer():
     t.add_ring_reveal(2.0, text_after="fortune0.com")
     t.add_black(1.0)
 
-    output = "/sessions/friendly-nice-rubin/mnt/fortune0.com/brand/fortune0-trailer-extended.mp4"
+    output = os.path.join(OUTPUT_DIR, "fortune0-trailer-extended.mp4")
     return t.render(output)
 
 def make_death2data_trailer():
@@ -369,7 +497,7 @@ def make_death2data_trailer():
     t.add_domain_intro("death2data.com", color=GOLD)
     t.add_black(0.8)
 
-    output = "/sessions/friendly-nice-rubin/mnt/fortune0.com/brand/death2data-trailer.mp4"
+    output = os.path.join(OUTPUT_DIR, "death2data-trailer.mp4")
     return t.render(output)
 
 def make_domain_trailer(domain, tagline, concepts, color=WHITE):
@@ -389,17 +517,38 @@ def make_domain_trailer(domain, tagline, concepts, color=WHITE):
     t.add_black(0.6)
 
     safe_name = domain.replace(".", "-")
-    output = f"/sessions/friendly-nice-rubin/mnt/fortune0.com/brand/{safe_name}-trailer.mp4"
+    output = os.path.join(OUTPUT_DIR, f"{safe_name}-trailer.mp4")
     return t.render(output)
 
 
 if __name__ == "__main__":
-    os.makedirs("/sessions/friendly-nice-rubin/mnt/fortune0.com/brand", exist_ok=True)
+    import sys
 
-    print("=== FORTUNE0 EXTENDED ===")
-    make_fortune0_trailer()
+    try:
+        output_dir = ensure_output_dir()
+        print(f"Output directory: {output_dir}")
+        print(f"Using font: {FONT_BOLD or 'default'}")
 
-    print("\n=== DEATH2DATA ===")
-    make_death2data_trailer()
+        print("\n=== FORTUNE0 EXTENDED ===")
+        make_fortune0_trailer()
 
-    print("\nDone!")
+        print("\n=== DEATH2DATA ===")
+        make_death2data_trailer()
+
+        print("\n✓ All videos rendered successfully!")
+
+    except ModuleNotFoundError as e:
+        print(f"\n✗ Missing dependency: {e}")
+        print("\nInstall: pip3 install moviepy pillow numpy")
+        print("System: brew install ffmpeg (macOS) or sudo apt-get install ffmpeg (Linux)")
+        sys.exit(1)
+
+    except IOError as e:
+        print(f"\n✗ File I/O error: {e}")
+        sys.exit(1)
+
+    except Exception as e:
+        print(f"\n✗ Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)

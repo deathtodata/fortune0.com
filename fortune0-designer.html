@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 designer — type to design</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:#0A0A0F;color:#eee;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* Top bar */
+.bar{display:flex;align-items:center;gap:0.75rem;padding:0.5rem 1rem;background:#111118;border-bottom:1px solid #252530;flex-shrink:0}
+.bar h1{font-size:0.85rem;font-weight:800;letter-spacing:-0.5px}
+.bar h1 span{color:#EC4899}
+.bar .hint{font-size:0.7rem;color:#555;margin-left:auto}
+
+/* Input */
+.input-row{display:flex;gap:0;border-bottom:1px solid #252530;flex-shrink:0}
+.input-row input{flex:1;padding:0.7rem 1rem;background:#111118;border:none;color:#eee;font-size:0.9rem;font-family:inherit;outline:none}
+.input-row input::placeholder{color:#444}
+.input-row button{padding:0.7rem 1.2rem;background:#EC4899;color:#fff;border:none;font-size:0.8rem;font-weight:700;cursor:pointer}
+.input-row button:hover{background:#DB2777}
+
+/* Main split */
+.split{display:flex;flex:1;overflow:hidden}
+
+/* Preview */
+.preview-wrap{flex:1;overflow:auto;background:#fff;position:relative}
+.preview-wrap iframe{width:100%;height:100%;border:none}
+
+/* Sidebar */
+.sidebar{width:320px;background:#111118;border-left:1px solid #252530;display:flex;flex-direction:column;overflow:hidden}
+.sidebar-tab{display:flex;border-bottom:1px solid #252530}
+.sidebar-tab div{flex:1;padding:0.5rem;text-align:center;font-size:0.7rem;font-weight:600;color:#555;cursor:pointer;border-bottom:2px solid transparent}
+.sidebar-tab div.active{color:#EC4899;border-bottom-color:#EC4899}
+.sidebar-panel{flex:1;overflow:auto;display:none;padding:0.75rem}
+.sidebar-panel.active{display:block}
+
+/* History */
+.history-item{padding:0.4rem 0.5rem;border-bottom:1px solid #1a1a22;font-size:0.75rem;cursor:pointer}
+.history-item:hover{background:#1a1a22}
+.history-item .cmd{color:#EC4899;font-family:Consolas,monospace}
+.history-item .time{color:#444;font-size:0.65rem;float:right}
+
+/* CSS output */
+.css-out{font-family:Consolas,monospace;font-size:0.7rem;color:#9CA3AF;white-space:pre-wrap;line-height:1.5;padding:0.5rem;background:#0A0A0F;border-radius:6px;min-height:200px}
+
+/* Quick commands */
+.quick{display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.75rem}
+.quick-btn{font-size:0.65rem;padding:0.25rem 0.5rem;background:#1a1a22;border:1px solid #252530;border-radius:4px;color:#9CA3AF;cursor:pointer}
+.quick-btn:hover{border-color:#555;color:#eee}
+
+/* Presets */
+.preset{padding:0.5rem;border:1px solid #252530;border-radius:6px;margin-bottom:0.5rem;cursor:pointer}
+.preset:hover{border-color:#EC4899}
+.preset h4{font-size:0.75rem;margin-bottom:0.2rem}
+.preset p{font-size:0.65rem;color:#555}
+
+@media(max-width:800px){
+  .sidebar{display:none}
+  .split{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <h1>fortune0 <span>designer</span></h1>
+  <div class="hint">type a design → page changes instantly</div>
+</div>
+
+<div class="input-row">
+  <input type="text" id="cmd" placeholder="try: dark mode with green accents..." autofocus
+    onkeydown="if(event.key==='Enter')apply()">
+  <button onclick="apply()">Apply</button>
+</div>
+
+<div class="split">
+  <!-- Live preview -->
+  <div class="preview-wrap">
+    <iframe id="preview" srcdoc=""></iframe>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-tab">
+      <div class="active" onclick="showTab('commands')">Commands</div>
+      <div onclick="showTab('css')">CSS</div>
+      <div onclick="showTab('history')">History</div>
+    </div>
+
+    <div class="sidebar-panel active" id="panelCommands">
+      <p style="font-size:0.7rem;color:#555;margin-bottom:0.5rem">Quick commands</p>
+      <div class="quick" id="quickBtns"></div>
+
+      <p style="font-size:0.7rem;color:#555;margin-bottom:0.5rem;margin-top:0.75rem">Presets</p>
+      <div id="presets"></div>
+    </div>
+
+    <div class="sidebar-panel" id="panelCss">
+      <p style="font-size:0.7rem;color:#555;margin-bottom:0.5rem">Generated CSS</p>
+      <div class="css-out" id="cssOut">/* type a command to see CSS */</div>
+      <button onclick="copyCss()" style="margin-top:0.5rem;padding:0.3rem 0.8rem;background:#252530;border:1px solid #333;border-radius:4px;color:#9CA3AF;font-size:0.7rem;cursor:pointer">Copy CSS</button>
+    </div>
+
+    <div class="sidebar-panel" id="panelHistory">
+      <div id="historyLog"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  BASE PAGE (the thing being designed)
+// ═══════════════════════════════════════════
+
+const BASE_HTML = `<!DOCTYPE html>
+<html>
+<head>
+<style id="base-style">
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #ffffff;
+  --surface: #f8f8f8;
+  --card: #ffffff;
+  --border: #e5e5e5;
+  --text: #333333;
+  --dim: #888888;
+  --accent: #3B82F6;
+  --accent2: #EC4899;
+  --heading: #111111;
+  --font: system-ui, -apple-system, sans-serif;
+  --mono: Consolas, monospace;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; }
+.page { max-width: 640px; margin: 0 auto; padding: 2rem 1.5rem; }
+header { text-align: center; padding: 2rem 0; }
+h1 { font-size: 2rem; font-weight: 800; color: var(--heading); letter-spacing: -1px; }
+h1 span { color: var(--accent); }
+.tagline { color: var(--dim); font-size: 0.9rem; margin-top: 0.3rem; }
+.hero { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; margin: 1.5rem 0; text-align: center; }
+.hero h2 { font-size: 1.2rem; color: var(--heading); margin-bottom: 0.5rem; }
+.hero p { color: var(--dim); font-size: 0.85rem; }
+.btn { display: inline-block; padding: 0.7rem 1.5rem; background: var(--accent); color: #fff; border: none; border-radius: var(--radius); font-size: 0.85rem; font-weight: 700; cursor: pointer; text-decoration: none; margin-top: 1rem; box-shadow: var(--shadow); }
+.btn:hover { opacity: 0.9; }
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1.5rem 0; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); }
+.card h3 { font-size: 0.9rem; color: var(--heading); margin-bottom: 0.3rem; }
+.card p { font-size: 0.8rem; color: var(--dim); }
+.input-group { margin: 1.5rem 0; }
+.input-group label { display: block; font-size: 0.8rem; color: var(--dim); margin-bottom: 0.3rem; font-weight: 600; }
+.input-group input { width: 100%; padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.9rem; background: var(--surface); color: var(--text); }
+.input-group input:focus { outline: none; border-color: var(--accent); }
+.badge { display: inline-block; font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); color: var(--dim); margin-top: 0.5rem; }
+.stats { display: flex; justify-content: center; gap: 2rem; margin: 1.5rem 0; }
+.stat { text-align: center; }
+.stat .num { font-family: var(--mono); font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+.stat .lbl { font-size: 0.7rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+footer { text-align: center; padding: 2rem 0; border-top: 1px solid var(--border); margin-top: 2rem; font-size: 0.75rem; color: var(--dim); }
+footer a { color: var(--accent); text-decoration: none; }
+</style>
+<style id="user-style"></style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1><span>Tone</span>Switch</h1>
+    <p class="tagline">Paste text or speak. Pick a tone. Rewritten instantly.</p>
+    <div class="badge">$1/mo membership</div>
+  </header>
+
+  <div class="hero">
+    <h2>Rewrite anything in any tone</h2>
+    <p>Professional, casual, sarcastic, Gen Z, academic, poetic — transform your writing in one click.</p>
+    <a class="btn" href="#">Get early access</a>
+  </div>
+
+  <div class="input-group">
+    <label>Paste your text</label>
+    <input type="text" placeholder="Enter text to transform...">
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <h3>7 Tones</h3>
+      <p>Professional, casual, sarcastic, Gen Z, academic, poetic, pirate</p>
+    </div>
+    <div class="card">
+      <h3>Voice Input</h3>
+      <p>Speak naturally — we transcribe and transform</p>
+    </div>
+    <div class="card">
+      <h3>Encrypted</h3>
+      <p>AES-256-GCM — content never leaves your browser unencrypted</p>
+    </div>
+    <div class="card">
+      <h3>100 Credits</h3>
+      <p>One credit per transformation. $1/mo gets you 100.</p>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="num">230</div><div class="lbl">Products</div></div>
+    <div class="stat"><div class="num">$1</div><div class="lbl">Per month</div></div>
+    <div class="stat"><div class="num">0</div><div class="lbl">Tracking</div></div>
+  </div>
+
+  <footer>
+    <a href="#">fortune0</a> · <a href="#">privacy-first</a> · <a href="#">230 domains</a>
+  </footer>
+</div>
+</body>
+</html>`;
+
+// ═══════════════════════════════════════════
+//  DESIGN PARSER — natural language → CSS
+// ═══════════════════════════════════════════
+
+const RULES = [
+  // COLORS / THEMES
+  {match:/dark\s*(mode|theme)?/i, css:':root{--bg:#0A0A0F;--surface:#111118;--card:#1E1E28;--border:#252530;--text:#9CA3AF;--dim:#555;--heading:#eee}body{color-scheme:dark}'},
+  {match:/light\s*(mode|theme)?/i, css:':root{--bg:#ffffff;--surface:#f8f8f8;--card:#ffffff;--border:#e5e5e5;--text:#333;--dim:#888;--heading:#111}'},
+  {match:/green\s*accent/i, css:':root{--accent:#10B981;--accent2:#6EE7B7}'},
+  {match:/blue\s*accent/i, css:':root{--accent:#3B82F6;--accent2:#60A5FA}'},
+  {match:/pink\s*accent/i, css:':root{--accent:#EC4899;--accent2:#F472B6}'},
+  {match:/purple\s*accent/i, css:':root{--accent:#8B5CF6;--accent2:#A78BFA}'},
+  {match:/orange\s*accent/i, css:':root{--accent:#F59E0B;--accent2:#FBBF24}'},
+  {match:/red\s*accent/i, css:':root{--accent:#EF4444;--accent2:#FCA5A5}'},
+  {match:/gold\s*accent/i, css:':root{--accent:#D4AF37;--accent2:#F0D060}'},
+  {match:/bg\s*#([0-9a-fA-F]{3,8})/i, fn:m=>`:root{--bg:#${m[1]}}`},
+  {match:/accent\s*#([0-9a-fA-F]{3,8})/i, fn:m=>`:root{--accent:#${m[1]}}`},
+  {match:/text\s*#([0-9a-fA-F]{3,8})/i, fn:m=>`:root{--text:#${m[1]};--heading:#${m[1]}}`},
+
+  // TYPOGRAPHY
+  {match:/bigger\s*(text|font)/i, css:'body{font-size:18px}h1{font-size:2.5rem}'},
+  {match:/smaller\s*(text|font)/i, css:'body{font-size:13px}h1{font-size:1.6rem}'},
+  {match:/mono(space)?\s*(font)?/i, css:'body{font-family:Consolas,"Courier New",monospace}'},
+  {match:/sans[\s-]?serif/i, css:'body{font-family:system-ui,-apple-system,sans-serif}'},
+  {match:/serif\s*(font)?/i, css:'body{font-family:Georgia,"Times New Roman",serif}'},
+  {match:/bold(er)?\s*head/i, css:'h1,h2,h3{font-weight:900}'},
+  {match:/thin\s*head/i, css:'h1,h2,h3{font-weight:300}'},
+  {match:/uppercase\s*head/i, css:'h1,h2,h3{text-transform:uppercase;letter-spacing:3px;font-size:1.5rem}'},
+  {match:/italic\s*tagline/i, css:'.tagline{font-style:italic}'},
+  {match:/tight\s*spacing/i, css:'*{letter-spacing:-0.5px}h1{letter-spacing:-2px}'},
+  {match:/loose\s*spacing/i, css:'*{letter-spacing:1px}'},
+
+  // LAYOUT
+  {match:/center\s*(every|all)/i, css:'.page{text-align:center}.cards{justify-items:center}'},
+  {match:/left\s*align/i, css:'.page{text-align:left}header{text-align:left}'},
+  {match:/one\s*column/i, css:'.cards{grid-template-columns:1fr}'},
+  {match:/three\s*column/i, css:'.cards{grid-template-columns:1fr 1fr 1fr}'},
+  {match:/wide(r)?/i, css:'.page{max-width:900px}'},
+  {match:/narrow(er)?/i, css:'.page{max-width:480px}'},
+  {match:/more\s*padding/i, css:'.page{padding:3rem 2.5rem}.card{padding:2rem}.hero{padding:3rem}'},
+  {match:/less\s*padding/i, css:'.page{padding:1rem 0.75rem}.card{padding:0.75rem}.hero{padding:1rem}'},
+  {match:/compact/i, css:'.page{padding:1rem}.card{padding:0.75rem}.hero{padding:1.25rem}h1{font-size:1.5rem}.cards{gap:0.4rem}'},
+  {match:/spacious/i, css:'.page{padding:3rem 2rem}.card{padding:1.5rem}.hero{padding:2.5rem}.cards{gap:1.5rem;margin:2rem 0}'},
+
+  // SHAPES
+  {match:/round(ed)?\s*corner/i, css:':root{--radius:16px}.btn{border-radius:50px}'},
+  {match:/sharp\s*corner/i, css:':root{--radius:0}.btn{border-radius:0}'},
+  {match:/pill\s*button/i, css:'.btn{border-radius:50px;padding:0.7rem 2rem}'},
+  {match:/square\s*button/i, css:'.btn{border-radius:0}'},
+  {match:/circle\s*stat/i, css:'.stat .num{width:60px;height:60px;line-height:60px;border-radius:50%;background:var(--accent);color:#fff;display:inline-block;font-size:1.2rem}'},
+
+  // EFFECTS
+  {match:/no\s*shadow/i, css:':root{--shadow:none}'},
+  {match:/(big|heavy)\s*shadow/i, css:':root{--shadow:0 8px 30px rgba(0,0,0,0.15)}.card{box-shadow:var(--shadow)}'},
+  {match:/glow/i, css:'.btn{box-shadow:0 0 20px var(--accent)}.card:hover{box-shadow:0 0 15px rgba(59,130,246,0.2)}'},
+  {match:/border\s*none/i, css:'.card,.hero,.input-group input{border:none}'},
+  {match:/thick\s*border/i, css:'.card,.hero{border-width:2px}'},
+  {match:/dashed\s*border/i, css:'.card,.hero{border-style:dashed}'},
+  {match:/gradient\s*(bg|background)/i, css:'body{background:linear-gradient(135deg,var(--bg),var(--surface))}'},
+  {match:/blur(red)?\s*(bg|background)/i, css:'.hero{backdrop-filter:blur(10px);background:rgba(255,255,255,0.05)}'},
+  {match:/animate/i, css:'.card{transition:transform 0.2s}.card:hover{transform:translateY(-4px)}.btn{transition:all 0.2s}.btn:hover{transform:scale(1.05)}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}.page>*{animation:fadeIn 0.5s ease both}'},
+
+  // PRESETS
+  {match:/minimal/i, css:':root{--shadow:none;--border:transparent;--radius:0}.card{border:none;padding:1rem}.hero{border:none;background:transparent;padding:1rem}footer{border:none}'},
+  {match:/brutalist/i, css:':root{--radius:0;--shadow:4px 4px 0 #000;--border:#000;--bg:#fff;--text:#000;--heading:#000;--font:"Courier New",monospace}.card{border:2px solid #000}.btn{border:2px solid #000;background:#000;box-shadow:4px 4px 0 var(--accent)}'},
+  {match:/glass(morphism)?/i, css:':root{--bg:#0f0f1a;--surface:rgba(255,255,255,0.05);--card:rgba(255,255,255,0.08);--border:rgba(255,255,255,0.1);--text:rgba(255,255,255,0.7);--heading:#fff;--dim:rgba(255,255,255,0.4)}.card,.hero{backdrop-filter:blur(12px);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1)}body{background:linear-gradient(135deg,#0f0f1a,#1a0f2e)}'},
+  {match:/neon/i, css:':root{--bg:#0a0a0a;--surface:#111;--card:#111;--border:#333;--text:#aaa;--heading:#fff;--accent:#00ff88;--dim:#555}.btn{background:#00ff88;color:#000;box-shadow:0 0 20px #00ff88,0 0 40px rgba(0,255,136,0.3)}.card{border-color:#333}.card:hover{border-color:#00ff88;box-shadow:0 0 15px rgba(0,255,136,0.15)}h1 span{text-shadow:0 0 10px var(--accent)}'},
+  {match:/retro/i, css:':root{--bg:#fdf6e3;--surface:#eee8d5;--card:#fdf6e3;--border:#d4c5a9;--text:#586e75;--heading:#073642;--accent:#b58900;--font:Georgia,serif;--radius:2px;--shadow:2px 2px 0 #d4c5a9}'},
+  {match:/corporate/i, css:':root{--bg:#f5f5f7;--surface:#fff;--card:#fff;--border:#e0e0e0;--text:#444;--heading:#1a1a2e;--accent:#1a1a2e;--font:"Segoe UI",system-ui,sans-serif;--radius:4px;--shadow:0 1px 3px rgba(0,0,0,0.08)}.btn{text-transform:uppercase;letter-spacing:2px;font-size:0.75rem}'},
+  {match:/fortune0/i, css:':root{--bg:#09090F;--surface:#111118;--card:#1E1E28;--border:#252530;--text:#9CA3AF;--dim:#555;--heading:#eee;--accent:#EC4899;--accent2:#8B5CF6;--font:system-ui,sans-serif;--mono:Consolas,monospace;--radius:8px;--shadow:none}body{color-scheme:dark}'},
+  {match:/death2data|d2d/i, css:':root{--bg:#0A0A0A;--surface:#111;--card:#111;--border:#222;--text:rgba(255,255,255,0.55);--dim:rgba(255,255,255,0.25);--heading:#f0f0f0;--accent:#50C878;--font:system-ui,sans-serif;--mono:"SF Mono",Consolas,monospace;--radius:12px;--shadow:none}body{color-scheme:dark}'},
+
+  // HIDE/SHOW
+  {match:/hide\s*(the\s*)?footer/i, css:'footer{display:none}'},
+  {match:/hide\s*(the\s*)?cards/i, css:'.cards{display:none}'},
+  {match:/hide\s*(the\s*)?stats/i, css:'.stats{display:none}'},
+  {match:/hide\s*(the\s*)?hero/i, css:'.hero{display:none}'},
+  {match:/show\s*everything/i, css:'footer,.cards,.stats,.hero{display:revert}'},
+
+  // RESET
+  {match:/reset|start\s*over|clear/i, css:'/* reset */'},
+];
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+
+let appliedCSS = [];
+let history = [];
+
+// ═══════════════════════════════════════════
+//  APPLY COMMAND
+// ═══════════════════════════════════════════
+
+// Strip filler words so "make it dark with some green accents" → "dark green accents"
+const FILLER = /\b(make|it|the|a|an|some|with|and|also|please|can|you|set|use|give|me|add|put|try|do|go|like|more|very|really|so|kind\s*of|sort\s*of|i\s*want|lets?|let's)\b/gi;
+
+function cleanInput(raw) {
+  return raw.replace(FILLER, ' ').replace(/\s{2,}/g, ' ').trim();
+}
+
+// Split compound commands: "dark mode and green accent and rounded corners"
+function splitCommands(input) {
+  // Split on: "and", "with", "+" , commas, semicolons — but keep preset names intact
+  const presetNames = ['fortune0','death2data','d2d','glassmorphism','glass','neon','brutalist','retro','corporate','minimal'];
+  if (presetNames.some(p => new RegExp(`^${p}$`, 'i').test(input.trim()))) {
+    return [input.trim()];
+  }
+  // Split on conjunctions/delimiters
+  return input.split(/\s*(?:,|;|\+|\band\b|\bthen\b|\balso\b)\s*/i).map(s => s.trim()).filter(Boolean);
+}
+
+function apply() {
+  const raw = document.getElementById('cmd').value.trim();
+  if (!raw) return;
+
+  // Check for reset
+  if (/reset|start\s*over|clear/i.test(raw)) {
+    appliedCSS = [];
+    updatePreview();
+    addHistory(raw, '/* reset to defaults */');
+    document.getElementById('cmd').value = '';
+    return;
+  }
+
+  // Raw CSS passthrough (before cleanup)
+  if (raw.includes('{') && raw.includes('}')) {
+    appliedCSS.push(raw);
+    updatePreview();
+    addHistory(raw, raw);
+    document.getElementById('cmd').value = '';
+    document.getElementById('cmd').focus();
+    return;
+  }
+
+  // Hex color shorthand
+  if (/^#[0-9a-fA-F]{3,8}$/.test(raw)) {
+    const css = `:root{--accent:${raw}}`;
+    appliedCSS.push(css);
+    updatePreview();
+    addHistory(raw, css);
+    document.getElementById('cmd').value = '';
+    document.getElementById('cmd').focus();
+    return;
+  }
+
+  // Clean filler words, split compound commands
+  const cleaned = cleanInput(raw);
+  const chunks = splitCommands(cleaned);
+
+  let allCSS = '';
+  let anyMatched = false;
+
+  for (const chunk of chunks) {
+    // Presets replace everything
+    const isPreset = /^(fortune0|death2data|d2d|glass(morphism)?|neon|brutalist|retro|corporate|minimal)$/i.test(chunk);
+    if (isPreset) {
+      appliedCSS = [];
+      allCSS = ''; // clear what we've accumulated this apply()
+    }
+
+    for (const rule of RULES) {
+      const m = chunk.match(rule.match);
+      if (m) {
+        const css = rule.fn ? rule.fn(m) : rule.css;
+        allCSS += css + '\n';
+        anyMatched = true;
+      }
+    }
+  }
+
+  // Fallback: try the whole cleaned string as one match
+  if (!anyMatched) {
+    for (const rule of RULES) {
+      const m = cleaned.match(rule.match);
+      if (m) {
+        const css = rule.fn ? rule.fn(m) : rule.css;
+        allCSS += css + '\n';
+        anyMatched = true;
+      }
+    }
+  }
+
+  // Last resort: try the original raw input
+  if (!anyMatched) {
+    for (const rule of RULES) {
+      const m = raw.match(rule.match);
+      if (m) {
+        const css = rule.fn ? rule.fn(m) : rule.css;
+        allCSS += css + '\n';
+        anyMatched = true;
+      }
+    }
+  }
+
+  if (anyMatched) {
+    appliedCSS.push(allCSS);
+    updatePreview();
+    addHistory(raw, allCSS);
+  } else {
+    addHistory(raw, '/* no match — try: dark mode, green accent, neon, etc */');
+  }
+
+  document.getElementById('cmd').value = '';
+  document.getElementById('cmd').focus();
+}
+
+function updatePreview() {
+  const iframe = document.getElementById('preview');
+  const combined = appliedCSS.join('\n');
+
+  // Write to iframe
+  iframe.srcdoc = BASE_HTML.replace(
+    '<style id="user-style"></style>',
+    '<style id="user-style">' + combined + '</style>'
+  );
+
+  // Update CSS panel
+  document.getElementById('cssOut').textContent = combined || '/* no custom styles yet */';
+}
+
+function addHistory(cmd, css) {
+  const now = new Date().toLocaleTimeString().slice(0,5);
+  history.unshift({cmd, css, time: now});
+  renderHistory();
+}
+
+function renderHistory() {
+  document.getElementById('historyLog').innerHTML = history.map(h =>
+    `<div class="history-item" onclick="reapply('${h.cmd.replace(/'/g,"\\'")}')">
+      <span class="time">${h.time}</span>
+      <span class="cmd">${h.cmd}</span>
+    </div>`
+  ).join('');
+}
+
+function reapply(cmd) {
+  document.getElementById('cmd').value = cmd;
+  apply();
+}
+
+// ═══════════════════════════════════════════
+//  TABS + UI
+// ═══════════════════════════════════════════
+
+function showTab(name) {
+  document.querySelectorAll('.sidebar-tab div').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sidebar-panel').forEach(p => p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+}
+
+function copyCss() {
+  navigator.clipboard.writeText(appliedCSS.join('\n'))
+    .then(() => alert('CSS copied!'))
+    .catch(() => {});
+}
+
+// Quick buttons
+const QUICK = [
+  'dark mode','light mode','green accent','pink accent','purple accent',
+  'rounded corners','sharp corners','bigger text','monospace font','serif font',
+  'one column','three columns','wider','compact','spacious',
+  'no shadow','big shadow','glow','animate','gradient bg',
+  'hide footer','hide stats','show everything','reset'
+];
+
+const PRESETS = [
+  {name:'fortune0', desc:'Dark + pink accent — the default brand'},
+  {name:'death2data', desc:'Dark + green — privacy-first search'},
+  {name:'glassmorphism', desc:'Frosted glass cards on dark gradient'},
+  {name:'neon', desc:'Black + neon green glow effects'},
+  {name:'brutalist', desc:'Raw, bold, no-nonsense design'},
+  {name:'retro', desc:'Warm cream + serif + old-school shadows'},
+  {name:'corporate', desc:'Clean light gray + navy — enterprise feel'},
+  {name:'minimal', desc:'Strip everything — just content'},
+];
+
+function initUI() {
+  // Quick buttons
+  document.getElementById('quickBtns').innerHTML = QUICK.map(q =>
+    `<div class="quick-btn" onclick="document.getElementById('cmd').value='${q}';apply()">${q}</div>`
+  ).join('');
+
+  // Presets
+  document.getElementById('presets').innerHTML = PRESETS.map(p =>
+    `<div class="preset" onclick="document.getElementById('cmd').value='${p.name}';apply()">
+      <h4>${p.name}</h4><p>${p.desc}</p>
+    </div>`
+  ).join('');
+
+  // Load initial preview
+  updatePreview();
+}
+
+initUI();
+</script>
+</body>
+</html>

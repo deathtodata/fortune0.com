@@ -7,6 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 from moviepy import ImageSequenceClip, concatenate_videoclips
 import os
+from pathlib import Path
 
 # Config - reduced for memory
 WIDTH, HEIGHT = 1280, 720
@@ -18,17 +19,80 @@ WHITE = (230, 230, 230)
 GRAY = (120, 120, 120)
 GOLD = (212, 175, 55)
 
-# Fonts - try to match the condensed bold style
-FONT_BOLD = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-FONT_CONDENSED = "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf"
+# Configurable output directory
+OUTPUT_DIR = os.environ.get(
+    'FORTUNE0_VIDEO_OUTPUT',
+    str(Path.home() / 'fortune0-videos')
+)
+
+def ensure_output_dir(path=None):
+    """Create output directory if it doesn't exist"""
+    target = path or OUTPUT_DIR
+    Path(target).mkdir(parents=True, exist_ok=True)
+    return target
+
+def find_font(preferred_names, fallback_names):
+    """Find first available font from preference list"""
+    import platform
+
+    # macOS font paths
+    if platform.system() == 'Darwin':
+        search_paths = [
+            Path.home() / 'Library/Fonts',
+            Path('/Library/Fonts'),
+            Path('/System/Library/Fonts'),
+        ]
+
+        # Try preferred fonts first
+        for font_name in preferred_names:
+            for base_path in search_paths:
+                for ext in ['.ttf', '.ttc', '.otf']:
+                    font_path = base_path / f"{font_name}{ext}"
+                    if font_path.exists():
+                        return str(font_path)
+
+        # Try fallback fonts
+        for font_name in fallback_names:
+            for base_path in search_paths:
+                for ext in ['.ttf', '.ttc', '.otf']:
+                    font_path = base_path / f"{font_name}{ext}"
+                    if font_path.exists():
+                        return str(font_path)
+
+    # Linux font paths
+    else:
+        search_paths = ['/usr/share/fonts/truetype', '/usr/share/fonts/opentype']
+        for font_name in preferred_names + fallback_names:
+            for base_path in search_paths:
+                for root, dirs, files in os.walk(base_path):
+                    for f in files:
+                        if font_name.lower() in f.lower() and f.endswith(('.ttf', '.otf')):
+                            return os.path.join(root, f)
+
+    return None
+
+# Detect fonts at module load
+FONT_BOLD = find_font(
+    preferred_names=['Poppins-Bold', 'Helvetica-Bold', 'Arial-Bold'],
+    fallback_names=['DejaVuSans-Bold', 'LiberationSans-Bold', 'Helvetica', 'Arial']
+)
+
+FONT_CONDENSED = find_font(
+    preferred_names=['Poppins-Medium', 'HelveticaNeue-Medium', 'Arial-Narrow'],
+    fallback_names=['DejaVuSansCondensed-Bold', 'LiberationSans-Narrow-Bold']
+)
 
 def get_font(size, condensed=False):
-    """Get font at specified size"""
-    try:
-        path = FONT_CONDENSED if condensed else FONT_BOLD
-        return ImageFont.truetype(path, size)
-    except:
-        return ImageFont.load_default()
+    """Get font at specified size with error handling"""
+    target_font = FONT_CONDENSED if condensed else FONT_BOLD
+    if target_font:
+        try:
+            return ImageFont.truetype(target_font, size)
+        except Exception as e:
+            print(f"Warning: Failed to load font {target_font}: {e}")
+
+    print("Warning: Using default font (may not render properly)")
+    return ImageFont.load_default()
 
 def draw_centered_text(draw, text, y, font, color, outline=False):
     """Draw text centered horizontally, handles multiline"""
@@ -140,12 +204,48 @@ def create_video_from_script(script, output_path):
     print(f"Total frames: {len(all_frames)}")
     print("Creating video clip...")
 
-    clip = ImageSequenceClip(all_frames, fps=FPS)
+    try:
+        # Check disk space
+        import shutil
+        stat = shutil.disk_usage(os.path.dirname(output_path) or '.')
+        required_space = len(all_frames) * WIDTH * HEIGHT * 3
+        if stat.free < required_space * 1.2:
+            raise IOError(f"Insufficient disk space. Need ~{required_space // 1024 // 1024}MB")
 
-    print(f"Writing to {output_path}...")
-    clip.write_videofile(output_path, fps=FPS, codec='libx264', audio=False)
+        clip = ImageSequenceClip(all_frames, fps=FPS)
 
-    return output_path
+        print(f"Writing to {output_path}...")
+        clip.write_videofile(
+            output_path,
+            fps=FPS,
+            codec='libx264',
+            audio=False,
+            preset='medium',
+            logger='bar'
+        )
+
+        # Validate output
+        if not os.path.exists(output_path):
+            raise IOError(f"Rendering failed - output file not created: {output_path}")
+
+        file_size = os.path.getsize(output_path)
+        if file_size < 1024:
+            raise IOError(f"Output file suspiciously small: {file_size} bytes")
+
+        print(f"✓ Done: {output_path} ({file_size // 1024}KB)")
+        return output_path
+
+    except KeyboardInterrupt:
+        print("\n✗ Rendering cancelled by user")
+        if os.path.exists(output_path):
+            os.remove(output_path)
+        raise
+
+    except Exception as e:
+        print(f"\n✗ Rendering failed: {e}")
+        if os.path.exists(output_path):
+            os.remove(output_path)
+        raise
 
 # ============================================
 # FORTUNE0 EXPLAINER SCRIPT
@@ -184,21 +284,44 @@ FORTUNE0_SCRIPT = [
 ]
 
 def main():
-    output_dir = "/sessions/friendly-nice-rubin/mnt/fortune0.com/brand"
-    os.makedirs(output_dir, exist_ok=True)
+    import sys
 
-    output_path = f"{output_dir}/fortune0-explainer.mp4"
+    try:
+        output_dir = ensure_output_dir()
+        print(f"Output directory: {output_dir}")
+        print(f"Using font: {FONT_BOLD or 'default'}")
 
-    print("Generating fortune0 explainer video...")
-    create_video_from_script(FORTUNE0_SCRIPT, output_path)
+        output_path = os.path.join(output_dir, "fortune0-explainer.mp4")
 
-    print(f"\nDone! Output: {output_path}")
+        print("\nGenerating fortune0 explainer video...")
+        create_video_from_script(FORTUNE0_SCRIPT, output_path)
 
-    # Also create a GIF version (smaller)
-    print("\nCreating web GIF version...")
-    gif_path = f"{output_dir}/fortune0-explainer-web.gif"
-    os.system(f'ffmpeg -i "{output_path}" -vf "scale=640:-1:flags=lanczos,fps=12" -loop 0 "{gif_path}" -y 2>/dev/null')
-    print(f"GIF: {gif_path}")
+        print(f"\n✓ Video rendered successfully!")
+
+        # Also create a GIF version (smaller) - optional
+        print("\nCreating web GIF version...")
+        gif_path = os.path.join(output_dir, "fortune0-explainer-web.gif")
+        result = os.system(f'ffmpeg -i "{output_path}" -vf "scale=640:-1:flags=lanczos,fps=12" -loop 0 "{gif_path}" -y 2>/dev/null')
+        if result == 0:
+            print(f"✓ GIF: {gif_path}")
+        else:
+            print("Note: GIF conversion skipped (ffmpeg not available)")
+
+    except ModuleNotFoundError as e:
+        print(f"\n✗ Missing dependency: {e}")
+        print("\nInstall: pip3 install moviepy pillow numpy")
+        print("System: brew install ffmpeg (macOS) or sudo apt-get install ffmpeg (Linux)")
+        sys.exit(1)
+
+    except IOError as e:
+        print(f"\n✗ File I/O error: {e}")
+        sys.exit(1)
+
+    except Exception as e:
+        print(f"\n✗ Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

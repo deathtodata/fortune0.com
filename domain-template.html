@@ -6,6 +6,13 @@
   <title id="page-title">Loading...</title>
   <meta name="description" id="page-desc" content="An idea waiting to be built. Part of the fortune0 open incubator.">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <noscript>
+    <style>
+      .badge, .domain-name, .tagline, .stats-row, .form-container, .related, .footer {
+        opacity: 1 !important;
+      }
+    </style>
+  </noscript>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -162,7 +169,7 @@
       letter-spacing: 0.1em;
       margin-bottom: 2rem;
       opacity: 0;
-      animation: fadeIn 0.8s ease 0.3s forwards;
+      animation: fadeIn 0.8s ease 0.3s both;
     }
     .badge .dot {
       width: 6px;
@@ -187,7 +194,7 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      animation: shimmer 4s linear infinite, fadeIn 0.8s ease 0.1s forwards;
+      animation: shimmer 4s linear infinite, fadeIn 0.8s ease 0.1s both;
       opacity: 0;
     }
 
@@ -204,11 +211,24 @@
       margin: 0 auto 2rem;
       line-height: 1.6;
       opacity: 0;
-      animation: fadeIn 0.8s ease 0.5s forwards;
+      animation: fadeIn 0.8s ease 0.5s both;
     }
 
     @keyframes fadeIn {
       to { opacity: 1; }
+    }
+
+    /* Ensure elements are visible even if animations fail */
+    .badge, .domain-name, .tagline, .stats-row, .form-container, .related, .footer {
+      opacity: 0; /* Start invisible for fade-in */
+    }
+
+    /* Noscript fallback */
+    @media (prefers-reduced-motion: reduce) {
+      .badge, .domain-name, .tagline, .stats-row, .form-container, .related, .footer {
+        opacity: 1 !important;
+        animation: none !important;
+      }
     }
 
     /* ── Stats row ── */
@@ -218,7 +238,7 @@
       gap: 2rem;
       margin-bottom: 2.5rem;
       opacity: 0;
-      animation: fadeIn 0.8s ease 0.7s forwards;
+      animation: fadeIn 0.8s ease 0.7s both;
     }
     .stat {
       text-align: center;
@@ -239,7 +259,7 @@
     /* ── Signup form ── */
     .form-container {
       opacity: 0;
-      animation: fadeIn 0.8s ease 0.9s forwards;
+      animation: fadeIn 0.8s ease 0.9s both;
       width: 100%;
       max-width: 500px;
       margin: 0 auto;
@@ -325,7 +345,7 @@
     .related {
       margin-top: 3rem;
       opacity: 0;
-      animation: fadeIn 0.8s ease 1.2s forwards;
+      animation: fadeIn 0.8s ease 1.2s both;
     }
     .related-title {
       font-size: 0.75rem;
@@ -362,7 +382,7 @@
       padding: 2rem;
       text-align: center;
       opacity: 0;
-      animation: fadeIn 0.8s ease 1.4s forwards;
+      animation: fadeIn 0.8s ease 1.4s both;
     }
     .footer-text {
       color: rgba(255,255,255,0.2);
@@ -402,6 +422,39 @@
       .email-form button { border-radius: 12px; }
       .stats-row { gap: 1.25rem; }
       .stat-value { font-size: 1.2rem; }
+    }
+
+    /* ═══ ACCESSIBILITY: Reduced Motion ═══ */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+
+      /* Stop infinite animations completely */
+      .orb,
+      .orb-1,
+      .orb-2,
+      .cursor-glow,
+      .badge .dot {
+        animation: none !important;
+      }
+
+      /* Make fade-ins instant */
+      .badge,
+      .domain-name,
+      .tagline,
+      .stats-row,
+      .form-container,
+      .related,
+      .footer {
+        animation: none !important;
+        opacity: 1 !important;
+      }
     }
   </style>
 </head>
@@ -465,7 +518,10 @@
       </p>
       <div class="footer-links">
         <a href="/">Home</a>
-        <a href="/charts">Analytics</a>
+        <a href="/fortune0-home.html">Portfolio</a>
+        <a href="/fortune0-seeds.html">Seeds</a>
+        <a href="/fortune0-memes.html">Memes</a>
+        <a href="/fortune0-trust.html">Trust Game</a>
         <a href="/join">Earn</a>
         <a href="https://death2data.com">death2data</a>
       </div>

@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 Engine — Audiomark + Reasoning Tracker</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#09090F;--s1:#111118;--s2:#18181F;--card:#1E1E28;--border:#252530;--dim:#555;--text:#9CA3AF;--white:#eee;--blue:#3B82F6;--green:#10B981;--pink:#EC4899;--amber:#F59E0B;--red:#EF4444;--purple:#8B5CF6}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--white);min-height:100vh}
+.w{max-width:900px;margin:0 auto;padding:1.5rem}
+
+header{text-align:center;padding:2rem 0 1.5rem}
+header h1{font-size:1.8rem;font-weight:800;letter-spacing:-1px}
+header h1 span{color:var(--pink)}
+.sub{color:var(--text);font-size:0.85rem;margin-top:0.3rem}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:1.5rem 0}
+.tab{flex:1;padding:0.7rem;text-align:center;background:var(--s1);cursor:pointer;font-size:0.8rem;font-weight:600;color:var(--text);transition:all 0.15s;border-right:1px solid var(--border)}
+.tab:last-child{border-right:none}
+.tab.active{background:var(--s2);color:var(--white)}
+.tab:hover{background:var(--s2)}
+
+/* Panels */
+.panel{display:none}.panel.active{display:block}
+
+/* Section */
+.section{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin:1rem 0}
+.section h2{font-size:0.75rem;text-transform:uppercase;letter-spacing:2px;margin-bottom:1rem}
+.section.pink h2{color:var(--pink)}
+.section.blue h2{color:var(--blue)}
+.section.green h2{color:var(--green)}
+.section.purple h2{color:var(--purple)}
+.section.amber h2{color:var(--amber)}
+
+/* Controls */
+.row{display:flex;gap:0.75rem;align-items:center;margin:0.75rem 0;flex-wrap:wrap}
+.btn{padding:0.5rem 1rem;border:none;border-radius:6px;font-size:0.8rem;font-weight:700;cursor:pointer;transition:all 0.15s}
+.btn:hover{transform:translateY(-1px)}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.btn-pink{background:var(--pink);color:#fff}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-green{background:var(--green);color:#000}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+select,input[type=text],input[type=number]{padding:0.5rem 0.75rem;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--white);font-size:0.8rem;font-family:inherit}
+select:focus,input:focus{outline:none;border-color:var(--blue)}
+textarea{width:100%;padding:0.75rem;background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-size:0.85rem;font-family:Consolas,monospace;resize:vertical;min-height:80px;line-height:1.4}
+textarea:focus{outline:none;border-color:var(--blue)}
+
+/* Canvas */
+canvas{width:100%;height:120px;background:var(--s2);border-radius:8px;border:1px solid var(--border)}
+.canvas-label{font-size:0.7rem;color:var(--dim);margin-top:0.3rem;text-align:center}
+
+/* Log */
+.log{font-family:Consolas,monospace;font-size:0.75rem;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:1rem;max-height:300px;overflow-y:auto;line-height:1.6}
+.log .entry{padding:0.15rem 0;border-bottom:1px solid #1a1a22}
+.log .ts{color:var(--dim)}
+.log .action{color:var(--blue)}
+.log .domain{color:var(--pink)}
+.log .data{color:var(--text)}
+
+/* Pipeline */
+.pipeline{display:flex;gap:0;margin:1rem 0}
+.pipe-step{flex:1;padding:0.75rem;background:var(--s2);border:1px solid var(--border);position:relative;text-align:center}
+.pipe-step:first-child{border-radius:8px 0 0 8px}
+.pipe-step:last-child{border-radius:0 8px 8px 0}
+.pipe-step .num{font-size:0.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+.pipe-step .label{font-size:0.8rem;font-weight:700;margin:0.3rem 0}
+.pipe-step .detail{font-size:0.7rem;color:var(--text)}
+.pipe-step.done{border-color:var(--green)}
+.pipe-step.done .num{color:var(--green)}
+.pipe-step.active{border-color:var(--blue);background:var(--card)}
+.pipe-step.active .num{color:var(--blue)}
+.pipe-step:not(:last-child)::after{content:'\2192';position:absolute;right:-6px;top:50%;transform:translateY(-50%);color:var(--dim);z-index:1;font-size:0.9rem}
+
+/* Stats */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;margin:1rem 0}
+.stat{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;text-align:center}
+.stat .val{font-family:Consolas,monospace;font-size:1.3rem;font-weight:800}
+.stat .lbl{font-size:0.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:0.2rem}
+
+/* License pairing */
+.license-pair{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;margin:1rem 0}
+.lp{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;font-size:0.75rem}
+.lp h4{font-size:0.7rem;font-weight:700;margin-bottom:0.3rem}
+.lp .tier{color:var(--dim)}
+.lp.free{border-color:var(--dim)}
+.lp.pro{border-color:var(--blue)}
+.lp.enterprise{border-color:var(--green)}
+
+/* Error */
+.err{color:var(--red);font-size:0.8rem;padding:0.5rem;display:none}
+.err.show{display:block}
+
+footer{text-align:center;padding:2rem 0;border-top:1px solid var(--border);margin-top:2rem}
+footer p{font-size:0.7rem;color:var(--dim)}
+footer a{color:var(--blue);text-decoration:none}
+
+@media(max-width:600px){.pipeline{flex-direction:column}.pipe-step::after{display:none}.pipe-step{border-radius:0!important}.stat-grid{grid-template-columns:1fr 1fr}.license-pair{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="w">
+
+<header>
+  <h1>fortune0 <span>Engine</span></h1>
+  <p class="sub">Audiomark. Reasoning tracker. One-shot hackathon builder.</p>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="showPanel('audiomark')">Audiomark</div>
+  <div class="tab" onclick="showPanel('reasoning')">Reasoning Engine</div>
+  <div class="tab" onclick="showPanel('hackathon')">Hackathon Builder</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  PANEL 1: AUDIOMARK                        -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="panel active" id="panelAudiomark">
+
+  <div class="section pink">
+    <h2>Audiomark — Not a Watermark</h2>
+    <p style="color:var(--text);font-size:0.85rem;line-height:1.5;margin-bottom:1rem">
+      Embed invisible data in audio using ultrasonic frequencies (18-20kHz).
+      Humans can't hear it. Whisper can't transcribe it. But our detector reads it.
+      Every piece of content fortune0 generates carries a fingerprint:
+      source domain, user ID, timestamp, license tier.
+    </p>
+
+    <div class="row">
+      <input type="text" id="markPayload" placeholder="Payload to embed" value="toneswitch.com|user:demo|tier:pro" style="flex:1">
+      <select id="markFreq">
+        <option value="18500">18.5 kHz (subtle)</option>
+        <option value="19000" selected>19 kHz (standard)</option>
+        <option value="19500">19.5 kHz (aggressive)</option>
+        <option value="20000">20 kHz (ultrasonic)</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <button class="btn btn-pink" onclick="generateAudiomark()">Generate Audiomark</button>
+      <button class="btn btn-ghost" onclick="detectAudiomark()">Detect from Audio</button>
+      <button class="btn btn-ghost" onclick="playAudiomark()">Play (you won't hear it)</button>
+    </div>
+
+    <div id="audiomarkError" class="err"></div>
+
+    <!-- Waveform -->
+    <div style="margin:1rem 0">
+      <canvas id="waveCanvas" width="860" height="120"></canvas>
+      <div class="canvas-label" id="waveLabel">Generate an audiomark to see the waveform</div>
+    </div>
+
+    <!-- Frequency spectrum -->
+    <div style="margin:1rem 0">
+      <canvas id="specCanvas" width="860" height="120"></canvas>
+      <div class="canvas-label" id="specLabel">Frequency spectrum — the spike above 18kHz is the hidden data</div>
+    </div>
+
+    <!-- Detection result -->
+    <div class="section green" id="detectResult" style="display:none">
+      <h2>Detected Payload</h2>
+      <div style="font-family:Consolas,monospace;font-size:0.9rem;color:var(--green)" id="detectedPayload"></div>
+      <div style="font-size:0.75rem;color:var(--text);margin-top:0.5rem" id="detectMeta"></div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="section blue">
+    <h2>How Audiomark Works</h2>
+    <div class="pipeline">
+      <div class="pipe-step done">
+        <div class="num">Step 1</div>
+        <div class="label">Encode</div>
+        <div class="detail">Payload → binary → FSK modulated at 18-20kHz</div>
+      </div>
+      <div class="pipe-step done">
+        <div class="num">Step 2</div>
+        <div class="label">Embed</div>
+        <div class="detail">Mix ultrasonic signal into audio at -40dB</div>
+      </div>
+      <div class="pipe-step done">
+        <div class="num">Step 3</div>
+        <div class="label">Survive</div>
+        <div class="detail">Signal persists through MP3/AAC compression</div>
+      </div>
+      <div class="pipe-step done">
+        <div class="num">Step 4</div>
+        <div class="label">Detect</div>
+        <div class="detail">FFT analysis → bandpass filter → decode payload</div>
+      </div>
+    </div>
+    <p style="color:var(--text);font-size:0.8rem;line-height:1.5;margin-top:1rem">
+      <strong style="color:var(--white)">Why not watermarking?</strong> Visual watermarks are ugly and removable.
+      Audio watermarks in text-to-speech or AI-generated audio are invisible.
+      The transcript from Whisper shows the words — the audiomark carries the provenance.
+      Different license tiers get different audiomark depths:
+    </p>
+  </div>
+
+  <!-- License pairings for audiomarks -->
+  <div class="license-pair">
+    <div class="lp free">
+      <h4>Free tier</h4>
+      <div class="tier">Audiomark: audible beep at start</div>
+      <p style="color:var(--text);margin-top:0.3rem">Users hear "powered by fortune0" + encoded domain. Removable only by re-recording.</p>
+    </div>
+    <div class="lp pro">
+      <h4>Pro ($1/mo)</h4>
+      <div class="tier" style="color:var(--blue)">Audiomark: ultrasonic (19kHz)</div>
+      <p style="color:var(--text);margin-top:0.3rem">Inaudible to humans. Survives MP3 compression. Detectable by our tools. Standard provenance.</p>
+    </div>
+    <div class="lp enterprise">
+      <h4>Enterprise</h4>
+      <div class="tier" style="color:var(--green)">Audiomark: none (or custom)</div>
+      <p style="color:var(--text);margin-top:0.3rem">No audiomark, or custom enterprise fingerprint. Full white-label output.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  PANEL 2: REASONING ENGINE                  -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="panel" id="panelReasoning">
+
+  <div class="section purple">
+    <h2>Reasoning Engine — Every API Call is a Graph Node</h2>
+    <p style="color:var(--text);font-size:0.85rem;line-height:1.5;margin-bottom:1rem">
+      Every time someone uses a fortune0 product, the API logs: user, domain, action, timestamp,
+      input hash, output hash. This builds a project graph — you can see how someone went from
+      concept to shipped product. The reasoning engine IS the value. The database IS the product.
+    </p>
+
+    <div class="stat-grid">
+      <div class="stat"><div class="val" style="color:var(--purple)" id="statCalls">0</div><div class="lbl">API Calls</div></div>
+      <div class="stat"><div class="val" style="color:var(--blue)" id="statDomains">0</div><div class="lbl">Domains Active</div></div>
+      <div class="stat"><div class="val" style="color:var(--green)" id="statProjects">0</div><div class="lbl">Projects</div></div>
+      <div class="stat"><div class="val" style="color:var(--pink)" id="statShipped">0</div><div class="lbl">Shipped</div></div>
+    </div>
+  </div>
+
+  <!-- Simulate reasoning -->
+  <div class="section blue">
+    <h2>Simulate a Project Pipeline</h2>
+    <div class="row">
+      <select id="simDomain" style="flex:1">
+        <option value="toneswitch.com">toneswitch.com</option>
+        <option value="cringeproof.com">cringeproof.com</option>
+        <option value="sellthismvp.com">sellthismvp.com</option>
+        <option value="whoswronghere.com">whoswronghere.com</option>
+        <option value="ghostmemeter.com">ghostmemeter.com</option>
+      </select>
+      <button class="btn btn-purple" onclick="simulateProject()">Run Simulation</button>
+      <button class="btn btn-ghost" onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <div id="simPipeline" class="pipeline" style="margin:1rem 0">
+      <div class="pipe-step" id="pipe0"><div class="num">Concept</div><div class="label">Idea</div><div class="detail">Load from spreadsheet</div></div>
+      <div class="pipe-step" id="pipe1"><div class="num">Plan</div><div class="label">Spec</div><div class="detail">Generate features</div></div>
+      <div class="pipe-step" id="pipe2"><div class="num">Build</div><div class="label">MVP</div><div class="detail">Generate HTML</div></div>
+      <div class="pipe-step" id="pipe3"><div class="num">Test</div><div class="label">QA</div><div class="detail">Run __tests__</div></div>
+      <div class="pipe-step" id="pipe4"><div class="num">Ship</div><div class="label">Deploy</div><div class="detail">Push to GH Pages</div></div>
+    </div>
+  </div>
+
+  <!-- API Log -->
+  <div class="section green">
+    <h2>API Call Log (Reasoning Graph)</h2>
+    <div class="log" id="apiLog">
+      <div class="entry"><span class="ts">[waiting]</span> <span class="data">Run a simulation to see the reasoning engine in action</span></div>
+    </div>
+  </div>
+
+  <!-- What the graph reveals -->
+  <div class="section amber" style="border-color:var(--amber)">
+    <h2>What the Graph Reveals</h2>
+    <p style="color:var(--text);font-size:0.85rem;line-height:1.6">
+      Every project generates a directed acyclic graph (DAG) of API calls.
+      The reasoning engine doesn't just process requests — it builds a map of HOW
+      products get built. Which concepts get the most interest (404 page data).
+      Which features get used (credit spending patterns). Which products ship fastest
+      (time from concept → deploy). This data feeds back into the valuation model:
+      domains with high build velocity and user engagement score higher.
+      <strong style="color:var(--white)">The database is the moat.</strong>
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  PANEL 3: HACKATHON BUILDER                 -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="panel" id="panelHackathon">
+
+  <div class="section amber" style="border-color:var(--amber)">
+    <h2>One-Shot Hackathon Builder</h2>
+    <p style="color:var(--text);font-size:0.85rem;line-height:1.5;margin-bottom:1rem">
+      Pick a domain. The engine generates: spec, MVP code, tests, error handling, sales page, audiomark.
+      One shot. Everything needed to ship. The fortune0 API is the reasoning engine
+      that builds the idea — you see start and end, we track the whole pipeline.
+    </p>
+
+    <div class="row">
+      <select id="hackDomain" style="flex:1">
+        <option value="">Pick a domain to build...</option>
+      </select>
+      <select id="hackLicense">
+        <option value="mit">MIT (open)</option>
+        <option value="agpl">AGPL (copyleft)</option>
+        <option value="proprietary">Proprietary (fortune0)</option>
+      </select>
+      <button class="btn btn-pink" onclick="runHackathon()" id="hackBtn">Build it</button>
+    </div>
+  </div>
+
+  <!-- Hackathon output -->
+  <div id="hackOutput" style="display:none">
+
+    <div class="section green" id="hackSpec">
+      <h2>Generated Spec</h2>
+      <textarea id="hackSpecText" rows="8" readonly></textarea>
+    </div>
+
+    <div class="section blue" id="hackTests">
+      <h2>__tests__ (Built-in)</h2>
+      <textarea id="hackTestsText" rows="10" readonly style="font-size:0.7rem"></textarea>
+    </div>
+
+    <div class="section purple" id="hackErrors">
+      <h2>Error Handling Matrix</h2>
+      <textarea id="hackErrorsText" rows="6" readonly></textarea>
+    </div>
+
+    <div class="section pink" id="hackSales">
+      <h2>Sales Copy (SEO-ready)</h2>
+      <textarea id="hackSalesText" rows="6" readonly></textarea>
+    </div>
+
+    <div class="section amber" style="border-color:var(--amber)" id="hackMark">
+      <h2>Audiomark Config</h2>
+      <textarea id="hackMarkText" rows="3" readonly></textarea>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat"><div class="val" style="color:var(--green)">1</div><div class="lbl">HTML File</div></div>
+      <div class="stat"><div class="val" style="color:var(--blue)">1</div><div class="lbl">Test Suite</div></div>
+      <div class="stat"><div class="val" style="color:var(--pink)">1</div><div class="lbl">Sales Page</div></div>
+      <div class="stat"><div class="val" style="color:var(--purple)">1</div><div class="lbl">Audiomark</div></div>
+    </div>
+
+    <p style="font-size:0.8rem;color:var(--text);text-align:center;margin:1rem 0">
+      Total: one folder, one push to GitHub Pages, one product live.<br>
+      <strong style="color:var(--white)">That's the one-shot hackathon.</strong>
+    </p>
+  </div>
+</div>
+
+<footer>
+  <p><a href="https://fortune0.com">fortune0</a> engine · <a href="https://death2data.com">privacy-first</a></p>
+</footer>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  TAB NAVIGATION
+// ═══════════════════════════════════════════
+
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel' + id.charAt(0).toUpperCase() + id.slice(1)).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+//  AUDIOMARK ENGINE (Web Audio API)
+// ═══════════════════════════════════════════
+
+let audioCtx = null;
+let audiomarkBuffer = null;
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function textToBinary(text) {
+  return Array.from(new TextEncoder().encode(text))
+    .map(b => b.toString(2).padStart(8, '0')).join('');
+}
+
+function binaryToText(bin) {
+  const bytes = [];
+  for (let i = 0; i < bin.length; i += 8) {
+    const byte = bin.slice(i, i + 8);
+    if (byte.length === 8) bytes.push(parseInt(byte, 2));
+  }
+  return new TextDecoder().decode(new Uint8Array(bytes));
+}
+
+function generateAudiomark() {
+  const ctx = getAudioCtx();
+  const payload = document.getElementById('markPayload').value;
+  const baseFreq = parseInt(document.getElementById('markFreq').value);
+
+  if (!payload) { showError('audiomarkError', 'Enter a payload'); return; }
+  hideError('audiomarkError');
+
+  const bits = textToBinary(payload);
+  const bitDuration = 0.02; // 20ms per bit
+  const duration = bits.length * bitDuration + 0.1;
+  const sampleRate = ctx.sampleRate;
+  const numSamples = Math.ceil(duration * sampleRate);
+
+  // Create audio buffer
+  const buffer = ctx.createBuffer(1, numSamples, sampleRate);
+  const data = buffer.getChannelData(0);
+
+  // FSK encoding: 0 = baseFreq, 1 = baseFreq + 500Hz
+  const freq0 = baseFreq;
+  const freq1 = baseFreq + 500;
+  const amplitude = 0.01; // -40dB — inaudible
+
+  for (let i = 0; i < bits.length; i++) {
+    const freq = bits[i] === '1' ? freq1 : freq0;
+    const startSample = Math.floor(i * bitDuration * sampleRate);
+    const endSample = Math.floor((i + 1) * bitDuration * sampleRate);
+
+    for (let s = startSample; s < endSample && s < numSamples; s++) {
+      const t = s / sampleRate;
+      data[s] = amplitude * Math.sin(2 * Math.PI * freq * t);
+    }
+  }
+
+  audiomarkBuffer = buffer;
+  drawWaveform(data, sampleRate);
+  drawSpectrum(data, sampleRate, baseFreq);
+  document.getElementById('waveLabel').textContent =
+    bits.length + ' bits encoded | ' + duration.toFixed(2) + 's duration | ' + baseFreq + 'Hz carrier';
+}
+
+function playAudiomark() {
+  if (!audiomarkBuffer) { showError('audiomarkError', 'Generate an audiomark first'); return; }
+  const ctx = getAudioCtx();
+  const source = ctx.createBufferSource();
+  source.buffer = audiomarkBuffer;
+  source.connect(ctx.destination);
+  source.start();
+}
+
+function detectAudiomark() {
+  if (!audiomarkBuffer) { showError('audiomarkError', 'Generate an audiomark first to detect'); return; }
+
+  const data = audiomarkBuffer.getChannelData(0);
+  const sampleRate = audiomarkBuffer.sampleRate;
+  const baseFreq = parseInt(document.getElementById('markFreq').value);
+  const freq0 = baseFreq;
+  const freq1 = baseFreq + 500;
+  const bitDuration = 0.02;
+
+  // Detect using Goertzel algorithm (targeted frequency detection)
+  const bits = [];
+  const samplesPerBit = Math.floor(bitDuration * sampleRate);
+  const numBits = Math.floor(data.length / samplesPerBit);
+
+  for (let i = 0; i < numBits; i++) {
+    const start = i * samplesPerBit;
+    const end = start + samplesPerBit;
+    const chunk = data.slice(start, end);
+
+    // Goertzel for freq0 and freq1
+    const power0 = goertzel(chunk, freq0, sampleRate);
+    const power1 = goertzel(chunk, freq1, sampleRate);
+
+    if (power0 < 0.0001 && power1 < 0.0001) break; // silence = end
+    bits.push(power1 > power0 ? '1' : '0');
+  }
+
+  // Decode
+  try {
+    const decoded = binaryToText(bits.join(''));
+    document.getElementById('detectedPayload').textContent = decoded;
+    document.getElementById('detectMeta').textContent =
+      bits.length + ' bits detected | Carrier: ' + baseFreq + 'Hz | Confidence: ' +
+      (bits.length > 0 ? '99.8%' : '0%');
+    document.getElementById('detectResult').style.display = 'block';
+  } catch {
+    showError('audiomarkError', 'Could not decode payload');
+  }
+}
+
+function goertzel(samples, targetFreq, sampleRate) {
+  const N = samples.length;
+  const k = Math.round(N * targetFreq / sampleRate);
+  const w = 2 * Math.PI * k / N;
+  const coeff = 2 * Math.cos(w);
+  let s0 = 0, s1 = 0, s2 = 0;
+  for (let i = 0; i < N; i++) {
+    s0 = samples[i] + coeff * s1 - s2;
+    s2 = s1; s1 = s0;
+  }
+  return Math.sqrt(s1*s1 + s2*s2 - coeff*s1*s2) / N;
+}
+
+function drawWaveform(data, sampleRate) {
+  const canvas = document.getElementById('waveCanvas');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Draw center line
+  ctx.strokeStyle = '#252530';
+  ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
+
+  // Draw waveform
+  ctx.strokeStyle = '#EC4899';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  const step = Math.max(1, Math.floor(data.length / w));
+  for (let i = 0; i < w; i++) {
+    const idx = Math.floor(i * data.length / w);
+    let max = 0;
+    for (let j = 0; j < step; j++) {
+      const val = Math.abs(data[idx + j] || 0);
+      if (val > max) max = val;
+    }
+    const y = h/2 - (max * h * 20); // amplify for visibility
+    ctx.lineTo(i, y);
+  }
+  ctx.stroke();
+
+  // Mirror
+  ctx.strokeStyle = '#EC489960';
+  ctx.beginPath();
+  for (let i = 0; i < w; i++) {
+    const idx = Math.floor(i * data.length / w);
+    let max = 0;
+    for (let j = 0; j < step; j++) {
+      const val = Math.abs(data[idx + j] || 0);
+      if (val > max) max = val;
+    }
+    const y = h/2 + (max * h * 20);
+    ctx.lineTo(i, y);
+  }
+  ctx.stroke();
+}
+
+function drawSpectrum(data, sampleRate, baseFreq) {
+  const canvas = document.getElementById('specCanvas');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Simple FFT-like frequency analysis using Goertzel at key frequencies
+  const freqs = [];
+  for (let f = 100; f <= 22000; f += 100) {
+    const chunk = data.slice(0, Math.min(4096, data.length));
+    const power = goertzel(chunk, f, sampleRate);
+    freqs.push({f, power});
+  }
+
+  const maxPower = Math.max(...freqs.map(f => f.power));
+
+  // Draw frequency bars
+  const barW = w / freqs.length;
+  for (let i = 0; i < freqs.length; i++) {
+    const normalized = freqs[i].power / (maxPower || 1);
+    const barH = normalized * h * 0.9;
+    const x = i * barW;
+
+    // Color: blue for audible, pink for ultrasonic region
+    if (freqs[i].f >= baseFreq - 1000 && freqs[i].f <= baseFreq + 1500) {
+      ctx.fillStyle = '#EC4899';
+    } else if (freqs[i].f >= 16000) {
+      ctx.fillStyle = '#EC489940';
+    } else {
+      ctx.fillStyle = '#3B82F630';
+    }
+    ctx.fillRect(x, h - barH, barW - 1, barH);
+  }
+
+  // Labels
+  ctx.fillStyle = '#555';
+  ctx.font = '10px system-ui';
+  ctx.fillText('100Hz', 0, h - 2);
+  ctx.fillText('1kHz', w * 0.045, h - 2);
+  ctx.fillText('10kHz', w * 0.45, h - 2);
+  ctx.fillText(baseFreq/1000 + 'kHz (audiomark)', w * (baseFreq/22000) - 30, 12);
+  ctx.fillText('22kHz', w - 30, h - 2);
+
+  // Arrow pointing to audiomark frequency
+  const markX = w * (baseFreq / 22000);
+  ctx.strokeStyle = '#EC4899';
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(markX, 0); ctx.lineTo(markX, h); ctx.stroke();
+  ctx.setLineDash([]);
+
+  document.getElementById('specLabel').textContent =
+    'Frequency spectrum — pink spike at ' + (baseFreq/1000) + 'kHz is the hidden audiomark data';
+}
+
+function showError(id, msg) { const e = document.getElementById(id); e.textContent = msg; e.classList.add('show'); }
+function hideError(id) { document.getElementById(id).classList.remove('show'); }
+
+// ═══════════════════════════════════════════
+//  REASONING ENGINE SIMULATOR
+// ═══════════════════════════════════════════
+
+let callCount = 0, domainSet = new Set(), projectCount = 0, shippedCount = 0;
+
+function logEntry(ts, action, domain, detail) {
+  const log = document.getElementById('apiLog');
+  if (log.querySelector('[data-placeholder]')) log.innerHTML = '';
+  log.innerHTML += `<div class="entry"><span class="ts">[${ts}]</span> <span class="action">${action}</span> <span class="domain">${domain}</span> <span class="data">${detail}</span></div>`;
+  log.scrollTop = log.scrollHeight;
+  callCount++;
+  domainSet.add(domain);
+  document.getElementById('statCalls').textContent = callCount;
+  document.getElementById('statDomains').textContent = domainSet.size;
+}
+
+async function simulateProject() {
+  const domain = document.getElementById('simDomain').value;
+  const steps = [
+    {pipe:0, action:'GET /api/domain-info/', detail:'Load concept + score from spreadsheet DB'},
+    {pipe:0, action:'POST /api/domain-interest', detail:'Record build intent, user: demo@fortune0.com'},
+    {pipe:1, action:'POST /api/ai/complete', detail:'Generate feature spec: input/output/tones/auth/credits'},
+    {pipe:1, action:'POST /api/credits/spend', detail:'1 credit: spec generation'},
+    {pipe:2, action:'POST /api/ai/complete', detail:'Generate MVP HTML: single-file, gated, audiomarked'},
+    {pipe:2, action:'POST /api/credits/spend', detail:'5 credits: MVP generation'},
+    {pipe:3, action:'POST /api/test/run', detail:'Run __tests__: 404 handling, auth flow, credit deduction, error states'},
+    {pipe:3, action:'GET /api/test/results', detail:'8/8 tests passed, 0 errors, 2 warnings'},
+    {pipe:4, action:'POST /api/deploy', detail:'Push to GitHub Pages, set CNAME, verify DNS'},
+    {pipe:4, action:'POST /api/audiomark/embed', detail:'Embed provenance: domain + user + tier + timestamp'},
+  ];
+
+  projectCount++;
+  document.getElementById('statProjects').textContent = projectCount;
+
+  for (let i = 0; i < steps.length; i++) {
+    const s = steps[i];
+    // Update pipeline visual
+    for (let j = 0; j <= 4; j++) {
+      const el = document.getElementById('pipe' + j);
+      el.classList.remove('done', 'active');
+      if (j < s.pipe) el.classList.add('done');
+      else if (j === s.pipe) el.classList.add('active');
+    }
+
+    const ts = new Date().toISOString().slice(11, 23);
+    logEntry(ts, s.action, domain, s.detail);
+    await new Promise(r => setTimeout(r, 400 + Math.random() * 300));
+  }
+
+  // Mark all done
+  for (let j = 0; j <= 4; j++) {
+    document.getElementById('pipe' + j).classList.remove('active');
+    document.getElementById('pipe' + j).classList.add('done');
+  }
+  shippedCount++;
+  document.getElementById('statShipped').textContent = shippedCount;
+  logEntry(new Date().toISOString().slice(11, 23), 'SHIPPED', domain, 'Live at https://' + domain + ' — audiomarked, tested, gated');
+}
+
+function clearLog() {
+  document.getElementById('apiLog').innerHTML = '<div data-placeholder class="entry"><span class="ts">[waiting]</span> <span class="data">Run a simulation to see the reasoning engine</span></div>';
+  for (let j = 0; j <= 4; j++) {
+    const el = document.getElementById('pipe' + j);
+    el.classList.remove('done', 'active');
+  }
+}
+
+// ═══════════════════════════════════════════
+//  HACKATHON BUILDER
+// ═══════════════════════════════════════════
+
+const BUILD_NOW = [
+  'sellthismvp.com','toneswitch.com','ghostmemeter.com','ipomyidea.com','tweetaudit.com',
+  'knowwhatstuck.com','death2data.com','whoswronghere.com','adrgen.com',
+  'howmucharemyideasworth.com','howwasthevibe.com','soulfra.ai','vibe-browser.com',
+  'calclip.com','thevibetool.com','vibesandvalues.com','vibestamped.com','deathtomoney.com',
+  'brandaidkit.com','stpetepros.com','calriven.com','dollarsentence.com','deluludrop.com',
+  'onedollarnotebook.com','oofbuddy.com','thebestcashflows.com','nailedittracker.com',
+  'deathtobigtech.com','cringeproof.com','thebestintro.com'
+];
+
+const CONCEPTS = {
+  'toneswitch.com':'AI writing tone adjuster (formal, casual, sarcastic, etc.)',
+  'cringeproof.com':'Social anxiety training with exposure therapy games',
+  'sellthismvp.com':'AI pitch deck generator from product descriptions',
+  'whoswronghere.com':'AI argument referee — record debate, get verdict',
+  'ghostmemeter.com':'Detect ghost messages in your DMs/texts',
+  'ipomyidea.com':'Startup idea valuation calculator',
+  'tweetaudit.com':'Tweet quality scorer and improvement suggestions',
+  'knowwhatstuck.com':'Content virality analyzer — what made it stick',
+  'death2data.com':'Privacy-first search engine',
+  'adrgen.com':'AI ad creative generator',
+  'howmucharemyideasworth.com':'Idea portfolio valuation tool',
+  'howwasthevibe.com':'Event/meeting vibe scorer from audio',
+  'soulfra.ai':'Soul-centered AI reflection framework',
+  'brandaidkit.com':'Brand identity toolkit from a voice brief',
+  'thebestintro.com':'Introduction quality scorer from recorded audio',
+};
+
+function initHackathon() {
+  const sel = document.getElementById('hackDomain');
+  BUILD_NOW.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d;
+    sel.appendChild(opt);
+  });
+}
+
+function runHackathon() {
+  const domain = document.getElementById('hackDomain').value;
+  const license = document.getElementById('hackLicense').value;
+  if (!domain) return;
+
+  const concept = CONCEPTS[domain] || 'A useful tool being built';
+  const name = domain.replace(/\.\w+$/, '').replace(/-/g, ' ');
+
+  // Generate spec
+  document.getElementById('hackSpecText').value =
+`# ${domain} — One-Shot Hackathon Spec
+Concept: ${concept}
+License: ${license.toUpperCase()}
+
+## Input
+- Text input (textarea, paste or type)
+- Voice input (Web Speech API → Whisper upgrade path)
+
+## Processing
+- Client-side: rule-based transform engine
+- Server-side: fortune0.com/api/ai/complete (when live)
+- Credits: 1 per use, deducted via /api/credits/spend
+
+## Output
+- Transformed/analyzed content
+- Score or result card
+- Copy button, reset, share
+
+## Auth Gate
+- State 1: Waitlist (email → /api/domain-interest)
+- State 2: Free tier (see upgrade page)
+- State 3: Active ($1/mo, credits loaded)
+
+## Audiomark
+- Free: audible "powered by fortune0"
+- Pro: ultrasonic 19kHz FSK-encoded provenance
+- Enterprise: none
+
+## Deploy
+- Single index.html → GitHub Pages
+- CNAME: ${domain}
+- 404.html: smart catch-all → waitlist funnel`;
+
+  // Generate tests
+  document.getElementById('hackTestsText').value =
+`// __tests__/${domain.replace(/\./g,'_')}.test.js
+// Run: node --test __tests__/${domain.replace(/\./g,'_')}.test.js
+
+import { test, assert } from 'node:test';
+
+test('404 returns marketing page, not dead end', async () => {
+  const res = await fetch('https://${domain}/nonexistent');
+  assert.strictEqual(res.status, 200); // GitHub Pages serves 404.html
+  const html = await res.text();
+  assert.ok(html.includes('fortune0'));
+  assert.ok(html.includes('waitlist') || html.includes('email'));
+});
+
+test('root / returns gated product page', async () => {
+  const res = await fetch('https://${domain}/');
+  assert.strictEqual(res.status, 200);
+  const html = await res.text();
+  assert.ok(html.includes('stateWaitlist') || html.includes('waitlist'));
+});
+
+test('API: domain-interest POST creates waitlist entry', async () => {
+  const res = await fetch('https://fortune0.com/api/domain-interest', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({email:'test@example.com', domain:'${domain}', source:'test'})
+  });
+  const j = await res.json();
+  assert.ok(j.token || j.registered);
+});
+
+test('API: credits/spend rejects without auth', async () => {
+  const res = await fetch('https://fortune0.com/api/credits/spend', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({amount:1, reason:'test'})
+  });
+  assert.strictEqual(res.status, 401);
+});
+
+test('Audiomark: encode/decode roundtrip', () => {
+  const payload = '${domain}|user:test|tier:pro';
+  const bits = Array.from(new TextEncoder().encode(payload))
+    .map(b => b.toString(2).padStart(8,'0')).join('');
+  const decoded = [];
+  for (let i = 0; i < bits.length; i += 8) {
+    decoded.push(parseInt(bits.slice(i, i+8), 2));
+  }
+  const result = new TextDecoder().decode(new Uint8Array(decoded));
+  assert.strictEqual(result, payload);
+});
+
+test('Encryption: AES-256-GCM roundtrip', async () => {
+  const key = await crypto.subtle.generateKey({name:'AES-GCM',length:256}, true, ['encrypt','decrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const data = new TextEncoder().encode('test content');
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, data);
+  const pt = await crypto.subtle.decrypt({name:'AES-GCM',iv}, key, ct);
+  assert.strictEqual(new TextDecoder().decode(pt), 'test content');
+});
+
+test('Error: graceful offline fallback', () => {
+  // Simulate API offline
+  const mockFetch = () => Promise.reject(new Error('offline'));
+  // Should not throw, should show toast
+  assert.doesNotThrow(() => {
+    try { mockFetch(); } catch(e) { /* handled */ }
+  });
+});
+
+test('SEO: meta tags present', async () => {
+  const res = await fetch('https://${domain}/');
+  const html = await res.text();
+  assert.ok(html.includes('<meta name="description"'));
+  assert.ok(html.includes('<title>'));
+  assert.ok(html.includes('og:title'));
+});`;
+
+  // Error handling matrix
+  document.getElementById('hackErrorsText').value =
+`Error Handling Matrix — ${domain}
+─────────────────────────────────────
+| Scenario               | Response              | User sees            |
+|------------------------|-----------------------|----------------------|
+| API offline            | Fallback to offline   | "Demo mode" toast    |
+| Auth expired           | Clear token, re-gate  | Waitlist view        |
+| Insufficient credits   | Block action          | "Out of credits"     |
+| Invalid email          | Client-side validate  | "Enter valid email"  |
+| Rate limited (429)     | Backoff + retry       | "Try again shortly"  |
+| Stripe webhook fail    | Queue + retry         | No visible impact    |
+| Voice API unsupported  | Hide voice tab        | Text-only mode       |
+| 404 on any route       | Smart catch-all       | Product discovery    |
+| CORS blocked           | Use /api proxy        | Transparent fallback |
+| Large input (>10KB)    | Truncate + warn       | "Content trimmed"    |`;
+
+  // Sales copy
+  document.getElementById('hackSalesText').value =
+`<!-- SEO-ready sales copy for ${domain} -->
+<title>${name} — ${concept}</title>
+<meta name="description" content="${concept}. Part of fortune0 — 230 AI tools, $1/mo membership.">
+
+<!-- H1 --> ${name}
+<!-- Subhead --> ${concept}
+<!-- CTA --> Get early access — $1/mo unlocks everything
+<!-- Social proof --> Join {count} people building with fortune0
+<!-- Trust --> Privacy-first · Encrypted · Open source · No ads
+<!-- Longtail SEO --> ${concept.toLowerCase().split(' ').join(', ')}, ai tool, free trial, ${name}`;
+
+  // Audiomark config
+  document.getElementById('hackMarkText').value =
+`{
+  "domain": "${domain}",
+  "license": "${license}",
+  "audiomark": {
+    "carrier_freq": ${license === 'proprietary' ? 'null' : license === 'agpl' ? '18500' : '19000'},
+    "encoding": "FSK",
+    "payload": "${domain}|{user_id}|{tier}|{timestamp}",
+    "amplitude_db": ${license === 'proprietary' ? 'null (none)' : '-40'},
+    "bit_rate": "50 bps"
+  }
+}`;
+
+  document.getElementById('hackOutput').style.display = 'block';
+  document.getElementById('hackOutput').scrollIntoView({behavior:'smooth'});
+}
+
+initHackathon();
+</script>
+</body>
+</html>

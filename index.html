@@ -1,591 +1,624 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>fortune0 — Ideas that survive</title>
-  <meta name="description" content="Time-limited communities around ideas. They expire unless people pledge to keep them alive.">
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 — We build $1 domains into real products</title>
+<meta name="description" content="230 domains. We build the cheapest ones first. $1 a share to get in early. Build it yourself or buy in.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#D4AF37;--gold-rgb:212,175,55;--bg:#000;--surface:#0a0a0a;--surface2:#111;--border:#1a1a1a;--white:#fff;--dim:rgba(255,255,255,.3);--text:rgba(255,255,255,.6);--green:#00dd44;--red:#f44;--blue:#4488ff;--font:-apple-system,BlinkMacSystemFont,'SF Pro','Segoe UI',sans-serif;--mono:'SF Mono',Menlo,monospace}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
+::selection{background:rgba(212,175,55,.2)}
 
-    :root {
-      --gold: #D4AF37;
-      --gold-rgb: 212, 175, 55;
-    }
+/* ═══ ENTRY GATE ═══ */
+#entry{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:40px 20px;transition:opacity .5s}
+#entry.gone{opacity:0;pointer-events:none;position:absolute}
+.entry-mark{font-family:var(--mono);font-size:clamp(3.5rem,12vw,7rem);font-weight:900;color:var(--white);letter-spacing:-.04em;line-height:.9;margin-bottom:8px}
+.entry-mark span{color:var(--gold)}
+.entry-tag{font-size:clamp(.75rem,2vw,.95rem);color:var(--dim);margin-bottom:36px;letter-spacing:.06em}
 
-    body {
-      background: #000;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
-      overflow-x: hidden;
-      cursor: crosshair;
-    }
+/* Proof card on entry */
+.entry-proof{max-width:400px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:28px;text-align:left}
+.entry-proof .ep-live{display:inline-block;font-size:10px;padding:2px 8px;border-radius:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:rgba(0,221,68,.1);color:var(--green);border:1px solid rgba(0,221,68,.2);margin-bottom:8px}
+.entry-proof .ep-domain{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--white);margin-bottom:4px}
+.entry-proof .ep-desc{font-size:13px;color:var(--text);line-height:1.5;margin-bottom:8px}
+.entry-proof .ep-price{font-family:var(--mono);font-size:12px;color:var(--gold)}
 
-    #canvas-container {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-    }
+/* Up next preview on entry */
+.entry-next{max-width:400px;width:100%;margin-bottom:32px}
+.entry-next h3{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.15em;margin-bottom:10px}
+.entry-next-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.entry-next-item:last-child{border-bottom:none}
+.entry-next-item .eni-name{font-family:var(--mono);font-size:13px;color:var(--white);font-weight:500}
+.entry-next-item .eni-what{font-size:11px;color:var(--dim)}
+.entry-next-item .eni-price{font-family:var(--mono);font-size:12px;color:var(--gold);white-space:nowrap}
 
-    .content {
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 2rem;
-    }
+.entry-pitch{max-width:420px;margin:0 auto 32px;font-size:14px;line-height:1.7;color:var(--text)}
+.entry-pitch strong{color:var(--white);font-weight:500}
+.enter-btn{padding:16px 48px;font-size:16px;font-weight:700;background:var(--gold);color:#000;border:none;border-radius:40px;cursor:pointer;font-family:var(--font);transition:all .2s;letter-spacing:.02em}
+.enter-btn:hover{transform:scale(1.04);box-shadow:0 0 40px rgba(var(--gold-rgb),.4)}
+.entry-fine{margin-top:24px;font-size:11px;color:var(--dim)}
+.entry-fine a{color:var(--dim);text-decoration:none;margin:0 6px}
+.entry-fine a:hover{color:var(--gold)}
 
-    .hero {
-      text-align: center;
-      max-width: 900px;
-    }
+/* ═══ APP ═══ */
+#app{display:none}
+#app.active{display:block}
 
-    .tagline {
-      font-size: clamp(0.75rem, 2vw, 0.9rem);
-      text-transform: uppercase;
-      letter-spacing: 0.3em;
-      color: var(--gold);
-      margin-bottom: 2rem;
-      opacity: 0;
-      animation: fadeIn 1s ease 0.5s forwards;
-    }
+/* ─── TOP BAR ─── */
+.bar{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(0,0,0,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.bar-logo{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--white);text-decoration:none;display:flex;align-items:center;gap:6px}
+.bar-logo span{color:var(--gold)}
+.bar-nav{display:flex;gap:14px;align-items:center;font-size:13px}
+.bar-nav a{color:var(--dim);text-decoration:none;transition:color .2s}
+.bar-nav a:hover{color:var(--white)}
+.bar-nav .btn-sm{padding:6px 14px;background:var(--gold);color:#000;border-radius:20px;font-weight:600;font-size:12px}
+.bar-nav .btn-sm:hover{opacity:.9;color:#000}
 
-    .title {
-      font-size: clamp(4rem, 18vw, 12rem);
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      line-height: 0.85;
-      margin-bottom: 2rem;
-      background: linear-gradient(
-        135deg,
-        #fff 0%,
-        #fff 40%,
-        var(--gold) 50%,
-        #fff 60%,
-        #fff 100%
-      );
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: shimmer 3s linear infinite, fadeIn 1s ease 0.2s forwards;
-      opacity: 0;
-    }
+/* ─── SECTION LAYOUT ─── */
+.section{max-width:900px;margin:0 auto;padding:48px 20px 32px}
+.section-label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.15em;margin-bottom:6px}
+.section h2{font-size:clamp(1.5rem,4vw,2rem);font-weight:800;color:var(--white);margin-bottom:8px;letter-spacing:-.02em}
+.section>p{font-size:14px;color:var(--text);line-height:1.6;margin-bottom:24px;max-width:600px}
 
-    @keyframes shimmer {
-      0% { background-position: 200% center; }
-      100% { background-position: -200% center; }
-    }
+/* ─── NOW BUILDING (spotlight) ─── */
+.spotlight{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;position:relative;overflow:hidden}
+.spotlight::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),var(--gold))}
+.spot-status{display:inline-block;font-size:10px;padding:3px 10px;border-radius:8px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.spot-status.live{background:rgba(0,221,68,.12);color:var(--green);border:1px solid rgba(0,221,68,.2)}
+.spot-status.building{background:rgba(var(--gold-rgb),.1);color:var(--gold);border:1px solid rgba(var(--gold-rgb),.2)}
+.spot-domain{font-family:var(--mono);font-size:clamp(1.2rem,3vw,1.6rem);font-weight:700;color:var(--white);margin-bottom:6px}
+.spot-desc{font-size:15px;color:var(--text);line-height:1.6;margin-bottom:16px;max-width:600px}
+.spot-stats{display:flex;gap:24px;flex-wrap:wrap}
+.spot-stat .n{font-family:var(--mono);font-size:18px;font-weight:700}
+.spot-stat .n.gold{color:var(--gold)}
+.spot-stat .n.green{color:var(--green)}
+.spot-stat .n.white{color:var(--white)}
+.spot-stat .l{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+.spot-link{display:inline-block;margin-top:16px;font-size:13px;color:var(--green);text-decoration:none;font-weight:600;border-bottom:1px solid rgba(0,221,68,.3);padding-bottom:1px}
+.spot-link:hover{color:var(--white);border-color:var(--white)}
 
-    .subtitle {
-      font-size: clamp(1.1rem, 3vw, 1.5rem);
-      font-weight: 300;
-      color: rgba(255,255,255,0.6);
-      max-width: 600px;
-      margin: 0 auto 3rem;
-      line-height: 1.5;
-      opacity: 0;
-      animation: fadeIn 1s ease 0.8s forwards;
-    }
+/* ─── QUEUE CARDS ─── */
+.queue-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.qcard{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;transition:all .2s;cursor:pointer}
+.qcard:hover{border-color:rgba(var(--gold-rgb),.3);transform:translateY(-2px)}
+.qcard-domain{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--white);margin-bottom:6px;word-break:break-all}
+.qcard-pitch{font-size:12px;color:var(--text);line-height:1.5;margin-bottom:12px;min-height:36px}
+.qcard-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.qcard-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.qcard-val{font-family:var(--mono);font-size:12px;color:var(--text)}
+.qcard-val.gold{color:var(--gold);font-weight:600}
+.qcard-cta{display:flex;gap:8px;margin-top:12px}
+.qcard-btn{flex:1;padding:8px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:var(--font);transition:all .2s;text-align:center}
+.qcard-btn.build{background:rgba(var(--gold-rgb),.1);color:var(--gold);border:1px solid rgba(var(--gold-rgb),.2)}
+.qcard-btn.build:hover{background:rgba(var(--gold-rgb),.2)}
+.qcard-btn.buy{background:none;border:1px solid var(--border);color:var(--dim)}
+.qcard-btn.buy:hover{border-color:var(--gold);color:var(--gold)}
 
-    .subtitle strong {
-      color: #fff;
-      font-weight: 500;
-    }
+/* ─── HOW IT WORKS (simplified) ─── */
+.how-steps{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.step{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.step-num{font-family:var(--mono);font-size:24px;font-weight:800;color:var(--gold);margin-bottom:8px}
+.step h3{font-size:14px;color:var(--white);margin-bottom:4px}
+.step p{font-size:12px;color:var(--dim);line-height:1.5}
 
-    @keyframes fadeIn {
-      to { opacity: 1; }
-    }
+/* ─── TIER EXPLAINER (compact) ─── */
+.tiers-compact{display:flex;gap:0;margin-top:16px}
+.tc{flex:1;padding:12px;text-align:center;border:1px solid var(--border)}
+.tc:first-child{border-radius:10px 0 0 10px}
+.tc:last-child{border-radius:0 10px 10px 0}
+.tc.now{border-color:var(--gold);background:rgba(var(--gold-rgb),.05)}
+.tc .tc-p{font-family:var(--mono);font-size:16px;font-weight:800;color:var(--text)}
+.tc.now .tc-p{color:var(--gold)}
+.tc .tc-l{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.tc-tag{font-size:8px;padding:1px 6px;background:var(--gold);color:#000;border-radius:6px;font-weight:700;margin-bottom:4px;display:inline-block}
 
-    .cta-container {
-      opacity: 0;
-      animation: fadeIn 1s ease 1.1s forwards;
-    }
+/* ─── BROWSE ALL ─── */
+.browse-toggle{text-align:center;margin-bottom:24px}
+.browse-btn{padding:12px 36px;border-radius:30px;font-size:14px;font-weight:600;border:1px solid var(--border);background:none;color:var(--text);cursor:pointer;font-family:var(--font);transition:all .2s}
+.browse-btn:hover{border-color:var(--gold);color:var(--gold)}
+#full-portfolio{display:none}
+#full-portfolio.open{display:block}
 
-    .email-form {
-      display: flex;
-      gap: 0;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 60px;
-      padding: 6px;
-      backdrop-filter: blur(10px);
-      transition: all 0.3s;
-    }
+/* ─── SEARCH & FILTER (reuse) ─── */
+.search-wrap{max-width:600px;margin:0 auto 20px;padding:0}
+.search-box{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s}
+.search-box:focus-within{border-color:var(--gold)}
+.search-box input{flex:1;background:none;border:none;color:var(--white);padding:12px 16px;font-size:14px;font-family:var(--font);outline:none}
+.search-box input::placeholder{color:var(--dim)}
+.search-box .count{padding:12px 16px;font-family:var(--mono);font-size:12px;color:var(--dim);white-space:nowrap}
+.filters{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.fbtn{padding:5px 12px;border-radius:18px;font-size:11px;font-weight:500;border:1px solid var(--border);background:none;color:var(--dim);cursor:pointer;transition:all .2s;font-family:var(--font)}
+.fbtn:hover{border-color:rgba(var(--gold-rgb),.3);color:var(--text)}
+.fbtn.on{border-color:var(--gold);color:var(--gold);background:rgba(var(--gold-rgb),.08)}
 
-    .email-form:focus-within {
-      border-color: var(--gold);
-      box-shadow: 0 0 40px rgba(var(--gold-rgb), 0.2);
-    }
+/* ─── GRID (smaller cards for browse-all) ─── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;max-width:900px;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all .2s;position:relative}
+.card:hover{border-color:rgba(var(--gold-rgb),.3);transform:translateY(-1px)}
+.card-name{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--white);margin-bottom:6px;word-break:break-all}
+.card-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.card-label{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em}
+.card-val{font-family:var(--mono);font-size:12px;color:var(--text)}
+.card-val.gold{color:var(--gold);font-weight:600}
+.card-tag{position:absolute;top:10px;right:10px;font-size:9px;padding:2px 6px;border-radius:8px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.card-tag.live{background:rgba(0,221,68,.1);color:var(--green);border:1px solid rgba(0,221,68,.2)}
 
-    .email-form input {
-      flex: 1;
-      min-width: 280px;
-      padding: 1rem 1.5rem;
-      font-size: 1rem;
-      font-family: inherit;
-      background: transparent;
-      border: none;
-      color: #fff;
-      outline: none;
-    }
+/* ─── MODAL ─── */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;justify-content:center;align-items:center;padding:20px}
+.mbg.open{display:flex}
+.mod{background:#0a0a0a;border:1px solid var(--border);border-radius:16px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;padding:28px}
+.mod-x{float:right;background:none;border:none;color:var(--dim);font-size:20px;cursor:pointer;padding:4px 8px}
+.mod-x:hover{color:var(--white)}
+.mod h2{font-size:18px;color:var(--white);margin-bottom:4px;font-family:var(--mono)}
+.mod .cat{font-size:12px;color:var(--gold);margin-bottom:6px;display:block}
+.mod .mod-pitch{font-size:13px;color:var(--text);line-height:1.5;margin-bottom:16px}
+.ms{margin-bottom:16px}
+.ms h3{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+.mr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
+.mr:last-child{border-bottom:none}
+.mr .k{color:var(--text);font-size:12px}
+.mr .v{font-family:var(--mono);font-size:12px;color:var(--white);font-weight:600}
+.mr .v.gold{color:var(--gold)}
+.mr .v.green{color:var(--green)}
 
-    .email-form input::placeholder {
-      color: rgba(255,255,255,0.4);
-    }
+.mod-cta{display:flex;gap:8px;margin-top:16px}
+.mod-btn{flex:1;padding:12px;border-radius:10px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:var(--font);transition:all .2s;text-align:center}
+.mod-btn.primary{background:var(--gold);color:#000}
+.mod-btn.primary:hover{box-shadow:0 0 24px rgba(var(--gold-rgb),.4)}
+.mod-btn.secondary{background:none;border:1px solid var(--border);color:var(--text)}
+.mod-btn.secondary:hover{border-color:var(--gold);color:var(--gold)}
+.mod-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--white);padding:10px 12px;border-radius:8px;font-size:13px;font-family:var(--font);margin-bottom:8px}
+.mod-input:focus{border-color:var(--gold);outline:none}
+.mod-input::placeholder{color:var(--dim)}
+.mod-note{font-size:10px;color:var(--dim);line-height:1.4;margin-top:6px}
+.mod-ok{display:none;text-align:center;padding:16px;color:var(--green);font-weight:600;font-size:14px}
 
-    .email-form button {
-      padding: 1rem 2rem;
-      font-size: 0.95rem;
-      font-weight: 600;
-      font-family: inherit;
-      background: var(--gold);
-      color: #000;
-      border: none;
-      border-radius: 60px;
-      cursor: pointer;
-      transition: all 0.2s;
-      white-space: nowrap;
-    }
+/* ─── FOOTER ─── */
+.foot{border-top:1px solid var(--border);padding:16px 20px;text-align:center;font-size:12px;color:var(--dim)}
+.foot a{color:var(--dim);text-decoration:none;margin:0 6px}
+.foot a:hover{color:var(--gold)}
 
-    .email-form button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 30px rgba(var(--gold-rgb), 0.5);
-    }
-
-    .concept {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 3rem;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: rgba(255,255,255,0.3);
-      opacity: 0;
-      animation: fadeIn 1s ease 1.5s forwards;
-    }
-
-    .concept span {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .concept .dot {
-      width: 6px;
-      height: 6px;
-      background: var(--gold);
-      border-radius: 50%;
-    }
-
-    /* Floating orbs */
-    .orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.5;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .orb-1 {
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(var(--gold-rgb), 0.3), transparent 70%);
-      top: -200px;
-      right: -200px;
-      animation: float1 20s ease-in-out infinite;
-    }
-
-    .orb-2 {
-      width: 400px;
-      height: 400px;
-      background: radial-gradient(circle, rgba(var(--gold-rgb), 0.2), transparent 70%);
-      bottom: -100px;
-      left: -100px;
-      animation: float2 25s ease-in-out infinite;
-    }
-
-    .orb-3 {
-      width: 300px;
-      height: 300px;
-      background: radial-gradient(circle, rgba(100, 100, 255, 0.15), transparent 70%);
-      top: 50%;
-      left: 20%;
-      animation: float3 18s ease-in-out infinite;
-    }
-
-    @keyframes float1 {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(-50px, 50px) scale(1.1); }
-      66% { transform: translate(30px, -30px) scale(0.95); }
-    }
-
-    @keyframes float2 {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(80px, -40px) scale(1.15); }
-    }
-
-    @keyframes float3 {
-      0%, 100% { transform: translate(0, 0); }
-      50% { transform: translate(-60px, 60px); }
-    }
-
-    /* Mouse follower */
-    .cursor-glow {
-      position: fixed;
-      width: 400px;
-      height: 400px;
-      background: radial-gradient(circle, rgba(var(--gold-rgb), 0.15), transparent 70%);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 0;
-      transform: translate(-50%, -50%);
-      transition: opacity 0.3s;
-      filter: blur(40px);
-    }
-
-    /* Header */
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1.25rem 2rem;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .logo {
-      font-size: 1.25rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: #fff;
-      text-decoration: none;
-      transition: opacity 0.2s;
-    }
-    .logo:hover { opacity: 0.8; }
-    .logo span { color: var(--gold); }
-
-    .nav-links {
-      display: flex;
-      gap: 2rem;
-      align-items: center;
-    }
-
-    .nav-links a {
-      color: rgba(255,255,255,0.5);
-      text-decoration: none;
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: #fff; }
-
-    .nav-btn {
-      padding: 0.65rem 1.25rem;
-      background: var(--gold);
-      color: #000;
-      border: none;
-      border-radius: 100px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-    .nav-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 30px rgba(var(--gold-rgb), 0.4);
-    }
-
-    @media (max-width: 640px) {
-      .email-form {
-        flex-direction: column;
-        border-radius: 16px;
-      }
-      .email-form input {
-        min-width: auto;
-        text-align: center;
-      }
-      .email-form button {
-        border-radius: 12px;
-      }
-      .concept {
-        flex-direction: column;
-        gap: 0.75rem;
-        align-items: center;
-        bottom: 1rem;
-        background: rgba(0,0,0,0.8);
-        padding: 1rem 1.5rem;
-        border-radius: 12px;
-        backdrop-filter: blur(10px);
-      }
-      header { padding: 1rem 1.5rem; }
-      .nav-links a:not(.nav-btn) { display: none; }
-    }
-  </style>
+@media(max-width:600px){
+  .queue-grid{grid-template-columns:1fr}
+  .grid{grid-template-columns:1fr;padding:0}
+  .how-steps{grid-template-columns:1fr 1fr}
+  .mod{padding:20px 16px}
+  .mod-cta{flex-direction:column}
+  .tiers-compact{flex-wrap:wrap}
+  .tc{min-width:45%}
+  .spot-stats{gap:16px}
+  .qcard-cta{flex-direction:column}
+  .entry-proof{margin-left:20px;margin-right:20px;width:auto;max-width:400px}
+  .entry-next{padding:0 20px}
+}
+</style>
 </head>
 <body>
-  <header>
-    <a href="/" class="logo">fortune<span>0</span></a>
-    <nav class="nav-links">
-      <a href="/ideas">Browse Ideas</a>
-      <a href="/projects">Projects</a>
+
+<!-- ═══════════════════════════════════ -->
+<!-- ENTRY GATE                          -->
+<!-- ═══════════════════════════════════ -->
+<div id="entry">
+  <div class="entry-mark">fortune<span>0</span></div>
+  <div class="entry-tag">We build $1 domains into real products</div>
+
+  <!-- Proof: death2data is live -->
+  <div class="entry-proof">
+    <span class="ep-live">Live</span>
+    <div class="ep-domain">death2data.com</div>
+    <div class="ep-desc">Private search engine. $1/month membership. First domain built from the portfolio.</div>
+    <div class="ep-price">17 shares &middot; Tier 1 &middot; $5/share</div>
+  </div>
+
+  <!-- Next 3 coming up -->
+  <div class="entry-next">
+    <h3>Up next</h3>
+    <div class="entry-next-item">
+      <div><span class="eni-name">howmucharemyideasworth.com</span><br><span class="eni-what">AI idea valuation calculator</span></div>
+      <span class="eni-price">$1/share</span>
+    </div>
+    <div class="entry-next-item">
+      <div><span class="eni-name">isthisspotavibe.com</span><br><span class="eni-what">Vibe-check any location</span></div>
+      <span class="eni-price">$1/share</span>
+    </div>
+    <div class="entry-next-item">
+      <div><span class="eni-name">canyouratemyidea.com</span><br><span class="eni-what">Crowdsourced idea feedback</span></div>
+      <span class="eni-price">$1/share</span>
+    </div>
+  </div>
+
+  <p class="entry-pitch">
+    230 domains. We start with the cheapest ones and build them into real products using AI. <strong>Buy shares at $1 while they're pre-launch, or build one yourself and earn shares free.</strong>
+  </p>
+
+  <button class="enter-btn" onclick="enter()">See what we're building</button>
+
+  <p class="entry-fine">
+    <a href="https://death2data.com">death2data</a>
+    <a href="/join">earn commissions</a>
+    <a href="mailto:matt@fortune0.com">contact</a>
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- APP                                 -->
+<!-- ═══════════════════════════════════ -->
+<div id="app">
+
+  <div class="bar">
+    <a href="/" class="bar-logo">fortune<span>0</span></a>
+    <nav class="bar-nav">
+      <a href="https://death2data.com">D2D</a>
       <a href="/join">Earn</a>
-      <a href="/app" class="nav-btn">Sign In</a>
+      <a href="mailto:matt@fortune0.com" class="btn-sm">Get in touch</a>
     </nav>
-  </header>
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-  <div class="cursor-glow" id="cursor-glow"></div>
+  </div>
 
-  <div id="canvas-container"></div>
+  <!-- ─── NOW BUILDING ─── -->
+  <div class="section">
+    <div class="section-label">Now building</div>
+    <h2>death2data.com</h2>
+    <div class="spotlight">
+      <span class="spot-status live">Live &middot; Tier 1</span>
+      <div class="spot-domain">Private search engine</div>
+      <div class="spot-desc">$1/month membership. Search without being tracked. Built from a $17 domain that nobody wanted. Proof the model works — the cheapest domains in the portfolio become real products.</div>
+      <div class="spot-stats">
+        <div class="spot-stat"><div class="n green">Live</div><div class="l">Status</div></div>
+        <div class="spot-stat"><div class="n gold">$5</div><div class="l">Share price</div></div>
+        <div class="spot-stat"><div class="n white">17</div><div class="l">Total shares</div></div>
+        <div class="spot-stat"><div class="n gold">$1/mo</div><div class="l">Revenue model</div></div>
+      </div>
+      <a href="https://death2data.com" class="spot-link" target="_blank">Visit death2data.com &rarr;</a>
+    </div>
+  </div>
 
-  <div class="content">
-    <div class="hero">
-      <p class="tagline">Ideas that survive</p>
-      <h1 class="title">fortune0</h1>
-      <p class="subtitle">
-        We build privacy tools and weird software.<br>
-        <strong>Subscribe for $1 to get early access to everything.</strong>
-      </p>
+  <!-- ─── UP NEXT ─── -->
+  <div class="section" id="upnext-section">
+    <div class="section-label">Up next</div>
+    <h2>Cheapest domains, clearest ideas</h2>
+    <p>These are the lowest-cost domains in the portfolio — cheap to advertise, easy to prototype with AI, and $1/share while they're pre-launch. We build these first.</p>
+    <div class="queue-grid" id="queue"></div>
+  </div>
 
-      <div class="cta-container">
-        <form class="email-form" id="form">
-          <input type="email" name="email" placeholder="email@example.com" required>
-          <button type="submit">Subscribe free</button>
-        </form>
-        <p style="margin-top: 1rem;">
-          <a href="https://buy.stripe.com/cNieVd5Vjb6N2ZY6Fq4wM00" style="color: var(--gold); text-decoration: none; font-size: 0.95rem; font-weight: 600;">
-            Support us — $1/month →
-          </a>
-        </p>
+  <!-- ─── HOW IT WORKS ─── -->
+  <div class="section">
+    <div class="section-label">How it works</div>
+    <h2>Two ways in</h2>
+    <p>Every domain has a fixed number of shares. 60% founder, 20% for builders, 20% for buyers. Price starts at $1 and goes up as the domain launches.</p>
+    <div class="how-steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Pick a domain</h3>
+        <p>Browse the queue. Find one with a name and concept you believe in.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Build it or buy in</h3>
+        <p>Build: ship code, earn shares free. Buy: $1/share via Stripe while it's pre-launch.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>It gets recorded</h3>
+        <p>Every transaction timestamped. Who, what domain, how many shares, what price.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <h3>Earn when it earns</h3>
+        <p>Domain makes money — revenue splits across shareholders. More shares, bigger cut.</p>
+      </div>
+    </div>
+
+    <div class="tiers-compact" style="margin-top:24px">
+      <div class="tc now">
+        <div class="tc-tag">Now</div>
+        <div class="tc-p">$1</div>
+        <div class="tc-l">Pre-launch</div>
+      </div>
+      <div class="tc">
+        <div class="tc-p">$5</div>
+        <div class="tc-l">MVP live</div>
+      </div>
+      <div class="tc">
+        <div class="tc-p">$25</div>
+        <div class="tc-l">Revenue</div>
+      </div>
+      <div class="tc">
+        <div class="tc-p">$100</div>
+        <div class="tc-l">Growth</div>
       </div>
     </div>
   </div>
 
-  <div class="concept">
-    <span><span class="dot"></span><a href="/onboard" style="color: inherit; text-decoration: none;">Get Started</a></span>
-    <span><span class="dot"></span><a href="/join" style="color: inherit; text-decoration: none;">Earn Commissions</a></span>
-    <span><span class="dot"></span><a href="https://death2data.com" style="color: inherit; text-decoration: none;">death2data.com</a></span>
-    <span><span class="dot"></span><a href="/projects" style="color: inherit; text-decoration: none;">Projects</a></span>
+  <!-- ─── FULL PORTFOLIO ─── -->
+  <div class="section">
+    <div class="section-label">Full portfolio</div>
+    <h2>All 230 domains</h2>
+    <p>The complete list. Sorted by value — cheapest at the top, because that's where we start.</p>
+
+    <div class="search-wrap">
+      <div class="search-box">
+        <input type="text" id="search" placeholder="Search domains..." oninput="render()">
+        <span class="count" id="count">230</span>
+      </div>
+    </div>
+
+    <div class="filters" id="filters">
+      <button class="fbtn on" onclick="setFilter('all',this)">All</button>
+      <button class="fbtn" onclick="setFilter('ai',this)">AI</button>
+      <button class="fbtn" onclick="setFilter('tool',this)">Tools</button>
+      <button class="fbtn" onclick="setFilter('fun',this)">Fun</button>
+      <button class="fbtn" onclick="setFilter('education',this)">Education</button>
+      <button class="fbtn" onclick="setFilter('community',this)">Community</button>
+      <button class="fbtn" onclick="setFilter('saas',this)">SaaS</button>
+      <button class="fbtn" onclick="setFilter('local',this)">Local</button>
+      <button class="fbtn" onclick="setFilter('content',this)">Content</button>
+      <button class="fbtn" onclick="setFilter('health',this)">Health</button>
+      <button class="fbtn" onclick="setFilter('marketplace',this)">Market</button>
+      <button class="fbtn" onclick="setFilter('finance',this)">Finance</button>
+      <button class="fbtn" onclick="setFilter('easy',this)">Easy Builds</button>
+      <button class="fbtn" onclick="setFilter('aiready',this)">AI-Ready</button>
+    </div>
+
+    <div class="grid" id="grid"></div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script>
-    // Mouse follower
-    const cursorGlow = document.getElementById('cursor-glow');
-    let mouseX = window.innerWidth / 2;
-    let mouseY = window.innerHeight / 2;
-    let currentX = mouseX;
-    let currentY = mouseY;
+  <!-- Domain detail modal -->
+  <div class="mbg" id="mbg" onclick="if(event.target===this)closeModal()">
+    <div class="mod" id="mod"></div>
+  </div>
 
-    document.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
+  <div class="foot">
+    fortune0 &middot;
+    <a href="https://death2data.com">death2data</a>
+    <a href="/join">earn</a>
+    <a href="mailto:matt@fortune0.com">contact</a>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+let domains = [];
+let filter = 'all';
+
+/* ═══ ALL 230 DOMAIN CONCEPTS ═══ */
+/* Every domain now has a product pitch, category, and build metadata */
+let CONCEPTS = {};
+fetch('/concepts.json').then(r=>r.json()).then(c=>{CONCEPTS=c;render();renderQueue();}).catch(()=>{});
+
+/* Legacy compat */
+const FEATURED = new Proxy({}, { get: (_, domain) => { const c = CONCEPTS[domain]; return c ? { pitch: c.concept, stage: domain === 'death2data.com' ? 'live' : 'next', wave: c.aiReady && c.difficulty === 'easy' ? 2 : c.difficulty === 'easy' ? 3 : 4 } : undefined; }, has: (_, domain) => !!CONCEPTS[domain] });
+
+/* ═══ ENTRY GATE ═══ */
+function enter() {
+  sessionStorage.setItem('f0_entered', '1');
+  activate();
+}
+function activate() {
+  document.getElementById('entry').classList.add('gone');
+  document.getElementById('app').classList.add('active');
+  setTimeout(() => { document.getElementById('entry').style.display = 'none'; }, 500);
+}
+if (sessionStorage.getItem('f0_entered') || location.search.includes('browse')) {
+  document.getElementById('entry').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+}
+
+/* ═══ CATEGORIES (from concepts.json) ═══ */
+function categorize(name) {
+  const c = CONCEPTS[name];
+  if (c) return c.category;
+  // fallback
+  name = name.toLowerCase();
+  if (/death|privacy|data|bigtech|delete|vault|proof/.test(name)) return 'saas';
+  if (/vibe|soul|feels|heart|soft|kind|felt/.test(name)) return 'community';
+  if (/finish|idea|repo|mvp|startup|ipo|bootstrap/.test(name)) return 'tool';
+  if (/lesson|learn|course|coach|teach|class|skill/.test(name)) return 'education';
+  if (/fart|yikes|oof|cringe|meme|roast|delulu/.test(name)) return 'fun';
+  if (/realtor|homeowner|permit|contractor|local|stpete|tampa|gulf|florida/.test(name)) return 'local';
+  return 'tool';
+}
+function catLabel(c) {
+  return {ai:'AI Tool',tool:'Tool',community:'Community',content:'Content',saas:'SaaS',marketplace:'Marketplace',local:'Local',fun:'Fun/Viral',finance:'Finance',education:'Education',health:'Health'}[c]||'General';
+}
+
+/* ═══ TIER PRICING ═══ */
+function getTier(d) {
+  if (d.status === 'launched') return { tier: 1, price: 5, label: 'MVP Live' };
+  return { tier: 0, price: 1, label: 'Pre-launch' };
+}
+
+/* ═══ QUEUE RENDERER ═══ */
+function renderQueue() {
+  const q = document.getElementById('queue');
+  if (!q) return;
+
+  // Queue = cheapest AI-ready easy builds (top 12, excluding death2data which is live)
+  const queueDomains = domains
+    .filter(d => {
+      if (d.status === 'launched') return false;
+      const c = CONCEPTS[d.domain];
+      return c && c.aiReady && c.difficulty === 'easy';
+    })
+    .sort((a, b) => a.value - b.value)
+    .slice(0, 12);
+
+  q.innerHTML = queueDomains.map(d => {
+    const c = CONCEPTS[d.domain];
+    const shares = d.value;
+    const available = Math.floor(shares * 0.4);
+    const t = getTier(d);
+
+    return `<div class="qcard" onclick="openModal('${d.domain}')">
+      <div class="qcard-domain">${d.domain}</div>
+      <div class="qcard-pitch">${c ? c.concept : ''}</div>
+      <div class="qcard-row"><span class="qcard-label">Category</span><span class="qcard-val" style="font-size:10px">${c ? catLabel(c.category) : ''}</span></div>
+      <div class="qcard-row"><span class="qcard-label">Shares</span><span class="qcard-val">${shares}</span></div>
+      <div class="qcard-row"><span class="qcard-label">Price now</span><span class="qcard-val gold">$${t.price}/share</span></div>
+      <div class="qcard-cta">
+        <button class="qcard-btn build" onclick="event.stopPropagation();openModal('${d.domain}')">Build it</button>
+        <button class="qcard-btn buy" onclick="event.stopPropagation();openModal('${d.domain}')">Buy $${available * t.price}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══ FULL GRID RENDERER ═══ */
+function loadDomains() {
+  fetch('/domains.json')
+    .then(r => r.json())
+    .then(data => {
+      // Sort cheapest first — that's the strategy
+      domains = data.sort((a, b) => a.value - b.value);
+      render();
+      renderQueue();
+    })
+    .catch(() => {
+      document.getElementById('grid').innerHTML = '<p style="text-align:center;color:var(--dim);padding:40px">Loading...</p>';
     });
+}
 
-    function animateCursor() {
-      currentX += (mouseX - currentX) * 0.08;
-      currentY += (mouseY - currentY) * 0.08;
-      cursorGlow.style.left = currentX + 'px';
-      cursorGlow.style.top = currentY + 'px';
-      requestAnimationFrame(animateCursor);
-    }
-    animateCursor();
+function render() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  const g = document.getElementById('grid');
 
-    // Three.js particle field
-    const container = document.getElementById('canvas-container');
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  let list = domains.filter(d => {
+    if (q && !d.domain.toLowerCase().includes(q) && !(CONCEPTS[d.domain] && CONCEPTS[d.domain].concept.toLowerCase().includes(q))) return false;
+    if (filter === 'all') return true;
+    if (filter === 'easy') return CONCEPTS[d.domain] && CONCEPTS[d.domain].difficulty === 'easy';
+    if (filter === 'aiready') return CONCEPTS[d.domain] && CONCEPTS[d.domain].aiReady;
+    return categorize(d.domain) === filter;
+  });
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
+  document.getElementById('count').textContent = `${list.length} domain${list.length!==1?'s':''}`;
 
-    // Particles
-    const particleCount = 2000;
-    const positions = new Float32Array(particleCount * 3);
-    const velocities = new Float32Array(particleCount * 3);
-    const colors = new Float32Array(particleCount * 3);
+  g.innerHTML = list.map(d => {
+    const shares = d.value;
+    const available = Math.floor(shares * 0.4);
+    const t = getTier(d);
+    const c = CONCEPTS[d.domain];
 
-    const goldColor = new THREE.Color(0xD4AF37);
-    const whiteColor = new THREE.Color(0xffffff);
+    let tag = '';
+    if (d.status === 'launched') tag = '<span class="card-tag live">Live</span>';
+    else if (c && c.aiReady) tag = '<span class="card-tag" style="background:rgba(68,136,255,.1);color:var(--blue);border:1px solid rgba(68,136,255,.2)">AI</span>';
 
-    for (let i = 0; i < particleCount; i++) {
-      const i3 = i * 3;
+    const diffColor = c ? {easy:'var(--green)',medium:'var(--gold)',hard:'var(--red)'}[c.difficulty] || 'var(--dim)' : 'var(--dim)';
 
-      // Position in a sphere
-      const radius = 15 + Math.random() * 25;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
+    return `<div class="card" onclick="openModal('${d.domain}')">
+      ${tag}
+      <div class="card-name">${d.domain}</div>
+      ${c ? `<div style="font-size:11px;color:var(--text);margin-bottom:6px;line-height:1.4">${c.concept}</div>` : ''}
+      <div class="card-row"><span class="card-label">Category</span><span class="card-val" style="font-size:10px;color:var(--dim)">${c ? catLabel(c.category) : ''}</span></div>
+      <div class="card-row"><span class="card-label">Build</span><span class="card-val" style="color:${diffColor};font-size:10px">${c ? c.difficulty.toUpperCase() : '?'}</span></div>
+      <div class="card-row"><span class="card-label">Shares</span><span class="card-val">${shares.toLocaleString()}</span></div>
+      <div class="card-row"><span class="card-label">Price</span><span class="card-val gold">$${t.price}/share</span></div>
+    </div>`;
+  }).join('');
+}
 
-      positions[i3] = radius * Math.sin(phi) * Math.cos(theta);
-      positions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
-      positions[i3 + 2] = radius * Math.cos(phi);
+function setFilter(f, el) {
+  filter = f;
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  render();
+}
 
-      // Velocity
-      velocities[i3] = (Math.random() - 0.5) * 0.02;
-      velocities[i3 + 1] = (Math.random() - 0.5) * 0.02;
-      velocities[i3 + 2] = (Math.random() - 0.5) * 0.02;
+/* ═══ MODAL ═══ */
+function openModal(name) {
+  const d = domains.find(x => x.domain === name);
+  if (!d) return;
 
-      // Color - mix of gold and white
-      const mixRatio = Math.random();
-      const color = mixRatio < 0.3 ? goldColor : whiteColor;
-      colors[i3] = color.r;
-      colors[i3 + 1] = color.g;
-      colors[i3 + 2] = color.b;
-    }
+  const shares = d.value;
+  const founder = Math.floor(shares * 0.6);
+  const buildPool = Math.floor(shares * 0.2);
+  const buyPool = shares - founder - buildPool;
+  const t = getTier(d);
+  const c = CONCEPTS[d.domain];
 
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const m = document.getElementById('mod');
+  const diffColor = c ? {easy:'var(--green)',medium:'var(--gold)',hard:'var(--red)'}[c.difficulty] : 'var(--dim)';
+  m.innerHTML = `
+    <button class="mod-x" onclick="closeModal()">&times;</button>
+    <h2>${d.domain}</h2>
+    <span class="cat">${c ? catLabel(c.category) : catLabel(categorize(d.domain))}${d.status==='launched'?' &middot; LIVE':''}${c ? ' &middot; <span style="color:'+diffColor+'">'+c.difficulty.toUpperCase()+'</span>':''}${c && c.aiReady ? ' &middot; <span style="color:var(--blue)">AI-Ready</span>':''}</span>
+    ${c ? `<p class="mod-pitch">${c.concept}</p>` : ''}
 
-    const material = new THREE.PointsMaterial({
-      size: 0.08,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.8,
-      sizeAttenuation: true
+    <div class="ms">
+      <h3>Shares</h3>
+      <div class="mr"><span class="k">Total supply</span><span class="v">${shares.toLocaleString()}</span></div>
+      <div class="mr"><span class="k">Founder (60%)</span><span class="v">${founder.toLocaleString()}</span></div>
+      <div class="mr"><span class="k">Build to earn (20%)</span><span class="v gold">${buildPool.toLocaleString()}</span></div>
+      <div class="mr"><span class="k">Buy in (20%)</span><span class="v gold">${buyPool.toLocaleString()}</span></div>
+      <div class="mr"><span class="k">Current price</span><span class="v gold">$${t.price}/share</span></div>
+      <div class="mr"><span class="k">Buy all available</span><span class="v">$${(buyPool*t.price).toLocaleString()}</span></div>
+    </div>
+
+    <div class="ms">
+      <h3>If you buy 10 shares ($${10*t.price})</h3>
+      <div class="mr"><span class="k">Ownership</span><span class="v gold">${(10/shares*100).toFixed(1)}%</span></div>
+      <div class="mr"><span class="k">If domain earns $500/mo</span><span class="v green">$${(500*10/shares).toFixed(2)}/mo</span></div>
+      <div class="mr"><span class="k">At Tier 3 ($100/share)</span><span class="v green">$${(10*100).toLocaleString()}</span></div>
+    </div>
+
+    <div class="ms" id="mform">
+      <h3>Get involved</h3>
+      <input class="mod-input" type="email" id="memail" placeholder="your email" />
+      <div class="mod-cta">
+        <button class="mod-btn primary" onclick="claim('${d.domain}','build')">I'll build it</button>
+        <button class="mod-btn secondary" onclick="claim('${d.domain}','buy')">Buy shares</button>
+      </div>
+      <p class="mod-note">Build = earn shares free by shipping code. Buy = $${t.price}/share via Stripe.</p>
+    </div>
+    <div class="mod-ok" id="mok"></div>
+  `;
+
+  document.getElementById('mbg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('mbg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function claim(domain, type) {
+  const email = document.getElementById('memail').value.trim();
+  if (!email || !email.includes('@')) { document.getElementById('memail').style.borderColor='var(--red)'; return; }
+
+  const btn = event.target;
+  btn.textContent = '...';
+  btn.disabled = true;
+
+  try {
+    const r = await fetch('/api/signup', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, domain, intent: type })
     });
+    if (r.ok) {
+      const data = await r.json();
+      document.getElementById('mform').style.display = 'none';
+      const ok = document.getElementById('mok');
+      ok.style.display = 'block';
+      ok.innerHTML = type === 'build'
+        ? `You're in. We'll reach out to <strong>${email}</strong>.`
+        : `Noted. Payment details coming to <strong>${email}</strong>.`;
+    } else throw 0;
+  } catch {
+    try { await fetch('https://fortune0-forms.mattmauersp.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,source:'fortune0',domain,intent:type})}); } catch{}
+    document.getElementById('mform').style.display='none';
+    const ok=document.getElementById('mok');
+    ok.style.display='block';
+    ok.innerHTML = type==='build'
+      ? `Noted. We'll reach out to <strong>${email}</strong> about <span style="color:var(--gold)">${domain}</span>.`
+      : `Noted. Details coming to <strong>${email}</strong> for <span style="color:var(--gold)">${domain}</span>.`;
+  }
+}
 
-    const particles = new THREE.Points(geometry, material);
-    scene.add(particles);
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
 
-    // Connection lines
-    const lineGeometry = new THREE.BufferGeometry();
-    const linePositions = new Float32Array(particleCount * 6);
-    lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-
-    const lineMaterial = new THREE.LineBasicMaterial({
-      color: 0xD4AF37,
-      transparent: true,
-      opacity: 0.1
-    });
-
-    const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-    scene.add(lines);
-
-    camera.position.z = 30;
-
-    // Mouse interaction
-    let targetRotationX = 0;
-    let targetRotationY = 0;
-
-    document.addEventListener('mousemove', (e) => {
-      targetRotationY = (e.clientX / window.innerWidth - 0.5) * 0.5;
-      targetRotationX = (e.clientY / window.innerHeight - 0.5) * 0.3;
-    });
-
-    // Animation
-    let time = 0;
-    function animate() {
-      requestAnimationFrame(animate);
-      time += 0.001;
-
-      // Rotate particles
-      particles.rotation.y += (targetRotationY - particles.rotation.y) * 0.02;
-      particles.rotation.x += (targetRotationX - particles.rotation.x) * 0.02;
-      particles.rotation.z = Math.sin(time) * 0.1;
-
-      // Update particle positions
-      const pos = geometry.attributes.position.array;
-      for (let i = 0; i < particleCount; i++) {
-        const i3 = i * 3;
-        pos[i3] += velocities[i3];
-        pos[i3 + 1] += velocities[i3 + 1];
-        pos[i3 + 2] += velocities[i3 + 2];
-
-        // Boundary check - wrap around
-        const dist = Math.sqrt(pos[i3]**2 + pos[i3+1]**2 + pos[i3+2]**2);
-        if (dist > 45) {
-          const scale = 15 / dist;
-          pos[i3] *= scale;
-          pos[i3 + 1] *= scale;
-          pos[i3 + 2] *= scale;
-        }
-      }
-      geometry.attributes.position.needsUpdate = true;
-
-      // Update connection lines (connect nearby particles)
-      const linePos = lineGeometry.attributes.position.array;
-      let lineIndex = 0;
-      const maxConnections = 200;
-
-      for (let i = 0; i < particleCount && lineIndex < maxConnections * 6; i += 10) {
-        const i3 = i * 3;
-        for (let j = i + 10; j < particleCount && lineIndex < maxConnections * 6; j += 10) {
-          const j3 = j * 3;
-          const dx = pos[i3] - pos[j3];
-          const dy = pos[i3 + 1] - pos[j3 + 1];
-          const dz = pos[i3 + 2] - pos[j3 + 2];
-          const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-
-          if (dist < 5) {
-            linePos[lineIndex++] = pos[i3];
-            linePos[lineIndex++] = pos[i3 + 1];
-            linePos[lineIndex++] = pos[i3 + 2];
-            linePos[lineIndex++] = pos[j3];
-            linePos[lineIndex++] = pos[j3 + 1];
-            linePos[lineIndex++] = pos[j3 + 2];
-          }
-        }
-      }
-      lineGeometry.attributes.position.needsUpdate = true;
-      lineGeometry.setDrawRange(0, lineIndex / 3);
-
-      renderer.render(scene, camera);
-    }
-    animate();
-
-    // Resize
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    // Form
-    document.getElementById('form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = e.target.querySelector('input').value;
-      const btn = e.target.querySelector('button');
-      btn.textContent = 'Submitting...';
-      btn.disabled = true;
-
-      try {
-        const res = await fetch('https://fortune0-forms.mattmauersp.workers.dev', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, source: 'homepage', domain: 'fortune0.com' })
-        });
-        if (res.ok) {
-          localStorage.setItem('fortune0_email', email);
-          btn.textContent = 'You\'re in!';
-          e.target.reset();
-        } else {
-          throw new Error('Failed');
-        }
-      } catch (err) {
-        btn.textContent = 'Get early access';
-        btn.disabled = false;
-        alert('Something went wrong. Try again?');
-      }
-    });
-  </script>
+loadDomains();
+</script>
 </body>
 </html>
