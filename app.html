@@ -950,9 +950,9 @@ async function doLoginWithKey() {
         }
 
         state.token = data.token;
-        state.user = { email: data.email, refCode: data.referral_code, tier: data.tier };
+        state.user = { email: data.email, refCode: data.referral_code, tier: data.tier, is_admin: data.is_admin };
         log('SEC', '/auth/session', 200, `Token: ${data.token.slice(0, 12)}...`);
-        log('SYS', '/auth', 200, `Welcome back, ${email}`);
+        log('SYS', '/auth', 200, `Welcome back, ${email}${data.is_admin ? ' (admin)' : ''}`);
         toast('Signed in!');
 
         updateAuthUI();

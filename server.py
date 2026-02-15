@@ -1316,6 +1316,7 @@ class Handler(BaseHTTPRequestHandler):
                 "token": token, "email": email,
                 "referral_code": user["referral_code"],
                 "tier": user["tier"],
+                "is_admin": (email == ADMIN_EMAIL),
             })
 
         # ── Add contact ──
