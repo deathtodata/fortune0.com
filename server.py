@@ -1824,6 +1824,72 @@ class Handler(BaseHTTPRequestHandler):
 
             self.send_json({"purged": True, "records_removed": purged, "total": total})
 
+        # ── Admin: list all users with license keys ──
+        elif path == "/api/admin/users":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            if sess["email"] != ADMIN_EMAIL:
+                self.send_json({"error": "Admin only"}, 403); return
+
+            conn = get_db()
+            users = conn.execute("""
+                SELECT u.email, u.tier, u.referral_code, u.license_key,
+                       u.created_at,
+                       COALESCE(SUM(CASE WHEN c.amount > 0 THEN c.amount ELSE 0 END), 0) as credits
+                FROM users u
+                LEFT JOIN credits c ON c.user_email = u.email
+                GROUP BY u.email
+                ORDER BY u.created_at DESC
+            """).fetchall()
+            conn.close()
+
+            user_list = []
+            for u in users:
+                # Check if license key is still valid
+                key_status = "none"
+                if u["license_key"]:
+                    _, msg = validate_license_key(u["license_key"])
+                    key_status = msg.lower()  # "valid", "expired", etc.
+                user_list.append({
+                    "email": u["email"],
+                    "tier": u["tier"],
+                    "referral_code": u["referral_code"],
+                    "license_key": u["license_key"] or "",
+                    "key_status": key_status,
+                    "credits": round(u["credits"], 2),
+                    "created_at": u["created_at"],
+                })
+
+            self.send_json({"users": user_list, "count": len(user_list)})
+
+        # ── Admin: renew a user's license key ──
+        elif path == "/api/admin/renew-key":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            if sess["email"] != ADMIN_EMAIL:
+                self.send_json({"error": "Admin only"}, 403); return
+
+            target_email = body.get("email", "").strip().lower()
+            days = int(body.get("days", 90))
+            if not target_email:
+                self.send_json({"error": "Email required"}, 400); return
+
+            conn = get_db()
+            user = conn.execute("SELECT * FROM users WHERE email=?", [target_email]).fetchone()
+            if not user:
+                conn.close()
+                self.send_json({"error": "User not found"}, 404); return
+
+            new_key = generate_license_key(target_email, days=days)
+            conn.execute("UPDATE users SET license_key=? WHERE email=?", [new_key, target_email])
+            log_activity(conn, sess["email"], "admin_renew_key", f"Renewed key for {target_email} ({days} days)")
+            conn.commit()
+            conn.close()
+
+            self.send_json({"renewed": True, "email": target_email, "new_key": new_key, "days": days})
+
         # ── Create note ──
         elif path == "/api/notes":
             sess = self.get_user()

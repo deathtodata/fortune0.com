@@ -547,10 +547,12 @@ footer{
             <p style="color:var(--dim);font-size:12px;margin-bottom:16px;">Pull existing Stripe payment history and convert to credits. Each $1 paid = 100 credits base + 10 per month since payment as loyalty bonus.</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <button class="btn btn-gold" onclick="syncStripe()">Sync Stripe payments</button>
+                <button class="btn btn-ghost btn-sm" onclick="listUsers()">View all users + keys</button>
                 <button class="btn btn-ghost btn-sm" onclick="grantCreditsPrompt()">Grant credits</button>
                 <button class="btn btn-red btn-sm" onclick="purgeTestData()">Purge test data</button>
             </div>
             <div id="sync-result" style="display:none;margin-top:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:var(--mono);font-size:12px;"></div>
+            <div id="users-list" style="display:none;margin-top:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;"></div>
         </div>
     </div>
 </div>
@@ -1473,6 +1475,49 @@ async function grantCreditsPrompt() {
     if (ok) {
         toast(`Granted ${amount} credits to ${email}. New balance: ${data.new_balance}`);
         await refreshCredits();
+    } else {
+        toast('Failed: ' + (data.error || 'Unknown'));
+    }
+}
+
+async function listUsers() {
+    toast('Loading users...');
+    const { ok, data } = await api('GET', '/api/admin/users');
+    const el = document.getElementById('users-list');
+    el.style.display = 'block';
+    if (ok && data.users) {
+        let html = `<div style="font-size:13px;color:var(--gold);margin-bottom:8px;">${data.count} users</div>`;
+        html += `<table style="width:100%;font-size:12px;border-collapse:collapse;font-family:var(--mono);">`;
+        html += `<tr style="color:var(--dim);text-align:left;border-bottom:1px solid var(--border);">
+            <th style="padding:4px 8px;">Email</th><th style="padding:4px 8px;">Tier</th>
+            <th style="padding:4px 8px;">Key Status</th><th style="padding:4px 8px;">Credits</th>
+            <th style="padding:4px 8px;">License Key</th><th style="padding:4px 8px;">Actions</th></tr>`;
+        data.users.forEach(u => {
+            const keyColor = u.key_status === 'valid' ? 'var(--green)' : u.key_status === 'expired' ? 'var(--red)' : 'var(--dim)';
+            const tierColor = u.tier === 'active' ? 'var(--gold)' : 'var(--dim)';
+            html += `<tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:6px 8px;">${u.email}</td>
+                <td style="padding:6px 8px;color:${tierColor};">${u.tier}</td>
+                <td style="padding:6px 8px;color:${keyColor};">${u.key_status}</td>
+                <td style="padding:6px 8px;">${u.credits}</td>
+                <td style="padding:6px 8px;font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis;cursor:pointer;" title="Click to copy" onclick="navigator.clipboard.writeText('${u.license_key}');toast('Key copied!')">${u.license_key || '—'}</td>
+                <td style="padding:6px 8px;"><button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 8px;" onclick="renewKey('${u.email}')">Renew</button></td>
+            </tr>`;
+        });
+        html += `</table>`;
+        el.innerHTML = html;
+    } else {
+        el.innerHTML = `<span style="color:var(--red);">${data.error || 'Failed to load users'}</span>`;
+    }
+}
+
+async function renewKey(email) {
+    const days = parseInt(prompt(`Renew key for ${email}. How many days?`, '90'));
+    if (!days || days <= 0) return;
+    const { ok, data } = await api('POST', '/api/admin/renew-key', { email, days });
+    if (ok) {
+        toast(`Key renewed for ${email} (${days} days)`);
+        listUsers(); // refresh the table
     } else {
         toast('Failed: ' + (data.error || 'Unknown'));
     }
