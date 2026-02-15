@@ -64,6 +64,7 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")  # whsec_...
 STRIPE_PAYMENT_LINK = os.environ.get("STRIPE_PAYMENT_LINK", "")  # https://buy.stripe.com/xxxxx
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")  # sk_live_... or sk_test_... for API calls
 SEARXNG_URL = os.environ.get("SEARXNG_URL", "")  # Your own SearXNG instance (e.g. https://d2d-search.onrender.com)
+BRAVE_SEARCH_KEY = os.environ.get("BRAVE_SEARCH_KEY", "")  # Free: https://brave.com/search/api/ (2000 queries/mo)
 ADMIN_EMAIL = os.environ.get("F0_ADMIN_EMAIL", "admin@example.com")  # Set F0_ADMIN_EMAIL env var in production
 ADMIN_SECRET = os.environ.get("F0_ADMIN_SECRET", "")  # Admin login passphrase — set on Render
 IS_PRODUCTION = bool(DATABASE_URL)  # True on Render (has PostgreSQL), False on localhost
@@ -630,32 +631,58 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as e:
                 sys.stderr.write(f"  Domain registry search failed: {e}\n")
 
-            # ── 2. Web search via SearXNG (paid tier only) ──
+            # ── 2. Web search — Brave API or SearXNG (paid tier only) ──
             web_results = []
             web_locked = False
-            if SEARXNG_URL:
+            has_web_backend = bool(BRAVE_SEARCH_KEY or SEARXNG_URL)
+
+            if has_web_backend:
                 if sess and user_tier == "active":
-                    try:
-                        search_url = f"{SEARXNG_URL.rstrip('/')}/search?q={urllib.parse.quote(q)}&format=json&categories=general"
-                        req = urllib.request.Request(search_url, headers={
-                            "User-Agent": "death2data/1.0 (privacy search)",
-                            "Accept": "application/json",
-                        })
-                        with urllib.request.urlopen(req, timeout=12) as resp:
-                            data = json.loads(resp.read().decode())
-                            for r in data.get("results", [])[:10]:
-                                web_results.append({
-                                    "title": r.get("title", ""),
-                                    "url": r.get("url", ""),
-                                    "snippet": r.get("content", ""),
-                                    "engine": r.get("engine", ""),
-                                })
-                        if web_results:
-                            search_source = "d2d-search" if search_source == "none" else search_source + "+web"
-                    except Exception as e:
-                        sys.stderr.write(f"  SearXNG ({SEARXNG_URL}) failed: {e}\n")
+                    # Try Brave Search API first (simpler, no infra needed)
+                    if BRAVE_SEARCH_KEY and not web_results:
+                        try:
+                            brave_url = f"https://api.search.brave.com/res/v1/web/search?q={urllib.parse.quote(q)}&count=10"
+                            req = urllib.request.Request(brave_url, headers={
+                                "Accept": "application/json",
+                                "X-Subscription-Token": BRAVE_SEARCH_KEY,
+                            })
+                            with urllib.request.urlopen(req, timeout=10) as resp:
+                                data = json.loads(resp.read().decode())
+                                for r in data.get("web", {}).get("results", [])[:10]:
+                                    web_results.append({
+                                        "title": r.get("title", ""),
+                                        "url": r.get("url", ""),
+                                        "snippet": r.get("description", ""),
+                                        "engine": "brave",
+                                    })
+                            if web_results:
+                                search_source = "brave" if search_source == "none" else search_source + "+brave"
+                        except Exception as e:
+                            sys.stderr.write(f"  Brave Search failed: {e}\n")
+
+                    # Fallback to SearXNG if configured and Brave didn't return results
+                    if SEARXNG_URL and not web_results:
+                        try:
+                            search_url = f"{SEARXNG_URL.rstrip('/')}/search?q={urllib.parse.quote(q)}&format=json&categories=general"
+                            req = urllib.request.Request(search_url, headers={
+                                "User-Agent": "death2data/1.0 (privacy search)",
+                                "Accept": "application/json",
+                            })
+                            with urllib.request.urlopen(req, timeout=12) as resp:
+                                data = json.loads(resp.read().decode())
+                                for r in data.get("results", [])[:10]:
+                                    web_results.append({
+                                        "title": r.get("title", ""),
+                                        "url": r.get("url", ""),
+                                        "snippet": r.get("content", ""),
+                                        "engine": r.get("engine", ""),
+                                    })
+                            if web_results:
+                                search_source = "searxng" if search_source == "none" else search_source + "+searxng"
+                        except Exception as e:
+                            sys.stderr.write(f"  SearXNG ({SEARXNG_URL}) failed: {e}\n")
                 else:
-                    web_locked = True  # SearXNG available but user not authed/paid
+                    web_locked = True  # Web search available but user not authed/paid
 
             # Remove score field, merge
             for r in results:
