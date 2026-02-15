@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>fortune0 seeds — plant one, see what blooms</title>
+<meta property="og:title" content="Someone planted a seed for you on fortune0">
+<meta property="og:description" content="Open it to see what bloomed. You'll get one to plant too.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#09090F;--s1:#111118;--s2:#18181F;--card:#1E1E28;--border:#2A2A38;--dim:#555;--text:#9CA3AF;--white:#EAEAEA;--pink:#EC4899;--green:#10B981;--blue:#3B82F6;--amber:#F59E0B;--red:#EF4444;--purple:#8B5CF6;--cyan:#06B6D4}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--white);min-height:100vh}
+.w{max-width:640px;margin:0 auto;padding:1.5rem}
+
+header{text-align:center;padding:2rem 0 0.5rem}
+header h1{font-size:2rem;font-weight:800;letter-spacing:-1px}
+header h1 span{color:var(--green)}
+.sub{color:var(--text);font-size:0.9rem;margin-top:0.3rem}
+
+/* Live bloom feed ticker */
+.bloom-feed{overflow:hidden;height:28px;border-bottom:1px solid var(--border);margin-bottom:1rem;position:relative}
+.bloom-feed-inner{display:flex;gap:2rem;animation:ticker 30s linear infinite;white-space:nowrap;padding-top:5px}
+.bloom-item{font-size:0.7rem;color:var(--dim);flex-shrink:0}
+.bloom-item .who{color:var(--text)}
+.bloom-item .got{font-family:Consolas,monospace}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* Chain depth badge */
+.chain-badge{display:inline-flex;align-items:center;gap:0.25rem;font-size:0.65rem;padding:0.15rem 0.5rem;border-radius:4px;background:rgba(139,92,246,0.1);color:var(--purple);font-weight:700;letter-spacing:0.5px}
+
+/* Countdown */
+.countdown{font-family:Consolas,monospace;font-size:1.8rem;font-weight:800;color:var(--amber);letter-spacing:1px}
+.countdown.expired{color:var(--red);text-decoration:line-through}
+.countdown-label{font-size:0.7rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+
+/* Seed visual */
+.seed-display{text-align:center;padding:2rem 0}
+.seed-icon{width:120px;height:120px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative;transition:all 0.6s cubic-bezier(0.34,1.56,0.64,1)}
+.seed-icon.sealed{background:linear-gradient(135deg,#1a1a2e,#2a1a3e);border:2px solid var(--purple);box-shadow:0 0 30px rgba(139,92,246,0.2)}
+.seed-icon.blooming{background:linear-gradient(135deg,#0a2e1a,#1a3e2a);border:2px solid var(--green);box-shadow:0 0 40px rgba(16,185,129,0.3);transform:scale(1.1)}
+.seed-icon.revealed{border:2px solid var(--pink);box-shadow:0 0 40px rgba(236,72,153,0.3)}
+@keyframes shimmer{0%{box-shadow:0 0 20px rgba(139,92,246,0.2)}50%{box-shadow:0 0 40px rgba(139,92,246,0.4)}100%{box-shadow:0 0 20px rgba(139,92,246,0.2)}}
+.seed-icon.sealed{animation:shimmer 2s infinite}
+@keyframes bloom{0%{transform:scale(1);filter:blur(0)}30%{transform:scale(1.3);filter:blur(4px)}60%{transform:scale(0.9);filter:blur(0)}100%{transform:scale(1)}}
+.blooming-anim{animation:bloom 0.8s ease}
+@keyframes sparkle{0%,100%{opacity:0;transform:translateY(0) scale(0)}50%{opacity:1;transform:translateY(-20px) scale(1)}}
+.sparkle{position:absolute;width:6px;height:6px;border-radius:50%;animation:sparkle 0.8s ease forwards}
+
+/* Rarity */
+.rarity-common{color:#9CA3AF}.rarity-uncommon{color:var(--green)}.rarity-rare{color:var(--blue)}.rarity-epic{color:var(--purple)}.rarity-legendary{color:var(--amber)}
+.rarity-tag{display:inline-flex;align-items:center;gap:0.35rem;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;padding:0.2rem 0.6rem;border-radius:4px;background:rgba(255,255,255,0.05)}
+.rarity-tag .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.rarity-guide{display:flex;justify-content:center;gap:0.5rem;flex-wrap:wrap;margin:0.5rem 0 0}
+.rarity-pill{font-size:0.6rem;padding:0.15rem 0.4rem;border-radius:4px;background:rgba(255,255,255,0.03);border:1px solid var(--border)}
+
+/* Plant form */
+.plant-box{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:2rem;margin:1rem 0}
+.plant-box h2{font-size:1rem;margin-bottom:0.75rem}
+.plant-box p{font-size:0.8rem;color:var(--text);margin-bottom:1rem;line-height:1.5}
+.field{margin-bottom:0.75rem}
+.field label{display:block;font-size:0.7rem;color:var(--dim);margin-bottom:0.3rem;font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.field input,.field select{width:100%;padding:0.65rem 1rem;background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-size:0.9rem;font-family:inherit}
+.field input:focus{outline:none;border-color:var(--green)}
+.field input::placeholder{color:var(--dim)}
+
+.btn{padding:0.7rem 1.5rem;border:none;border-radius:8px;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.15s;display:inline-block}
+.btn:hover{transform:translateY(-1px)}
+.btn-green{background:var(--green);color:#000}
+.btn-pink{background:var(--pink);color:#fff}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-amber{background:var(--amber);color:#000}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-ghost:hover{border-color:var(--dim)}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+
+/* Bet */
+.bet-box{background:var(--s2);border:1px dashed var(--border);border-radius:8px;padding:1rem;margin-top:1rem}
+.bet-box h3{font-size:0.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--amber);margin-bottom:0.5rem}
+.bet-options{display:flex;flex-wrap:wrap;gap:0.3rem}
+.bet-chip{font-size:0.7rem;padding:0.25rem 0.6rem;border-radius:20px;border:1px solid var(--border);background:var(--s1);color:var(--text);cursor:pointer;transition:all 0.15s}
+.bet-chip:hover{border-color:var(--amber);color:var(--amber)}
+.bet-chip.picked{border-color:var(--amber);color:var(--amber);background:rgba(245,158,11,0.1)}
+
+/* Reveal card */
+.reveal-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:2rem;margin:1rem 0;text-align:center;display:none}
+.reveal-domain{font-size:1.5rem;font-weight:800;letter-spacing:-0.5px;margin:0.5rem 0}
+.reveal-concept{font-size:0.85rem;color:var(--text);line-height:1.5;margin:0.5rem 0}
+.reveal-meta{display:flex;justify-content:center;gap:1.5rem;margin-top:1rem;font-size:0.75rem;color:var(--dim)}
+
+/* Share card (screenshot-ready) */
+.share-card{background:linear-gradient(135deg,#111118,#1a1a2e);border:2px solid var(--purple);border-radius:16px;padding:2rem;margin:1rem 0;text-align:center;position:relative;overflow:hidden}
+.share-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent,rgba(139,92,246,0.05),transparent,rgba(236,72,153,0.05),transparent);animation:rotateBg 10s linear infinite}
+@keyframes rotateBg{to{transform:rotate(360deg)}}
+.share-card>*{position:relative;z-index:1}
+.share-card .brand{font-size:0.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:3px;margin-bottom:0.5rem}
+.share-card .bloom-domain{font-size:1.8rem;font-weight:900;letter-spacing:-1px}
+.share-card .bloom-desc{font-size:0.85rem;color:var(--text);margin:0.5rem 0}
+.share-card .bloom-rarity{margin:0.75rem 0}
+.share-card .bloom-chain{font-size:0.7rem;color:var(--dim);margin-top:0.5rem}
+.share-card .cta{font-size:0.75rem;color:var(--green);margin-top:1rem;font-weight:600}
+
+/* Chain reaction box */
+.chain-box{background:linear-gradient(135deg,#0a1a2e,#0a2e1a);border:1px solid var(--green);border-radius:12px;padding:1.5rem;margin:1rem 0;text-align:center}
+.chain-box h3{font-size:0.8rem;color:var(--green);margin-bottom:0.5rem}
+.chain-box p{font-size:0.8rem;color:var(--text);line-height:1.5}
+
+/* Open box */
+.open-box{background:var(--s1);border:1px solid var(--purple);border-radius:12px;padding:2rem;margin:1.5rem 0;text-align:center}
+
+/* History */
+.history h2{font-size:0.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:0.75rem}
+.seed-row{display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0.75rem;background:var(--s1);border:1px solid var(--border);border-radius:8px;margin-bottom:0.3rem;cursor:pointer;transition:all 0.15s;font-size:0.8rem}
+.seed-row:hover{border-color:var(--dim)}
+.seed-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.seed-row .to{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seed-row .domain{font-size:0.7rem;font-family:Consolas,monospace;color:var(--pink)}
+.seed-row .status{font-size:0.6rem;text-transform:uppercase;letter-spacing:1px;padding:0.1rem 0.4rem;border-radius:4px}
+.status-sealed{background:rgba(139,92,246,0.15);color:var(--purple)}
+.status-opened{background:rgba(16,185,129,0.15);color:var(--green)}
+
+/* Stats */
+.stats{display:flex;justify-content:center;gap:1.5rem;margin:1.5rem 0;flex-wrap:wrap}
+.stat{text-align:center}
+.stat .num{font-family:Consolas,monospace;font-size:1.4rem;font-weight:800;color:var(--green)}
+.stat .lbl{font-size:0.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+
+/* Leaderboard */
+.leaderboard{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin:1rem 0}
+.leaderboard h3{font-size:0.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--amber);margin-bottom:0.75rem}
+.lb-row{display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0;font-size:0.8rem}
+.lb-rank{width:20px;color:var(--dim);font-weight:700;font-size:0.75rem}
+.lb-name{flex:1}
+.lb-score{font-family:Consolas,monospace;color:var(--green);font-size:0.75rem}
+
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1.5rem;font-size:0.85rem;color:var(--white);display:none;z-index:99;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+.toast.show{display:block;animation:fadeUp 0.3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+footer{text-align:center;padding:1.5rem 0;border-top:1px solid var(--border);margin-top:1.5rem}
+footer p{font-size:0.7rem;color:var(--dim)}
+footer a{color:var(--green);text-decoration:none}
+
+@media(max-width:500px){.w{padding:0.75rem}.stats{gap:0.75rem}.reveal-meta{flex-direction:column;gap:0.3rem}.bet-options{gap:0.2rem}header h1{font-size:1.5rem}.seed-icon{width:90px;height:90px;font-size:2.2rem}.reveal-domain{font-size:1.3rem}.share-card .bloom-domain{font-size:1.4rem}.btn{padding:0.5rem 1rem;font-size:0.75rem}.plant-box{padding:1.25rem}}
+@media(max-height:500px) and (orientation:landscape){.w{padding:0.5rem 1rem}header{padding:0.5rem 0}header h1{font-size:1.3rem}.seed-icon{width:70px;height:70px;font-size:1.8rem}.plant-box{padding:1rem}.seed-display{padding:1rem 0}}
+</style>
+</head>
+<body>
+<div class="w">
+
+<header>
+  <h1>fortune0 <span>seeds</span></h1>
+  <p class="sub">Plant a seed. See what blooms. Pass it on.</p>
+  <div class="rarity-guide">
+    <span class="rarity-pill rarity-common">Common</span>
+    <span class="rarity-pill rarity-uncommon">Uncommon</span>
+    <span class="rarity-pill rarity-rare">Rare</span>
+    <span class="rarity-pill rarity-epic">Epic</span>
+    <span class="rarity-pill rarity-legendary">Legendary</span>
+  </div>
+</header>
+
+<!-- LIVE BLOOM FEED — social proof ticker -->
+<div class="bloom-feed" id="bloomFeed">
+  <div class="bloom-feed-inner" id="bloomTicker"></div>
+</div>
+
+<!-- Seed visual -->
+<div class="seed-display">
+  <div class="seed-icon sealed" id="seedIcon">&#127793;</div>
+  <p style="color:var(--dim);font-size:0.75rem;margin-top:0.75rem" id="seedLabel">sealed — waiting to bloom</p>
+</div>
+
+<!-- ═══ PLANT A SEED ═══ -->
+<div class="plant-box" id="plantBox">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+    <h2 style="margin:0">Plant a seed</h2>
+    <span class="chain-badge" id="seedsRemaining">3 seeds left</span>
+  </div>
+  <p>Send a mystery product to a friend. Neither of you sees what blooms until they open it. They get 1 seed to pass forward.</p>
+
+  <div class="field">
+    <label>Send to</label>
+    <input type="email" id="recipientEmail" placeholder="friend@email.com">
+  </div>
+
+  <div class="field">
+    <label>Your name (shown on reveal)</label>
+    <input type="text" id="senderName" placeholder="your name or alias">
+  </div>
+
+  <div class="bet-box">
+    <h3>Place a bet</h3>
+    <p style="font-size:0.75rem;color:var(--text);margin-bottom:0.5rem">Guess the category. Right = 5 bonus credits each. Wrong = bragging rights lost.</p>
+    <div class="bet-options" id="betOptions"></div>
+    <p style="font-size:0.6rem;color:var(--dim);margin-top:0.5rem" id="betLabel">No bet placed</p>
+  </div>
+
+  <div style="margin-top:1.5rem">
+    <button class="btn btn-green" onclick="plantSeed()" style="width:100%" id="plantBtn">Plant the seed</button>
+  </div>
+</div>
+
+<!-- ═══ REVEAL CARD ═══ -->
+<div class="reveal-card" id="revealCard">
+  <div class="rarity-tag" id="revealRarity"><span class="dot"></span> <span id="revealRarityText">—</span></div>
+  <div class="reveal-domain" id="revealDomain">—</div>
+  <div class="reveal-concept" id="revealConcept">—</div>
+  <div class="reveal-meta">
+    <span id="revealFrom">—</span>
+    <span id="revealDifficulty">—</span>
+    <span id="revealCategory">—</span>
+  </div>
+  <div id="revealChain" style="margin-top:0.75rem"></div>
+</div>
+
+<!-- ═══ SHARE CARD (screenshot-ready) ═══ -->
+<div class="share-card" id="shareCard" style="display:none">
+  <div class="brand">fortune0 seeds</div>
+  <div class="bloom-domain" id="shareDomain">—</div>
+  <div class="bloom-desc" id="shareDesc">—</div>
+  <div class="bloom-rarity" id="shareRarity"></div>
+  <div class="bloom-chain" id="shareChain">Chain depth: 1</div>
+  <div class="cta">fortune0.com — the domain is the meme</div>
+</div>
+
+<!-- Share + chain reaction buttons -->
+<div id="postRevealActions" style="display:none;margin:1rem 0">
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center">
+    <button class="btn btn-pink" onclick="copyShareLink()">Copy share link</button>
+    <button class="btn btn-purple" onclick="copyShareCard()">Copy for screenshot</button>
+    <button class="btn btn-amber" onclick="openAsMeme()">Open as meme</button>
+    <button class="btn btn-cyan" onclick="challengeDomain()" style="background:var(--cyan);color:#000">Challenge it</button>
+    <button class="btn btn-ghost" onclick="resetPlanter()">Plant another</button>
+  </div>
+</div>
+
+<!-- ═══ CHAIN REACTION BOX (shown to recipients after opening) ═══ -->
+<div class="chain-box" id="chainBox" style="display:none">
+  <h3>You got a seed too</h3>
+  <p>Every bloom comes with 1 seed to plant for someone else. Keep the chain going.</p>
+  <button class="btn btn-green" onclick="claimChainSeed()" style="margin-top:1rem">Plant your seed</button>
+</div>
+
+<!-- ═══ OPEN A RECEIVED SEED ═══ -->
+<div id="openBox" style="display:none">
+  <div class="open-box">
+    <p style="font-size:0.85rem;color:var(--text);margin-bottom:0.3rem">You received a seed from</p>
+    <p style="font-size:1.3rem;font-weight:800" id="openFrom">—</p>
+
+    <!-- Countdown timer -->
+    <div style="margin:1.5rem 0">
+      <div class="countdown" id="openCountdown">47:59:32</div>
+      <div class="countdown-label">before this seed expires</div>
+    </div>
+
+    <div id="openChainInfo" style="font-size:0.7rem;color:var(--dim);margin-bottom:1rem"></div>
+    <button class="btn btn-green" onclick="openSeed()" style="width:100%">Open the seed</button>
+    <p style="font-size:0.7rem;color:var(--dim);margin-top:0.75rem">You'll see what bloomed + get 1 seed to plant for someone else</p>
+  </div>
+</div>
+
+<!-- ═══ LEADERBOARD ═══ -->
+<div class="leaderboard" id="leaderboard">
+  <h3>Top planters</h3>
+  <div id="lbRows"></div>
+</div>
+
+<!-- ═══ HISTORY ═══ -->
+<div class="history" id="historySection">
+  <h2>Your seeds</h2>
+  <div id="historyList"></div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="num" id="statPlanted">0</div><div class="lbl">Planted</div></div>
+  <div class="stat"><div class="num" id="statOpened">0</div><div class="lbl">Opened</div></div>
+  <div class="stat"><div class="num" id="statBetsWon">0</div><div class="lbl">Bets Won</div></div>
+  <div class="stat"><div class="num" id="statChainDepth">0</div><div class="lbl">Chain Depth</div></div>
+</div>
+
+<footer>
+  <p><a href="https://fortune0.com">fortune0</a> · <a href="fortune0-memes.html">memes</a> · <a href="fortune0-challenge.html">challenge</a> · <a href="fortune0-tiers.html">tiers</a></p>
+  <p style="margin-top:0.25rem">Open a seed. Get a seed. Plant a seed. Repeat.</p>
+</footer>
+
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  DOMAINS
+// ═══════════════════════════════════════════
+
+const DOMAINS = [
+  {d:"toneswitch.com",c:"AI tool that adjusts writing tone",cat:"ai",diff:"easy"},
+  {d:"brandaidkit.com",c:"AI-powered brand identity builder",cat:"ai",diff:"medium"},
+  {d:"onedollaragent.com",c:"AI agent marketplace at $1 each",cat:"ai",diff:"medium"},
+  {d:"calriven.com",c:"AI calendar intelligence engine",cat:"ai",diff:"hard"},
+  {d:"tweetaudit.com",c:"AI-powered social media audit tool",cat:"ai",diff:"easy"},
+  {d:"ghostmemeter.com",c:"AI that detects when you're being ghosted",cat:"ai",diff:"medium"},
+  {d:"sellthismvp.com",c:"AI generates sales copy for your MVP",cat:"ai",diff:"easy"},
+  {d:"knowwhatstuck.com",c:"AI analyzes what content resonated most",cat:"ai",diff:"medium"},
+  {d:"ipomyidea.com",c:"AI valuates your startup idea",cat:"ai",diff:"hard"},
+  {d:"whoswronghere.com",c:"AI argument mediator",cat:"ai",diff:"medium"},
+  {d:"howmucharemyideasworth.com",c:"AI-powered idea valuation engine",cat:"ai",diff:"medium"},
+  {d:"hollowtown.com",c:"Atmospheric horror narrative platform",cat:"fun",diff:"hard"},
+  {d:"accentwars.com",c:"Accent battle game — who does it best?",cat:"fun",diff:"medium"},
+  {d:"mascotrooms.com",c:"Create and battle custom mascots",cat:"fun",diff:"medium"},
+  {d:"roastthebrand.com",c:"Comedic brand roasting game",cat:"fun",diff:"easy"},
+  {d:"gachavibe.com",c:"Gacha-style random vibe generator",cat:"fun",diff:"medium"},
+  {d:"softthrowdown.com",c:"Gentle competition platform",cat:"fun",diff:"easy"},
+  {d:"vibecastgame.com",c:"Cast vibes and see who matches",cat:"fun",diff:"medium"},
+  {d:"mascotmurder.com",c:"Whodunit mystery with brand mascots",cat:"fun",diff:"hard"},
+  {d:"trilliondollarsite.com",c:"Million dollar homepage but way bigger",cat:"fun",diff:"easy"},
+  {d:"dealordelete.com",c:"Quick-fire deal negotiation game",cat:"fun",diff:"easy"},
+  {d:"cringerelay.com",c:"Pass the cringe — social relay game",cat:"fun",diff:"easy"},
+  {d:"onepennymeme.com",c:"Meme marketplace at 1 cent each",cat:"fun",diff:"easy"},
+  {d:"finishmeme.com",c:"Collaborative meme finishing game",cat:"fun",diff:"easy"},
+  {d:"xchangememe.com",c:"Meme stock exchange",cat:"fun",diff:"medium"},
+  {d:"jkyousuck.com",c:"Joke roast generator",cat:"fun",diff:"easy"},
+  {d:"stillnolaunch.com",c:"Countdown to never launching",cat:"fun",diff:"easy"},
+  {d:"fartjokesonline.com",c:"Exactly what it sounds like",cat:"fun",diff:"easy"},
+  {d:"thestartupbash.com",c:"Startup roasting social event",cat:"fun",diff:"easy"},
+  {d:"saveorsink.com",c:"Personal finance gamification platform",cat:"finance",diff:"medium"},
+  {d:"ipomyagent.com",c:"Agent-based IPO simulator",cat:"finance",diff:"hard"},
+  {d:"thebestcashflows.com",c:"Cash flow analysis templates",cat:"finance",diff:"medium"},
+  {d:"thebestrateofreturn.com",c:"Rate of return calculator & education",cat:"finance",diff:"medium"},
+  {d:"installkernel.com",c:"Real estate CRM with local-first data",cat:"saas",diff:"hard"},
+  {d:"vaultdaemon.com",c:"Encrypted vault management daemon",cat:"saas",diff:"hard"},
+  {d:"blamechain.com",c:"Accountability chain for team projects",cat:"saas",diff:"medium"},
+  {d:"traitapi.com",c:"Personality trait API for apps",cat:"saas",diff:"hard"},
+  {d:"death2data.com",c:"Privacy-first search engine",cat:"saas",diff:"hard"},
+  {d:"tagoftrust.com",c:"Trust verification tagging system",cat:"saas",diff:"medium"},
+  {d:"proofofvibe.com",c:"Vibe verification protocol",cat:"saas",diff:"medium"},
+  {d:"fortune0.com",c:"Open incubator — 230 domains, one membership",cat:"marketplace",diff:"hard"},
+  {d:"soulfra.com",c:"Soul-based infrastructure marketplace",cat:"marketplace",diff:"hard"},
+  {d:"wrongtab.com",c:"Browser extension for accidental tab detection",cat:"tool",diff:"easy"},
+  {d:"calclip.com",c:"Clipboard calculator for video calls",cat:"tool",diff:"easy"},
+  {d:"monstercal.com",c:"Monster-themed calendar app",cat:"tool",diff:"easy"},
+  {d:"slamcal.com",c:"Aggressive scheduling tool",cat:"tool",diff:"easy"},
+  {d:"fakefocus.com",c:"Focus simulator for remote workers",cat:"tool",diff:"easy"},
+  {d:"dollarsentence.com",c:"Write a sentence, earn a dollar",cat:"tool",diff:"easy"},
+  {d:"finishthisidea.com",c:"Idea completion accountability tool",cat:"tool",diff:"easy"},
+  {d:"pimpmychrome.com",c:"Chrome browser customization toolkit",cat:"tool",diff:"medium"},
+  {d:"lowkeydrop.com",c:"Anonymous content dropping tool",cat:"tool",diff:"easy"},
+  {d:"planmodeagain.com",c:"Recursive planning tool",cat:"tool",diff:"easy"},
+  {d:"kindstamp.com",c:"Digital stamp tracking random acts of kindness",cat:"community",diff:"medium"},
+  {d:"oofbox.com",c:"Share your biggest oof moments",cat:"community",diff:"easy"},
+  {d:"dropyourvoice.com",c:"Anonymous voice message board",cat:"community",diff:"medium"},
+  {d:"cringeproof.com",c:"Cringe analysis & immunity building",cat:"health",diff:"medium"},
+  {d:"oofbuddy.com",c:"Emotional support for rough moments",cat:"health",diff:"medium"},
+  {d:"halfwaytomax.com",c:"Halfway progress tracker & motivator",cat:"health",diff:"easy"},
+  {d:"scaredofshipping.com",c:"Ship anxiety therapy for creators",cat:"health",diff:"easy"},
+  {d:"hookclinic.com",c:"Learn to write killer hooks",cat:"education",diff:"easy"},
+  {d:"coldstartkit.com",c:"Cold start problem solver toolkit",cat:"education",diff:"medium"},
+  {d:"gulfcoastglow.com",c:"Gulf Coast lifestyle & culture content",cat:"content",diff:"easy"},
+  {d:"hustlenice.com",c:"Hustle culture — but make it kind",cat:"content",diff:"easy"},
+  {d:"stpetepros.com",c:"St. Pete professional services directory",cat:"local",diff:"easy"},
+  {d:"tampatechhive.com",c:"Tampa Bay tech community hub",cat:"local",diff:"medium"},
+];
+
+const RARITY_MAP = {tool:'common',content:'common',education:'uncommon',community:'uncommon',local:'uncommon',health:'rare',fun:'rare',ai:'epic',saas:'epic',finance:'legendary',marketplace:'legendary'};
+const RARITY_COLORS = {common:'#9CA3AF',uncommon:'#10B981',rare:'#3B82F6',epic:'#8B5CF6',legendary:'#F59E0B'};
+const RARITY_EMOJI = {common:'&#127793;',uncommon:'&#127807;',rare:'&#127804;',epic:'&#128142;',legendary:'&#11088;'};
+const CATEGORIES = ['ai','fun','tool','saas','finance','health','community','education','content','marketplace','local'];
+
+function getRarity(cat){return RARITY_MAP[cat]||'common'}
+function seedRandom(str){let h=0;for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0}return Math.abs(h)}
+function pickDomain(seedId){return DOMAINS[seedRandom(seedId)%DOMAINS.length]}
+function generateSeedId(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let id='';for(let i=0;i<12;i++){id+=c[Math.floor(Math.random()*c.length)];if(i===3||i===7)id+='-'}return id}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+
+const API = location.hostname==='localhost'?'http://localhost:8080':'https://fortune0-com.onrender.com';
+
+let seeds = JSON.parse(localStorage.getItem('f0_seeds')||'[]');
+let seedBalance = parseInt(localStorage.getItem('f0_seed_balance')||'3');
+let chainDepth = parseInt(localStorage.getItem('f0_chain_depth')||'0');
+let currentBet = null;
+let currentSeedId = null;
+let pendingReveal = null;
+let lastRevealedDomain = null;
+
+// ═══════════════════════════════════════════
+//  LIVE BLOOM FEED — fake-real social proof
+// ═══════════════════════════════════════════
+
+function generateBloomFeed() {
+  const names = ['alex','jordan','sam','riley','casey','morgan','taylor','avery','quinn','drew','sage','kai','blake','reese','jamie','skyler','parker','hayden','emery','rowan'];
+  const times = ['2s ago','5s ago','12s ago','23s ago','34s ago','1m ago','1m ago','2m ago','3m ago','5m ago','8m ago','12m ago','15m ago','20m ago'];
+  let items = [];
+  for (let i = 0; i < 28; i++) {
+    const d = DOMAINS[Math.floor(Math.random()*DOMAINS.length)];
+    const n = names[Math.floor(Math.random()*names.length)];
+    const t = times[i % times.length];
+    const r = getRarity(d.cat);
+    const color = RARITY_COLORS[r];
+    items.push(`<span class="bloom-item"><span class="who">${n}</span> bloomed <span class="got" style="color:${color}">${d.d}</span> · ${t}</span>`);
+  }
+  // Duplicate for seamless loop
+  const html = items.join('') + items.join('');
+  document.getElementById('bloomTicker').innerHTML = html;
+}
+
+// Occasionally add a "real" bloom from local seeds
+function injectRealBloom() {
+  if (seeds.length === 0) return;
+  const s = seeds[Math.floor(Math.random()*seeds.length)];
+  const color = RARITY_COLORS[s.rarity];
+  const item = document.createElement('span');
+  item.className = 'bloom-item';
+  item.innerHTML = `<span class="who" style="color:var(--green)">you</span> planted <span class="got" style="color:${color}">${s.domain}</span> · just now`;
+  document.getElementById('bloomTicker').prepend(item);
+}
+
+// ═══════════════════════════════════════════
+//  COUNTDOWN TIMER (48h expiry)
+// ═══════════════════════════════════════════
+
+let countdownInterval = null;
+
+function startCountdown(plantedTime) {
+  const el = document.getElementById('openCountdown');
+  if (!el) return;
+  const expiry = new Date(plantedTime).getTime() + 48*60*60*1000;
+  countdownInterval = setInterval(() => {
+    const now = Date.now();
+    const left = expiry - now;
+    if (left <= 0) {
+      el.textContent = 'EXPIRED';
+      el.className = 'countdown expired';
+      clearInterval(countdownInterval);
+      return;
+    }
+    const h = Math.floor(left/3600000);
+    const m = Math.floor((left%3600000)/60000);
+    const s = Math.floor((left%60000)/1000);
+    el.textContent = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════
+//  PLANT
+// ═══════════════════════════════════════════
+
+async function plantSeed() {
+  const to = document.getElementById('recipientEmail').value.trim();
+  const from = document.getElementById('senderName').value.trim()||'Anonymous';
+  if(!to||!to.includes('@')){toast('Enter a valid email');return}
+
+  if (seedBalance <= 0) {
+    toast('No seeds left! Open a received seed to get more.');
+    return;
+  }
+
+  const seedId = generateSeedId();
+  const domain = pickDomain(seedId);
+  const rarity = getRarity(domain.cat);
+
+  // Track chain depth
+  const depth = chainDepth + 1;
+
+  const seed = {
+    id: seedId, to, from,
+    domain: domain.d, concept: domain.c,
+    category: domain.cat, rarity, difficulty: domain.diff,
+    bet: currentBet, betWon: currentBet===domain.cat,
+    planted: new Date().toISOString(), opened: null,
+    depth, expired: false
+  };
+
+  seeds.unshift(seed);
+  seedBalance--;
+  localStorage.setItem('f0_seeds', JSON.stringify(seeds));
+  localStorage.setItem('f0_seed_balance', seedBalance);
+
+  // Log to API
+  try {
+    const opts = {method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:to,domain:domain.d,source:'seed:'+seedId+':from:'+from+':depth:'+depth+':bet:'+(currentBet||'none')})};
+    const token=localStorage.getItem('ts_token');
+    if(token)opts.headers['Authorization']='Bearer '+token;
+    await fetch(API+'/api/domain-interest',opts).catch(()=>{});
+  }catch{}
+
+  currentSeedId = seedId;
+  lastRevealedDomain = domain;
+  await animateBloom(domain, rarity, from, seed.betWon, depth);
+  renderHistory(); updateStats(); updateSeedBalance();
+  injectRealBloom();
+}
+
+async function animateBloom(domain, rarity, from, betWon, depth) {
+  const icon = document.getElementById('seedIcon');
+  const label = document.getElementById('seedLabel');
+  const color = RARITY_COLORS[rarity];
+
+  // Phase 1
+  icon.className='seed-icon sealed';icon.innerHTML='&#127793;';
+  label.textContent='planting...';
+  await sleep(600);
+
+  // Phase 2: bloom
+  icon.className='seed-icon blooming blooming-anim';
+  icon.innerHTML='&#127804;';
+  label.textContent='blooming...';
+  // Sparkles
+  icon.querySelectorAll('.sparkle').forEach(s=>s.remove());
+  for(let i=0;i<10;i++){
+    const s=document.createElement('div');s.className='sparkle';
+    s.style.background=color;
+    s.style.left=(50+Math.cos(i*Math.PI/5)*45)+'%';
+    s.style.top=(50+Math.sin(i*Math.PI/5)*45)+'%';
+    s.style.animationDelay=(i*0.04)+'s';
+    icon.appendChild(s);
+  }
+  await sleep(900);
+
+  // Phase 3: reveal
+  icon.className='seed-icon revealed';
+  icon.style.borderColor=color;
+  icon.style.boxShadow='0 0 50px '+color+'60';
+  icon.innerHTML=RARITY_EMOJI[rarity];
+  label.innerHTML='<span style="color:'+color+'">'+rarity.toUpperCase()+'</span> bloom!';
+
+  // Show cards
+  showRevealCard(domain,rarity,from,betWon,depth);
+  showShareCard(domain,rarity,depth);
+}
+
+function showRevealCard(domain,rarity,from,betWon,depth){
+  const card=document.getElementById('revealCard');
+  const color=RARITY_COLORS[rarity];
+  document.getElementById('revealRarity').className='rarity-tag rarity-'+rarity;
+  document.getElementById('revealRarityText').textContent=rarity;
+  document.getElementById('revealDomain').textContent=domain.d;
+  document.getElementById('revealDomain').style.color=color;
+  document.getElementById('revealConcept').textContent=domain.c;
+  document.getElementById('revealFrom').textContent='From: '+from;
+  document.getElementById('revealDifficulty').textContent='Difficulty: '+domain.diff;
+  document.getElementById('revealCategory').textContent='Category: '+domain.cat;
+  document.getElementById('revealChain').innerHTML=depth?'<span class="chain-badge">Chain depth: '+depth+'</span>':'';
+  card.style.display='block';card.style.borderColor=color;
+  document.getElementById('postRevealActions').style.display='block';
+  document.getElementById('plantBox').style.display='none';
+  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  if(betWon)toast('BET WON! You guessed '+domain.cat+' — 5 bonus credits each!');
+  else if(currentBet)toast('Bet lost — guessed '+currentBet+', got '+domain.cat);
+}
+
+// Mystery taglines — never leak product details in shares
+const MYSTERY_LINES = [
+  "you already know","don't ask","exactly what you think","self-explanatory",
+  "figure it out","you can't unsee it","yes, really","it's real",
+  "try not to share this","go ahead, screenshot it","this one hits different",
+  "you weren't supposed to see this","the name is the pitch",
+  "say it out loud","read it again, slowly","someone bought this",
+  "real domain, real product","built behind closed doors",
+];
+function getRandomMystery(){return MYSTERY_LINES[Math.floor(Math.random()*MYSTERY_LINES.length)]}
+
+// Shock scoring — how memetic is the domain name?
+const SHOCK_WORDS = ['death','kill','murder','suck','shit','dumb','trash','cringe','oof','yikes','ruin','ghost','blame','fake','wrong','roast','bash','war','fart','pimp','delulu'];
+function shockScore(d){let s=0;d=d.toLowerCase();SHOCK_WORDS.forEach(w=>{if(d.includes(w))s+=4});if(d.length>20)s+=2;const r=getRarity(DOMAINS.find(x=>x.d===d)?.cat||'tool');if(r==='legendary')s=Math.round(s*1.5);else if(r==='epic')s=Math.round(s*1.3);return s}
+
+function showShareCard(domain,rarity,depth){
+  const color=RARITY_COLORS[rarity];
+  document.getElementById('shareCard').style.display='block';
+  document.getElementById('shareCard').style.borderColor=color;
+  document.getElementById('shareDomain').textContent=domain.d;
+  document.getElementById('shareDomain').style.color=color;
+  // ANTI-LEAK: mystery tagline instead of concept
+  document.getElementById('shareDesc').textContent=getRandomMystery();
+  document.getElementById('shareRarity').innerHTML='<span class="rarity-tag rarity-'+rarity+'"><span class="dot" style="background:'+color+'"></span> '+rarity+'</span>';
+  const shock=shockScore(domain.d);
+  document.getElementById('shareChain').textContent='Chain depth: '+(depth||1)+(shock>0?' · shock: '+shock:'');
+}
+
+function resetPlanter(){
+  document.getElementById('revealCard').style.display='none';
+  document.getElementById('shareCard').style.display='none';
+  document.getElementById('postRevealActions').style.display='none';
+  document.getElementById('chainBox').style.display='none';
+  document.getElementById('plantBox').style.display='block';
+  document.getElementById('recipientEmail').value='';
+  currentBet=null;currentSeedId=null;lastRevealedDomain=null;
+  renderBetOptions();updateSeedBalance();
+
+  const icon=document.getElementById('seedIcon');
+  icon.className='seed-icon sealed';icon.innerHTML='&#127793;';
+  icon.style.borderColor='';icon.style.boxShadow='';
+  document.getElementById('seedLabel').textContent='sealed — waiting to bloom';
+}
+
+// ═══════════════════════════════════════════
+//  CHAIN REACTION — opening gives you a seed
+// ═══════════════════════════════════════════
+
+function checkForReceivedSeed(){
+  const params=new URLSearchParams(location.search);
+  const seedId=params.get('seed');
+  const from=params.get('from')||'Someone';
+  const depth=parseInt(params.get('depth')||'1');
+  const planted=params.get('t')||new Date().toISOString(); // plant timestamp for countdown
+
+  if(seedId){
+    document.getElementById('plantBox').style.display='none';
+    document.getElementById('openBox').style.display='block';
+    document.getElementById('openFrom').textContent=decodeURIComponent(from);
+    document.getElementById('openChainInfo').textContent='This seed has traveled through '+depth+' hands before reaching you.';
+    pendingReveal={seedId,from:decodeURIComponent(from),depth,planted};
+    startCountdown(planted);
+    history.replaceState({},'',location.pathname);
+  }
+}
+
+async function openSeed(){
+  if(!pendingReveal)return;
+  if(countdownInterval)clearInterval(countdownInterval);
+  document.getElementById('openBox').style.display='none';
+
+  const domain=pickDomain(pendingReveal.seedId);
+  const rarity=getRarity(domain.cat);
+  const depth=pendingReveal.depth;
+
+  // Update chain depth
+  chainDepth=Math.max(chainDepth,depth);
+  localStorage.setItem('f0_chain_depth',chainDepth);
+
+  // Grant 1 seed to the recipient (chain reaction!)
+  seedBalance++;
+  localStorage.setItem('f0_seed_balance',seedBalance);
+
+  // Log read receipt
+  try{
+    await fetch(API+'/api/domain-interest',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:'opened',domain:domain.d,source:'seed_opened:'+pendingReveal.seedId+':depth:'+depth})}).catch(()=>{});
+  }catch{}
+
+  lastRevealedDomain=domain;
+  await animateBloom(domain,rarity,pendingReveal.from,false,depth);
+
+  // Show chain reaction prompt
+  document.getElementById('chainBox').style.display='block';
+
+  pendingReveal=null;
+  updateStats();updateSeedBalance();
+}
+
+function claimChainSeed(){
+  document.getElementById('chainBox').style.display='none';
+  resetPlanter();
+  toast('You have '+seedBalance+' seed'+(seedBalance!==1?'s':'')+' to plant!');
+  document.getElementById('recipientEmail').focus();
+}
+
+// ═══════════════════════════════════════════
+//  SHARE
+// ═══════════════════════════════════════════
+
+function copyShareLink(){
+  if(!currentSeedId)return;
+  const from=document.getElementById('senderName').value.trim()||'Someone';
+  const depth=seeds.find(s=>s.id===currentSeedId)?.depth||1;
+  const url=location.origin+location.pathname+'?seed='+currentSeedId+'&from='+encodeURIComponent(from)+'&depth='+(depth+1)+'&t='+encodeURIComponent(new Date().toISOString());
+  navigator.clipboard.writeText(url).then(()=>toast('Share link copied! Send it — they have 48 hours to open.')).catch(()=>{});
+}
+
+function copyShareCard(){
+  // ANTI-LEAK: mystery tagline in share text, never the concept
+  if(!lastRevealedDomain)return;
+  const r=getRarity(lastRevealedDomain.cat);
+  const shock=shockScore(lastRevealedDomain.d);
+  const text=`${lastRevealedDomain.d}\n\n${getRandomMystery()}\n\n${r.toUpperCase()}${shock>0?' · shock: '+shock:''}\n\nfortune0.com/seeds`;
+  navigator.clipboard.writeText(text).then(()=>toast('Share text copied — no product details leaked')).catch(()=>{});
+}
+
+function openAsMeme(){
+  // Deep link to meme page with this domain
+  if(!lastRevealedDomain)return;
+  window.open('fortune0-memes.html?d='+encodeURIComponent(lastRevealedDomain.d),'_blank');
+}
+
+function challengeDomain(){
+  // Deep link to challenge page — dare someone to explain this domain
+  if(!lastRevealedDomain)return;
+  window.open('fortune0-challenge.html?d='+encodeURIComponent(lastRevealedDomain.d),'_blank');
+}
+
+// ═══════════════════════════════════════════
+//  BETS
+// ═══════════════════════════════════════════
+
+function renderBetOptions(){
+  document.getElementById('betOptions').innerHTML=CATEGORIES.map(c=>
+    '<div class="bet-chip'+(currentBet===c?' picked':'')+'" onclick="placeBet(\''+c+'\')">'+c+'</div>'
+  ).join('');
+  document.getElementById('betLabel').textContent=currentBet?'Bet: '+currentBet+' — right = 5 bonus credits':'No bet placed';
+}
+
+function placeBet(cat){currentBet=currentBet===cat?null:cat;renderBetOptions()}
+
+// ═══════════════════════════════════════════
+//  LEADERBOARD (simulated + local)
+// ═══════════════════════════════════════════
+
+function renderLeaderboard(){
+  // Mix real local data with simulated
+  const leaders=[
+    {name:'you',score:seeds.length,real:true},
+    {name:'alex_tx',score:Math.floor(Math.random()*12)+5},
+    {name:'riv3n',score:Math.floor(Math.random()*10)+3},
+    {name:'jade.q',score:Math.floor(Math.random()*8)+2},
+    {name:'neonkai',score:Math.floor(Math.random()*6)+1},
+  ];
+  // Boost player if they've planted a lot
+  leaders.sort((a,b)=>b.score-a.score);
+  document.getElementById('lbRows').innerHTML=leaders.slice(0,5).map((l,i)=>
+    `<div class="lb-row">
+      <span class="lb-rank">${i===0?'&#127942;':i===1?'&#129352;':i===2?'&#129353;':(i+1)+'.'}</span>
+      <span class="lb-name" style="${l.real?'color:var(--green);font-weight:700':''}">${l.name}</span>
+      <span class="lb-score">${l.score} seeds</span>
+    </div>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════
+//  HISTORY + STATS
+// ═══════════════════════════════════════════
+
+function renderHistory(){
+  const el=document.getElementById('historyList');
+  if(seeds.length===0){el.innerHTML='<p style="font-size:0.8rem;color:var(--dim)">No seeds planted yet</p>';return}
+  el.innerHTML=seeds.slice(0,15).map(s=>{
+    const color=RARITY_COLORS[s.rarity];
+    return`<div class="seed-row" onclick="peekSeed('${s.id}')">
+      <div class="seed-dot" style="background:${color}"></div>
+      <span class="to">${s.to}</span>
+      <span class="domain">${s.domain}</span>
+      <span class="status ${s.opened?'status-opened':'status-sealed'}">${s.opened?'opened':'sealed'}</span>
+    </div>`;
+  }).join('');
+}
+
+function peekSeed(id){
+  const s=seeds.find(x=>x.id===id);
+  if(!s)return;
+  toast(s.rarity.toUpperCase()+': '+s.domain+' → '+s.to+(s.betWon?' — BET WON!':''));
+}
+
+function updateStats(){
+  document.getElementById('statPlanted').textContent=seeds.length;
+  document.getElementById('statOpened').textContent=seeds.filter(s=>s.opened).length;
+  document.getElementById('statBetsWon').textContent=seeds.filter(s=>s.betWon).length;
+  document.getElementById('statChainDepth').textContent=chainDepth||seeds.reduce((max,s)=>Math.max(max,s.depth||0),0);
+}
+
+function updateSeedBalance(){
+  const el=document.getElementById('seedsRemaining');
+  el.textContent=seedBalance+' seed'+(seedBalance!==1?'s':'')+' left';
+  el.style.color=seedBalance>0?'var(--purple)':'var(--red)';
+  document.getElementById('plantBtn').disabled=seedBalance<=0;
+  if(seedBalance<=0)document.getElementById('plantBtn').textContent='No seeds left';
+  else document.getElementById('plantBtn').textContent='Plant the seed';
+}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000)}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+
+function init(){
+  generateBloomFeed();
+  renderBetOptions();
+  renderHistory();
+  renderLeaderboard();
+  updateStats();
+  updateSeedBalance();
+  checkForReceivedSeed();
+}
+
+init();
+</script>
+</body>
+</html>

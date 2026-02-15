@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 ops — pick your expert</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--fg:#e8e8e8;--muted:#666;--accent:#D4AF37;--green:#22c55e;
+  --red:#ef4444;--blue:#3b82f6;--purple:#a855f7;--card:#111;--border:#222;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'SF Mono','Fira Code',monospace}
+html{font-family:var(--font);background:var(--bg);color:var(--fg)}
+body{min-height:100vh;display:flex;flex-direction:column}
+a{color:var(--accent);text-decoration:none}
+
+.top-bar{background:#0d1117;border-bottom:1px solid var(--border);padding:10px 20px;
+  display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:18px;font-weight:800;letter-spacing:-1px}
+.logo span{color:var(--accent)}
+.status{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.main{display:flex;flex:1;max-height:calc(100vh - 46px)}
+
+/* LEFT: Expert Picker */
+.sidebar{width:260px;border-right:1px solid var(--border);overflow-y:auto;padding:16px;flex-shrink:0}
+.sidebar-title{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:12px}
+.expert-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:14px;margin-bottom:10px;cursor:pointer;transition:all .2s;
+}
+.expert-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.expert-card.active{border-color:var(--accent);background:#1a1a0a}
+.expert-icon{font-size:24px;margin-bottom:6px}
+.expert-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.expert-desc{font-size:11px;color:var(--muted);line-height:1.4}
+.expert-tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;
+  margin-top:6px;background:rgba(212,175,55,0.1);color:var(--accent);
+  font-family:var(--mono)}
+
+/* RIGHT: Chat */
+.chat-area{flex:1;display:flex;flex-direction:column;min-width:0}
+.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.msg{max-width:85%;padding:14px 18px;border-radius:12px;font-size:14px;line-height:1.6}
+.msg.user{align-self:flex-end;background:var(--accent);color:#000;border-bottom-right-radius:4px}
+.msg.bot{align-self:flex-start;background:var(--card);border:1px solid var(--border);
+  border-bottom-left-radius:4px}
+.msg .expert-badge{font-size:11px;color:var(--accent);font-weight:700;margin-bottom:6px;
+  display:flex;align-items:center;gap:6px}
+.msg .reasoning{font-size:12px;color:var(--muted);margin-top:10px;padding-top:10px;
+  border-top:1px solid var(--border);font-style:italic}
+.msg pre{background:var(--bg);padding:10px;border-radius:6px;margin-top:8px;
+  font-family:var(--mono);font-size:12px;overflow-x:auto;white-space:pre-wrap}
+.msg .domain-chip{display:inline-block;background:rgba(212,175,55,0.1);
+  border:1px solid rgba(212,175,55,0.2);border-radius:4px;padding:2px 8px;
+  font-family:var(--mono);font-size:12px;margin:2px;color:var(--accent)}
+
+.input-bar{border-top:1px solid var(--border);padding:16px 20px;display:flex;gap:10px}
+.input-bar input{flex:1;background:var(--card);border:1px solid var(--border);
+  border-radius:8px;padding:12px 16px;color:var(--fg);font-size:14px;font-family:var(--font)}
+.input-bar input:focus{outline:none;border-color:var(--accent)}
+.input-bar input::placeholder{color:var(--muted)}
+.send-btn{background:var(--accent);color:#000;font-weight:700;font-size:14px;
+  padding:12px 24px;border-radius:8px;border:none;cursor:pointer}
+.send-btn:hover{background:#e8c84a}
+.send-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* DRAG & DROP */
+.drop-zone{border:2px dashed var(--border);border-radius:10px;padding:20px;
+  text-align:center;margin-top:12px;transition:all .2s;cursor:pointer}
+.drop-zone:hover,.drop-zone.over{border-color:var(--accent);background:rgba(212,175,55,0.05)}
+.drop-zone-text{font-size:12px;color:var(--muted)}
+.drop-zone-file{font-size:13px;color:var(--green);margin-top:4px;font-family:var(--mono)}
+
+/* Ollama status */
+.ollama-status{padding:12px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+.ollama-status.connected{color:var(--green)}
+.ollama-status.error{color:var(--red)}
+
+@media(max-width:700px){
+  .main{flex-direction:column}
+  .sidebar{width:100%;max-height:200px;flex-direction:row;overflow-x:auto;
+    display:flex;gap:10px;flex-wrap:nowrap;padding:12px}
+  .expert-card{min-width:180px;flex-shrink:0}
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="logo">fortune<span>0</span> ops</div>
+  <div class="status">
+    <span class="dot" id="ollamaDot" style="background:var(--muted)"></span>
+    <span id="ollamaLabel">Checking Ollama...</span>
+  </div>
+</div>
+
+<div class="main">
+  <!-- EXPERT PICKER -->
+  <div class="sidebar">
+    <div class="sidebar-title">Pick your expert</div>
+
+    <div class="expert-card active" data-expert="ops" onclick="pickExpert(this)">
+      <div class="expert-icon">🎯</div>
+      <div class="expert-name">Ops Manager</div>
+      <div class="expert-desc">Full system view. Cards, revenue, domains, spread math. The default brain.</div>
+      <div class="expert-tag">fortune0-ops</div>
+    </div>
+
+    <div class="expert-card" data-expert="domain" onclick="pickExpert(this)">
+      <div class="expert-icon">🌐</div>
+      <div class="expert-name">Domain Advisor</div>
+      <div class="expert-desc">Score any domain. Compare ideas. Find the best one to build next.</div>
+      <div class="expert-tag">230 domains</div>
+    </div>
+
+    <div class="expert-card" data-expert="cards" onclick="pickExpert(this)">
+      <div class="expert-icon">🃏</div>
+      <div class="expert-name">Card Generator</div>
+      <div class="expert-desc">Generate seed codes, random domain combos, and printable card layouts.</div>
+      <div class="expert-tag">F0-XXXX-XXXX</div>
+    </div>
+
+    <div class="expert-card" data-expert="revenue" onclick="pickExpert(this)">
+      <div class="expert-icon">💰</div>
+      <div class="expert-name">Revenue Calculator</div>
+      <div class="expert-desc">Stripe splits, member projections, break-even analysis, partner payouts.</div>
+      <div class="expert-tag">$0.47/member</div>
+    </div>
+
+    <div class="expert-card" data-expert="spread" onclick="pickExpert(this)">
+      <div class="expert-icon">🔥</div>
+      <div class="expert-name">Spread Estimator</div>
+      <div class="expert-desc">How many members from X cards? Wave projections, viral math.</div>
+      <div class="expert-tag">wave math</div>
+    </div>
+
+    <div class="expert-card" data-expert="partner" onclick="pickExpert(this)">
+      <div class="expert-icon">🤝</div>
+      <div class="expert-name">Partner Advisor</div>
+      <div class="expert-desc">Affiliate, host, builder roles. What they earn. How to onboard them.</div>
+      <div class="expert-tag">stripe connect</div>
+    </div>
+
+    <!-- DRAG & DROP -->
+    <div class="sidebar-title" style="margin-top:16px">Add context</div>
+    <div class="drop-zone" id="dropZone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('fileInput').click()">
+      <div class="drop-zone-text">Drop CSV, XLSX, or JSON<br>to load into the conversation</div>
+      <div class="drop-zone-file" id="dropFileName"></div>
+      <input type="file" id="fileInput" accept=".csv,.xlsx,.json,.txt" style="display:none" onchange="handleFile(this.files[0])">
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-area">
+    <div class="messages" id="messages">
+      <div class="msg bot">
+        <div class="expert-badge">🎯 Ops Manager</div>
+        fortune0 ops ready. 230 domains loaded. Pick an expert on the left, or just ask me anything.
+        <div class="reasoning">I know the full domain catalog, revenue model, card system, and spread math. Ask me about any domain by name, or try: "generate 5 cards", "revenue at 1000 members", "what should we build next?"</div>
+      </div>
+    </div>
+
+    <div class="input-bar">
+      <input type="text" id="userInput" placeholder="Ask anything about fortune0..." onkeydown="if(event.key==='Enter')sendMessage()">
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+    </div>
+
+    <div class="ollama-status" id="ollamaStatus">
+      Ollama: checking localhost:11434...
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DOMAIN DATABASE (baked in from spreadsheet)
+// ============================================================
+const DOMAINS = [
+  {d:"sellthismvp.com",s:81.2,g:"A",c:"AI pitch deck generator",cat:"ai",diff:"easy",mrr:174},
+  {d:"toneswitch.com",s:80.1,g:"A",c:"AI tone adjuster",cat:"ai",diff:"easy",mrr:166},
+  {d:"ghostmemeter.com",s:78,g:"A",c:"Ghosting analyzer",cat:"ai",diff:"easy",mrr:152},
+  {d:"ipomyidea.com",s:77.1,g:"A",c:"Startup idea valuator",cat:"ai",diff:"easy",mrr:146},
+  {d:"tweetaudit.com",s:76.6,g:"A",c:"Twitter analysis",cat:"ai",diff:"easy",mrr:143},
+  {d:"knowwhatstuck.com",s:76.6,g:"A",c:"AI debugging assistant",cat:"ai",diff:"easy",mrr:149},
+  {d:"death2data.com",s:76.3,g:"A",c:"Private search engine (LIVE)",cat:"saas",diff:"medium",mrr:433},
+  {d:"whoswronghere.com",s:76,g:"A",c:"AI argument settler",cat:"ai",diff:"easy",mrr:152},
+  {d:"adrgen.com",s:75.7,g:"A",c:"Ad creative generator",cat:"ai",diff:"medium",mrr:441},
+  {d:"howmucharemyideasworth.com",s:75.4,g:"A",c:"Idea valuation calculator",cat:"ai",diff:"easy",mrr:149},
+  {d:"howwasthevibe.com",s:74.9,g:"B",c:"Post-event vibe survey",cat:"tool",diff:"easy",mrr:165},
+  {d:"brandaidkit.com",s:74,g:"B",c:"Instant brand identity builder",cat:"ai",diff:"easy",mrr:149},
+  {d:"cringeproof.com",s:73.5,g:"B",c:"Pre-post cringe checker",cat:"ai",diff:"easy",mrr:137},
+  {d:"oofbuddy.com",s:72.8,g:"B",c:"Rate how bad your day was",cat:"fun",diff:"easy",mrr:127},
+  {d:"deluludrop.com",s:72,g:"B",c:"Daily delusion affirmation",cat:"fun",diff:"easy",mrr:121},
+  {d:"thevibetool.com",s:71.5,g:"B",c:"Vibe check any situation",cat:"ai",diff:"easy",mrr:118},
+  {d:"nailedittracker.com",s:71,g:"B",c:"Track your wins",cat:"tool",diff:"easy",mrr:143},
+  {d:"vibestamped.com",s:70.2,g:"B",c:"Timestamp your vibes",cat:"fun",diff:"easy",mrr:112},
+  {d:"mascotmurder.com",s:69.5,g:"B",c:"Roast any brand mascot",cat:"fun",diff:"easy",mrr:108},
+  {d:"roastthebrand.com",s:69,g:"B",c:"Comedic brand roasting game",cat:"fun",diff:"easy",mrr:105},
+  {d:"wrongtab.com",s:68.5,g:"B",c:"Browser tab detection extension",cat:"tool",diff:"easy",mrr:130},
+  {d:"onedollaragent.com",s:68,g:"B",c:"AI agent marketplace at $1 each",cat:"ai",diff:"medium",mrr:124},
+  {d:"finishthisidea.com",s:67.5,g:"B",c:"AI completes half-baked ideas",cat:"ai",diff:"easy",mrr:118},
+  {d:"accentwars.com",s:67,g:"B",c:"Accent battle game",cat:"fun",diff:"medium",mrr:102},
+  {d:"saveorsink.com",s:66.5,g:"B",c:"Personal finance gamification",cat:"finance",diff:"medium",mrr:115},
+];
+
+// ============================================================
+// EXPERT SYSTEM (local reasoning — no API needed)
+// ============================================================
+let currentExpert = 'ops';
+let uploadedData = null;
+let ollamaAvailable = false;
+
+const EXPERT_NAMES = {
+  ops: '🎯 Ops Manager',
+  domain: '🌐 Domain Advisor',
+  cards: '🃏 Card Generator',
+  revenue: '💰 Revenue Calculator',
+  spread: '🔥 Spread Estimator',
+  partner: '🤝 Partner Advisor',
+};
+
+function pickExpert(el) {
+  document.querySelectorAll('.expert-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentExpert = el.dataset.expert;
+}
+
+// ============================================================
+// LOCAL REASONING ENGINE (works without Ollama)
+// ============================================================
+function localReason(query, expert) {
+  const q = query.toLowerCase();
+
+  // DOMAIN ADVISOR
+  if (expert === 'domain' || q.includes('.com') || q.includes('.ai') || q.match(/score|grade|build next|which domain/)) {
+    // Search for specific domain
+    const match = DOMAINS.find(d => q.includes(d.d.replace('.com','').replace('.ai','')));
+    if (match) {
+      return {
+        text: `**${match.d}** — Score: ${match.s}/100 (Grade ${match.g})\n\n${match.c}\n\nCategory: ${match.cat} | Difficulty: ${match.diff} | Est MRR: $${match.mrr}/mo`,
+        reasoning: `Looked up ${match.d} in the 230-domain catalog. Score ${match.s} puts it in Grade ${match.g}. ${match.diff === 'easy' ? 'Easy build = 1 day with AI assistance.' : 'Medium/hard build = needs more time.'}`
+      };
+    }
+    // General "what to build"
+    const top5 = DOMAINS.filter(d => d.diff === 'easy').slice(0, 5);
+    return {
+      text: `**Top 5 domains to build next** (easy difficulty, highest score):\n\n${top5.map((d,i) => `${i+1}. **${d.d}** (${d.s}) — ${d.c}`).join('\n')}`,
+      reasoning: `Filtered 230 domains for easy difficulty, sorted by score. These can each be shipped in 1 day.`
+    };
+  }
+
+  // CARD GENERATOR
+  if (expert === 'cards' || q.match(/card|seed|generate|print|combo|whack/)) {
+    const count = parseInt(q.match(/(\d+)/)?.[1] || '5');
+    const cards = [];
+    for (let i = 0; i < Math.min(count, 10); i++) {
+      const seed = 'F0-' + rand4() + '-' + rand4();
+      const picks = shuffle([...DOMAINS]).slice(0, 3);
+      cards.push({seed, domains: picks});
+    }
+    return {
+      text: cards.map((c,i) => `**Card ${i+1}:** \`${c.seed}\`\n${c.domains.map(d => `  • ${d.d} — ${d.c}`).join('\n')}`).join('\n\n'),
+      reasoning: `Generated ${cards.length} unique seed codes with 3 random domains each. Print on Avery 8371 (10/sheet). QR points to fortune0.com/fortune0-scan.html?seed=CODE. Timer starts on scan (48hrs).`
+    };
+  }
+
+  // REVENUE CALCULATOR
+  if (expert === 'revenue' || q.match(/revenue|money|earn|member|stripe|split|break.?even/)) {
+    const members = parseInt(q.match(/(\d+)/)?.[1] || '100');
+    const gross = members;
+    const stripeFee = Math.round(members * 0.33 * 100) / 100;
+    const net = Math.round(members * 0.67 * 100) / 100;
+    const keep = Math.round(net * 0.70 * 100) / 100;
+    const affiliate = Math.round(net * 0.20 * 100) / 100;
+    const partner = Math.round(net * 0.10 * 100) / 100;
+    return {
+      text: `**${members} members × $1/month**\n\nGross: $${gross}/mo\nStripe fee: -$${stripeFee}\nNet: $${net}\n\n→ fortune0 keeps: **$${keep}** (70%)\n→ Affiliates get: $${affiliate} (20%)\n→ Partners get: $${partner} (10%)\n\nAnnual: **$${Math.round(keep * 12)}**/year\nBreak-even: **505 members** (covers $2,760 domain renewals)`,
+      reasoning: `Standard Stripe processing: 2.9% + 30c per transaction on $1 = $0.33 fee. Net $0.67 split 70/20/10 via Stripe Connect Express accounts. No platform fee beyond Stripe standard.`
+    };
+  }
+
+  // SPREAD ESTIMATOR
+  if (expert === 'spread' || q.match(/spread|viral|wave|referral|grow|card.*member/)) {
+    const cards = parseInt(q.match(/(\d+)/)?.[1] || '100');
+    const scanRate = 0.30, convRate = 0.20, spreadRate = 2.0;
+    let total = 0, current = cards;
+    const waves = [];
+    for (let w = 0; w < 10; w++) {
+      const scans = Math.round(current * scanRate);
+      const conv = Math.round(scans * convRate);
+      const refs = Math.round(conv * spreadRate);
+      total += conv;
+      waves.push({w, cards: current, scans, conv, refs, total});
+      current = refs;
+      if (current === 0) break;
+    }
+    return {
+      text: `**${cards} cards → ${total} members**\n\n${waves.map(w => `Wave ${w.w}: ${w.cards} out → ${w.scans} scans → ${w.conv} convert → ${w.total} total`).join('\n')}\n\nRevenue: **$${total}/month**`,
+      reasoning: `Assumptions: 30% scan rate (in-person handoff), 20% conversion (scan → paid), 2.0 spread rate (each convert shares with 2 people). Rounding kills small numbers — need 500+ cards for the chain to sustain.`
+    };
+  }
+
+  // PARTNER ADVISOR
+  if (expert === 'partner' || q.match(/partner|affiliate|host|builder|earn|payout|uppromote|connect/)) {
+    return {
+      text: `**4 ways to earn with fortune0:**\n\n**Affiliate (20% recurring)** — Get a seed code. Share it. Every member who signs up through your code pays you 20% of their $1/mo forever. At 100 referrals = $13.40/mo passive.\n\n**Local Host (10% recurring)** — Run an event, host a meetup, put cards at your venue. Everyone who joins from your location pays you 10%. At 50 venue signups = $3.35/mo.\n\n**Builder (equity shares)** — Claim a domain, ship an MVP. Earn shares from the 2,000-share builder pool. Currently $1/share.\n\n**Member (vote)** — Your $1 = your vote. Pick which domain ships next.`,
+      reasoning: `All payouts automated via Stripe Connect Express. No invoicing, no platform fee beyond Stripe 2.9% + 30c. Partners create Express accounts in 2 minutes. Revenue splits happen automatically on every payment.`
+    };
+  }
+
+  // DEFAULT OPS
+  return {
+    text: `I know 230 domains, the full revenue model, card generation, spread math, and partner payouts. Try:\n\n• "Tell me about ghostmemeter.com"\n• "Generate 5 whacky cards"\n• "Revenue at 5000 members"\n• "How many members from 200 cards?"\n• "How do affiliates earn?"`,
+    reasoning: `No specific query matched. Showing available actions. Pick an expert on the left to focus the conversation, or ask about any domain by name.`
+  };
+}
+
+function rand4() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  return Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+}
+function shuffle(arr) {
+  for (let i = arr.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ============================================================
+// OLLAMA INTEGRATION (optional — falls back to local)
+// ============================================================
+async function checkOllama() {
+  try {
+    const res = await fetch('http://localhost:11434/api/tags', {signal: AbortSignal.timeout(2000)});
+    if (res.ok) {
+      const data = await res.json();
+      const models = data.models || [];
+      const hasF0 = models.some(m => m.name.includes('fortune0'));
+      ollamaAvailable = true;
+      document.getElementById('ollamaDot').style.background = 'var(--green)';
+      document.getElementById('ollamaLabel').textContent = hasF0 ?
+        'Ollama + fortune0-ops model' : `Ollama (${models.length} models)`;
+      document.getElementById('ollamaStatus').textContent =
+        hasF0 ? 'Connected to Ollama with fortune0-ops model loaded' :
+        `Ollama running (${models.map(m=>m.name).join(', ')}). Run: ollama create fortune0-ops -f Modelfile`;
+      document.getElementById('ollamaStatus').className = 'ollama-status connected';
+    }
+  } catch(e) {
+    ollamaAvailable = false;
+    document.getElementById('ollamaDot').style.background = 'var(--muted)';
+    document.getElementById('ollamaLabel').textContent = 'Local mode (no Ollama)';
+    document.getElementById('ollamaStatus').textContent =
+      'Ollama not detected. Running in local mode — all reasoning happens in-browser. To enable Ollama: brew install ollama && ollama serve';
+    document.getElementById('ollamaStatus').className = 'ollama-status';
+  }
+}
+
+async function askOllama(prompt) {
+  try {
+    const res = await fetch('http://localhost:11434/api/generate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'fortune0-ops',
+        prompt: prompt,
+        stream: false
+      }),
+      signal: AbortSignal.timeout(30000)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.response;
+    }
+  } catch(e) {}
+  return null;
+}
+
+// ============================================================
+// CHAT
+// ============================================================
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const query = input.value.trim();
+  if (!query) return;
+
+  input.value = '';
+  addMessage(query, 'user');
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  // Try Ollama first, fall back to local
+  let response;
+  if (ollamaAvailable) {
+    const ollamaResponse = await askOllama(query);
+    if (ollamaResponse) {
+      response = {text: ollamaResponse, reasoning: 'Response from local Ollama fortune0-ops model.'};
+    }
+  }
+
+  if (!response) {
+    response = localReason(query, currentExpert);
+  }
+
+  addBotMessage(response.text, response.reasoning, currentExpert);
+
+  btn.disabled = false;
+  btn.textContent = 'Send';
+}
+
+function addMessage(text, type) {
+  const el = document.createElement('div');
+  el.className = `msg ${type}`;
+  el.textContent = text;
+  document.getElementById('messages').appendChild(el);
+  el.scrollIntoView({behavior:'smooth'});
+}
+
+function addBotMessage(text, reasoning, expert) {
+  const el = document.createElement('div');
+  el.className = 'msg bot';
+
+  // Parse markdown-ish formatting
+  let html = text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code style="background:var(--bg);padding:2px 6px;border-radius:3px;font-family:var(--mono);font-size:12px">$1</code>')
+    .replace(/\n/g, '<br>');
+
+  // Highlight domain names
+  html = html.replace(/([\w-]+\.(com|ai|io|org|net|xyz))/g,
+    '<span class="domain-chip">$1</span>');
+
+  el.innerHTML = `
+    <div class="expert-badge">${EXPERT_NAMES[expert] || expert}</div>
+    ${html}
+    ${reasoning ? `<div class="reasoning">${reasoning}</div>` : ''}
+  `;
+  document.getElementById('messages').appendChild(el);
+  el.scrollIntoView({behavior:'smooth'});
+}
+
+// ============================================================
+// DRAG & DROP FILE LOADING
+// ============================================================
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.add('over');
+}
+function handleDragLeave(e) {
+  document.getElementById('dropZone').classList.remove('over');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('over');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+function handleFile(file) {
+  if (!file) return;
+  document.getElementById('dropFileName').textContent = file.name;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    uploadedData = {name: file.name, content: text.substring(0, 5000)}; // cap at 5k chars
+    addBotMessage(
+      `Loaded **${file.name}** (${(file.size/1024).toFixed(1)} KB). I can reference this data in my answers.`,
+      `File loaded into conversation context. Content available for domain lookups, data analysis, etc.`,
+      currentExpert
+    );
+  };
+  reader.readAsText(file);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+checkOllama();
+document.getElementById('userInput').focus();
+</script>
+</body>
+</html>

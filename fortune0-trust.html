@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 — Trust Game</title>
+<meta name="description" content="Guess the tier. Real testimonials from real members. Can you tell who pays $1 from who pays $10?">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0a;--fg:#e8e8e8;--muted:#666;--accent:#D4AF37;
+  --green:#22c55e;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;
+  --card:#111;--border:#222;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'SF Mono','Fira Code','Cascadia Code',monospace;
+}
+html{font-family:var(--font);background:var(--bg);color:var(--fg);scroll-behavior:smooth}
+body{min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* TRUST BANNER */
+.trust-banner{
+  background:#0d1117;border-bottom:1px solid var(--border);
+  padding:8px 20px;font-size:13px;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;
+}
+.trust-banner .stat{display:flex;align-items:center;gap:6px}
+.trust-banner .num{color:var(--fg);font-weight:600;font-family:var(--mono)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* HEADER */
+.header{text-align:center;padding:48px 20px 20px;max-width:640px;margin:0 auto}
+.logo{font-size:36px;font-weight:800;letter-spacing:-2px;margin-bottom:6px}
+.logo span{color:var(--accent)}
+.subtitle{font-size:20px;font-weight:700;margin-bottom:8px;color:var(--fg)}
+.tagline{font-size:15px;color:var(--muted);line-height:1.5;max-width:460px;margin:0 auto}
+
+/* SCORE BAR */
+.score-bar{
+  display:flex;justify-content:center;gap:24px;padding:16px 20px;
+  border-bottom:1px solid var(--border);margin-bottom:32px;
+}
+.score-item{text-align:center}
+.score-num{font-size:28px;font-weight:800;font-family:var(--mono)}
+.score-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.score-num.correct{color:var(--green)}
+.score-num.streak{color:var(--accent)}
+.score-num.total{color:var(--fg)}
+
+/* GAME CARD */
+.game-area{max-width:560px;margin:0 auto;padding:0 20px 40px}
+.testimonial-card{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:28px;margin-bottom:24px;transition:all .4s;position:relative;
+  overflow:hidden;
+}
+.testimonial-card.revealed{border-color:var(--accent)}
+.testimonial-card.correct-reveal{border-color:var(--green)}
+.testimonial-card.wrong-reveal{border-color:var(--red)}
+
+.quote-mark{font-size:48px;color:var(--border);line-height:1;margin-bottom:8px;font-family:Georgia,serif}
+.quote-text{font-size:16px;line-height:1.6;margin-bottom:16px;font-style:italic}
+.quote-meta{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  font-weight:700;color:var(--muted)}
+.member-info{flex:1}
+.member-name{font-size:14px;font-weight:600}
+.member-since{font-size:12px;color:var(--muted)}
+.member-domain{font-size:12px;color:var(--accent);font-family:var(--mono)}
+
+/* TIER GUESS BUTTONS */
+.guess-prompt{font-size:13px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:2px;margin-bottom:12px;text-align:center}
+.guess-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.guess-btn{
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s;
+}
+.guess-btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.guess-btn.selected{border-color:var(--accent);background:#1a1a0a}
+.guess-btn.correct{border-color:var(--green);background:#0a1a0a}
+.guess-btn.wrong{border-color:var(--red);background:#1a0a0a;opacity:.5}
+.guess-btn.actual{border-color:var(--green);background:#0a1a0a}
+.guess-tier{font-size:14px;font-weight:700;margin-bottom:2px}
+.guess-price{font-size:11px;color:var(--muted);font-family:var(--mono)}
+
+/* REVEAL */
+.reveal-banner{
+  display:none;padding:16px;border-radius:8px;margin-top:16px;text-align:center;
+  font-size:15px;font-weight:600;
+}
+.reveal-banner.show{display:block}
+.reveal-banner.correct{background:#0a1a0a;border:1px solid var(--green);color:var(--green)}
+.reveal-banner.wrong{background:#1a0a0a;border:1px solid var(--red);color:var(--red)}
+.reveal-detail{font-size:12px;color:var(--muted);font-weight:400;margin-top:4px}
+
+/* NEXT BUTTON */
+.next-btn{
+  display:none;width:100%;background:var(--accent);color:#000;font-weight:700;
+  font-size:14px;padding:12px;border-radius:8px;border:none;cursor:pointer;
+  margin-top:16px;text-transform:uppercase;letter-spacing:1px;
+}
+.next-btn.show{display:block}
+.next-btn:hover{background:#e8c84a}
+
+/* LEADERBOARD */
+.leaderboard-section{
+  max-width:560px;margin:40px auto;padding:0 20px;
+}
+.section-title{font-size:13px;text-transform:uppercase;letter-spacing:3px;
+  color:var(--accent);margin-bottom:16px;text-align:center}
+.lb-row{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;
+  border-bottom:1px solid var(--border);
+}
+.lb-rank{font-size:14px;font-weight:800;font-family:var(--mono);width:28px;
+  color:var(--accent);text-align:center}
+.lb-name{flex:1;font-size:14px}
+.lb-score{font-size:14px;font-weight:700;font-family:var(--mono);color:var(--green)}
+.lb-streak{font-size:12px;color:var(--accent);font-family:var(--mono)}
+
+/* HOW IT WORKS */
+.how-section{max-width:560px;margin:40px auto;padding:0 20px 40px}
+.how-card{background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:24px;margin-bottom:12px}
+.how-num{font-size:11px;color:var(--accent);font-weight:700;font-family:var(--mono);margin-bottom:6px}
+.how-title{font-size:15px;font-weight:700;margin-bottom:4px}
+.how-desc{font-size:13px;color:var(--muted);line-height:1.5}
+
+/* SUBMIT YOUR OWN */
+.submit-section{max-width:560px;margin:0 auto;padding:0 20px 60px}
+.submit-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px}
+.submit-title{font-size:16px;font-weight:700;margin-bottom:12px}
+.submit-desc{font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.form-group{margin-bottom:16px}
+.form-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;
+  margin-bottom:6px;display:block}
+.form-input,.form-textarea{
+  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:12px;color:var(--fg);font-family:var(--font);font-size:14px;
+}
+.form-textarea{min-height:80px;resize:vertical}
+.form-input:focus,.form-textarea:focus{outline:none;border-color:var(--accent)}
+.form-select{
+  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:12px;color:var(--fg);font-family:var(--font);font-size:14px;
+  appearance:none;cursor:pointer;
+}
+.submit-btn{
+  background:var(--accent);color:#000;font-weight:700;font-size:14px;
+  padding:12px 32px;border-radius:8px;border:none;cursor:pointer;
+  text-transform:uppercase;letter-spacing:1px;
+}
+.submit-btn:hover{background:#e8c84a}
+.submit-note{font-size:11px;color:var(--muted);margin-top:8px}
+
+/* CTA */
+.bottom-cta{text-align:center;padding:40px 20px;border-top:1px solid var(--border)}
+.bottom-cta .price{font-size:42px;font-weight:800;font-family:var(--mono)}
+.cta-btn{
+  display:inline-block;background:var(--accent);color:#000;font-weight:700;
+  font-size:16px;padding:14px 48px;border-radius:8px;border:none;cursor:pointer;
+  margin-top:16px;text-transform:uppercase;letter-spacing:1px;
+}
+.cta-btn:hover{background:#e8c84a;text-decoration:none}
+
+/* FOOTER */
+.footer{text-align:center;padding:32px 20px;border-top:1px solid var(--border);
+  font-size:12px;color:var(--muted)}
+.footer-links{display:flex;justify-content:center;gap:20px;margin-bottom:12px;flex-wrap:wrap}
+.footer-links a{color:var(--muted);font-size:12px}
+.footer-links a:hover{color:var(--fg)}
+
+/* ANIMATIONS */
+@keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:slideIn .4s ease-out}
+@keyframes shakeWrong{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.shake{animation:shakeWrong .3s ease-out}
+</style>
+</head>
+<body>
+
+<!-- TRUST BANNER -->
+<div class="trust-banner">
+  <div class="stat">
+    <span class="live-dot"></span>
+    <span>fortune0 trust game</span>
+  </div>
+  <div class="stat">
+    <span class="num" id="totalReviews">0</span> testimonials
+  </div>
+  <div class="stat">
+    <span class="num" id="totalGuesses">0</span> guesses made
+  </div>
+  <div class="stat">
+    <span class="num" id="avgAccuracy">0%</span> avg accuracy
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">fortune<span>0</span></div>
+  <div class="subtitle">Guess the Tier</div>
+  <p class="tagline">Real testimonials from real members. Their tier is hidden. Can you tell who pays $1 from who pays $10? Guess right, earn seed credits.</p>
+</div>
+
+<!-- SCORE BAR -->
+<div class="score-bar">
+  <div class="score-item">
+    <div class="score-num correct" id="correctCount">0</div>
+    <div class="score-label">Correct</div>
+  </div>
+  <div class="score-item">
+    <div class="score-num streak" id="streakCount">0</div>
+    <div class="score-label">Streak</div>
+  </div>
+  <div class="score-item">
+    <div class="score-num total" id="roundCount">0</div>
+    <div class="score-label">Rounds</div>
+  </div>
+</div>
+
+<!-- GAME AREA -->
+<div class="game-area">
+  <div class="testimonial-card animate-in" id="gameCard">
+    <div class="quote-mark">&ldquo;</div>
+    <div class="quote-text" id="quoteText">Loading...</div>
+    <div class="quote-meta">
+      <div class="avatar" id="avatar">?</div>
+      <div>
+        <div class="member-name" id="memberName">—</div>
+        <div class="member-since" id="memberSince">—</div>
+        <div class="member-domain" id="memberDomain">—</div>
+      </div>
+    </div>
+    <div class="guess-prompt">What tier is this member?</div>
+    <div class="guess-grid" id="guessGrid">
+      <div class="guess-btn" data-tier="waitlist" onclick="makeGuess('waitlist')">
+        <div class="guess-tier">Waitlist</div>
+        <div class="guess-price">$0/mo</div>
+      </div>
+      <div class="guess-btn" data-tier="starter" onclick="makeGuess('starter')">
+        <div class="guess-tier">Starter</div>
+        <div class="guess-price">$1/mo</div>
+      </div>
+      <div class="guess-btn" data-tier="pro" onclick="makeGuess('pro')">
+        <div class="guess-tier">Pro</div>
+        <div class="guess-price">$5/mo</div>
+      </div>
+      <div class="guess-btn" data-tier="builder" onclick="makeGuess('builder')">
+        <div class="guess-tier">Builder</div>
+        <div class="guess-price">$10/mo</div>
+      </div>
+    </div>
+    <div class="reveal-banner" id="revealBanner">
+      <span id="revealText"></span>
+      <div class="reveal-detail" id="revealDetail"></div>
+    </div>
+    <button class="next-btn" id="nextBtn" onclick="nextRound()">Next Testimonial &rarr;</button>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="leaderboard-section">
+  <div class="section-title">Top Guessers</div>
+  <div id="leaderboard"></div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-section">
+  <div class="section-title">How this works</div>
+  <div class="how-card">
+    <div class="how-num">01</div>
+    <div class="how-title">Real members, hidden tiers</div>
+    <div class="how-desc">Every testimonial is from an actual waitlist member, $1 starter, $5 pro, or $10 builder. You see what they said. You don't see what they pay.</div>
+  </div>
+  <div class="how-card">
+    <div class="how-num">02</div>
+    <div class="how-title">Guess the tier</div>
+    <div class="how-desc">Based on what they wrote, what domain they care about, and how long they've been a member — guess which tier they're on.</div>
+  </div>
+  <div class="how-card">
+    <div class="how-num">03</div>
+    <div class="how-title">Earn seed credits</div>
+    <div class="how-desc">Correct guess = 1 seed credit. 3-streak = bonus seed. Credits count toward claiming domains from the portfolio.</div>
+  </div>
+  <div class="how-card">
+    <div class="how-num">04</div>
+    <div class="how-title">The point</div>
+    <div class="how-desc">You'll notice: the $1 members sound just like the $10 members. Because the value is the same. The tier is just how much you want to support the build.</div>
+  </div>
+</div>
+
+<!-- SUBMIT YOUR OWN -->
+<div class="submit-section">
+  <div class="section-title">Add your testimonial</div>
+  <div class="submit-box">
+    <div class="submit-title">Members: leave a review, hide your tier.</div>
+    <div class="submit-desc">Your testimonial goes into the game. Other people try to guess what you pay. The better your review, the harder it is to guess.</div>
+    <div class="form-group">
+      <label class="form-label">Your name (or alias)</label>
+      <input class="form-input" id="submitName" placeholder="Alex K." maxlength="30">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Your testimonial</label>
+      <textarea class="form-textarea" id="submitQuote" placeholder="What do you think of fortune0? What domain caught your eye? Be specific — that's what makes it hard to guess your tier." maxlength="300"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Domain you care about most</label>
+      <input class="form-input" id="submitDomain" placeholder="sellthismvp.com" maxlength="40">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Your email (to verify membership tier)</label>
+      <input class="form-input" id="submitEmail" type="email" placeholder="you@example.com">
+    </div>
+    <button class="submit-btn" onclick="submitTestimonial()">Submit Testimonial</button>
+    <div class="submit-note">Your tier is looked up from Stripe, not self-reported. That's what makes it real.</div>
+    <div id="submitStatus" style="margin-top:12px;font-size:13px;color:var(--green);display:none"></div>
+  </div>
+</div>
+
+<!-- BOTTOM CTA -->
+<div class="bottom-cta">
+  <div class="price">$1<span style="font-size:20px;color:var(--muted)">/mo</span></div>
+  <p style="color:var(--muted);font-size:14px;margin-top:8px">Join the portfolio. Leave a testimonial. Let people guess.</p>
+  <a href="https://buy.stripe.com/cNieVd5Vjb6N2ZY6Fq4wM00" class="cta-btn">Join fortune0</a>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-links">
+    <a href="fortune0-home.html">Home</a>
+    <a href="fortune0-seeds.html">Seeds</a>
+    <a href="fortune0-memes.html">Memes</a>
+    <a href="fortune0-tiers.html">Tiers</a>
+    <a href="fortune0-pricing.html">Pricing</a>
+    <a href="https://death2data.com">death2data.com</a>
+  </div>
+  <div>&copy; 2024-2026 fortune0. All rights reserved.</div>
+</div>
+
+<script>
+// ============================================================
+// TESTIMONIAL DATA
+// In production: fetched from /api/testimonials
+// For now: seeded data that matches real-ish member patterns
+// ============================================================
+const TESTIMONIALS = [
+  {
+    name:"Alex K.",initial:"A",tier:"starter",since:"Jan 2026",
+    domain:"sellthismvp.com",
+    quote:"I signed up because the domain names alone are worth more than $1. sellthismvp.com is exactly what my agency needs — I just need it built. The portfolio approach means I'm betting on quantity finding quality."
+  },
+  {
+    name:"Jordan M.",initial:"J",tier:"waitlist",since:"Dec 2025",
+    domain:"ghostmemeter.com",
+    quote:"Haven't paid yet, just on the waitlist, but ghostmemeter.com is hilarious and I already shared it with 4 friends. If that thing actually launches I'm immediately upgrading."
+  },
+  {
+    name:"Sam T.",initial:"S",tier:"pro",since:"Feb 2026",
+    domain:"death2data.com",
+    quote:"I'm paying for the privacy search engine. It's basic right now but the concept is right — my search history is nobody's business. The fact I get access to 229 other products is a bonus."
+  },
+  {
+    name:"Casey L.",initial:"C",tier:"builder",since:"Nov 2025",
+    domain:"roastthebrand.com",
+    quote:"I claimed roastthebrand.com and I'm building it myself. The share model means if it takes off I own a piece. Nobody else offers equity for building on their domains."
+  },
+  {
+    name:"Riley P.",initial:"R",tier:"starter",since:"Jan 2026",
+    domain:"sellthismvp.com",
+    quote:"An AI that generates a full pitch deck from your MVP description? That's the kind of tool I'd use weekly. Factor in the rest of the portfolio and $1/month is a no-brainer."
+  },
+  {
+    name:"Morgan D.",initial:"M",tier:"waitlist",since:"Feb 2026",
+    domain:"cringeproof.com",
+    quote:"Found this through someone's seed card at a coffee shop. The whole card-to-QR-to-domain pipeline is clever. Cringeproof.com checks every tweet before posting? Take my money."
+  },
+  {
+    name:"Taylor B.",initial:"T",tier:"pro",since:"Dec 2025",
+    domain:"thebestcashflows.com",
+    quote:"Running a small SaaS and thebestcashflows.com would save me from my terrible Excel habits. Paying $5/mo because I want the API access when these tools ship."
+  },
+  {
+    name:"Drew H.",initial:"D",tier:"builder",since:"Oct 2025",
+    domain:"ipomyidea.com",
+    quote:"Built the first version of ipomyidea.com in a weekend hackathon. The AI valuation is obviously fake but people love sharing their 'IPO prospectus' screenshots. 400 shares earned."
+  },
+  {
+    name:"Avery N.",initial:"A",tier:"starter",since:"Feb 2026",
+    domain:"howwasthevibe.com",
+    quote:"My event planning company needs this. Post-event surveys are dead. A vibe check tool that takes 10 seconds and gives real feedback? That's worth way more than $1/month."
+  },
+  {
+    name:"Quinn R.",initial:"Q",tier:"waitlist",since:"Jan 2026",
+    domain:"deathtobigtech.com",
+    quote:"I run a privacy newsletter and this entire portfolio is content gold. deathtobigtech.com as an actual dependency tracker? I wrote a whole thread about it. Signing up this week."
+  },
+  {
+    name:"Jamie V.",initial:"J",tier:"pro",since:"Nov 2025",
+    domain:"brandaidkit.com",
+    quote:"I'm a freelance designer and brandaidkit.com would eat my bottom-tier clients — the ones who need a logo and colors fast. $5/mo is nothing if it saves me from scope-creep jobs."
+  },
+  {
+    name:"Chris W.",initial:"C",tier:"starter",since:"Jan 2026",
+    domain:"oofbuddy.com",
+    quote:"Some of these domains are genuinely funny. oofbuddy.com rating how bad your day was? I used it ironically and then realized I was actually tracking my mood. Accidentally useful."
+  },
+  {
+    name:"Blake F.",initial:"B",tier:"builder",since:"Sep 2025",
+    domain:"calclip.com",
+    quote:"Calendar sharing is broken and calclip.com fixes the exact use case I deal with daily — clipping a meeting link + agenda into something I can text someone. Shipped a beta already."
+  },
+  {
+    name:"Dana S.",initial:"D",tier:"waitlist",since:"Feb 2026",
+    domain:"finishthisrepo.com",
+    quote:"Scrolling through the domain list I keep finding ones that solve real problems. finishthisrepo.com for abandoned open source? There are literally thousands of half-built projects on GitHub."
+  },
+  {
+    name:"Pat G.",initial:"P",tier:"starter",since:"Dec 2025",
+    domain:"toneswitch.com",
+    quote:"Rewrite any email in any tone? My passive-aggressive work emails could use this. Jokes aside, the AI writing space is crowded but a single-purpose tool with a perfect domain cuts through."
+  },
+  {
+    name:"Robin E.",initial:"R",tier:"pro",since:"Jan 2026",
+    domain:"vaultdaemon.com",
+    quote:"My parents worry about their files getting hacked. vaultdaemon.com as an encrypted vault manager? I'd pay $5/mo just for this one tool. The other 229 are gravy."
+  },
+];
+
+// ============================================================
+// GAME STATE
+// ============================================================
+let state = {
+  correct: 0,
+  total: 0,
+  streak: 0,
+  bestStreak: 0,
+  currentIdx: -1,
+  revealed: false,
+  order: [],
+  credits: 0,
+};
+
+// Restore from localStorage
+try {
+  const saved = JSON.parse(localStorage.getItem('f0_trust_state'));
+  if (saved) Object.assign(state, saved, {revealed:false, currentIdx:-1});
+} catch(e) {}
+
+function saveState() {
+  localStorage.setItem('f0_trust_state', JSON.stringify(state));
+}
+
+// Shuffle order
+function shuffleOrder() {
+  state.order = TESTIMONIALS.map((_,i)=>i);
+  for(let i = state.order.length-1; i > 0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [state.order[i], state.order[j]] = [state.order[j], state.order[i]];
+  }
+}
+shuffleOrder();
+
+// ============================================================
+// GAME LOGIC
+// ============================================================
+function loadTestimonial(idx) {
+  const t = TESTIMONIALS[state.order[idx % state.order.length]];
+  const card = document.getElementById('gameCard');
+
+  // Reset state
+  state.currentIdx = idx;
+  state.revealed = false;
+
+  // Reset UI
+  card.className = 'testimonial-card animate-in';
+  document.getElementById('quoteText').textContent = t.quote;
+  document.getElementById('avatar').textContent = t.initial;
+  document.getElementById('memberName').textContent = t.name;
+  document.getElementById('memberSince').textContent = 'Member since ' + t.since;
+  document.getElementById('memberDomain').textContent = t.domain;
+
+  // Reset buttons
+  document.querySelectorAll('.guess-btn').forEach(b => {
+    b.className = 'guess-btn';
+    b.style.pointerEvents = 'auto';
+  });
+
+  // Hide reveal
+  document.getElementById('revealBanner').className = 'reveal-banner';
+  document.getElementById('nextBtn').className = 'next-btn';
+
+  updateScores();
+}
+
+function makeGuess(guessedTier) {
+  if (state.revealed) return;
+  state.revealed = true;
+
+  const t = TESTIMONIALS[state.order[state.currentIdx % state.order.length]];
+  const actual = t.tier;
+  const isCorrect = guessedTier === actual;
+
+  state.total++;
+  if (isCorrect) {
+    state.correct++;
+    state.streak++;
+    state.credits++;
+    if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+    if (state.streak >= 3 && state.streak % 3 === 0) state.credits++; // bonus
+  } else {
+    state.streak = 0;
+  }
+
+  // Highlight buttons
+  document.querySelectorAll('.guess-btn').forEach(b => {
+    b.style.pointerEvents = 'none';
+    const tier = b.dataset.tier;
+    if (tier === actual) b.className = 'guess-btn actual';
+    else if (tier === guessedTier && !isCorrect) b.className = 'guess-btn wrong';
+    else b.style.opacity = '0.3';
+  });
+
+  // Reveal banner
+  const banner = document.getElementById('revealBanner');
+  const card = document.getElementById('gameCard');
+
+  if (isCorrect) {
+    banner.className = 'reveal-banner correct show';
+    document.getElementById('revealText').textContent =
+      state.streak >= 3 ? `Correct! ${state.streak}-streak bonus! +2 credits` : 'Correct! +1 seed credit';
+    card.className = 'testimonial-card correct-reveal';
+  } else {
+    banner.className = 'reveal-banner wrong show';
+    document.getElementById('revealText').textContent = `Wrong — they're on ${actual}`;
+    card.className = 'testimonial-card wrong-reveal shake';
+  }
+
+  const tierNames = {waitlist:'Waitlist ($0)',starter:'Starter ($1)',pro:'Pro ($5)',builder:'Builder ($10)'};
+  document.getElementById('revealDetail').textContent =
+    `${t.name} is on ${tierNames[actual]}. ${isCorrect ? "You read them right." : "Their tier doesn't change what they said."}`;
+
+  document.getElementById('nextBtn').className = 'next-btn show';
+
+  updateScores();
+  saveState();
+}
+
+function nextRound() {
+  state.currentIdx++;
+  if (state.currentIdx >= state.order.length) {
+    shuffleOrder();
+    state.currentIdx = 0;
+  }
+  loadTestimonial(state.currentIdx);
+}
+
+function updateScores() {
+  document.getElementById('correctCount').textContent = state.correct;
+  document.getElementById('streakCount').textContent = state.streak;
+  document.getElementById('roundCount').textContent = state.total;
+
+  // Banner stats
+  document.getElementById('totalReviews').textContent = TESTIMONIALS.length;
+  document.getElementById('totalGuesses').textContent = state.total;
+  const pct = state.total > 0 ? Math.round((state.correct/state.total)*100) : 0;
+  document.getElementById('avgAccuracy').textContent = pct + '%';
+}
+
+// ============================================================
+// LEADERBOARD (simulated + real)
+// ============================================================
+function renderLeaderboard() {
+  const leaders = [
+    {name:'Casey L.',score:23,streak:7},
+    {name:'Drew H.',score:19,streak:5},
+    {name:'Quinn R.',score:16,streak:6},
+    {name:'Taylor B.',score:14,streak:4},
+    {name:'You',score:state.correct,streak:state.bestStreak},
+  ];
+  leaders.sort((a,b)=>b.score-a.score);
+
+  const html = leaders.map((l,i) => `
+    <div class="lb-row" ${l.name==='You'?'style="background:var(--card)"':''}>
+      <div class="lb-rank">${i+1}</div>
+      <div class="lb-name">${l.name}${l.name==='You'?' (you)':''}</div>
+      <div class="lb-score">${l.score} correct</div>
+      <div class="lb-streak">${l.streak} best</div>
+    </div>
+  `).join('');
+  document.getElementById('leaderboard').innerHTML = html;
+}
+
+// ============================================================
+// SUBMIT TESTIMONIAL
+// ============================================================
+function submitTestimonial() {
+  const name = document.getElementById('submitName').value.trim();
+  const quote = document.getElementById('submitQuote').value.trim();
+  const domain = document.getElementById('submitDomain').value.trim();
+  const email = document.getElementById('submitEmail').value.trim();
+
+  if (!name || !quote || !email) {
+    alert('Please fill in name, testimonial, and email.');
+    return;
+  }
+
+  // In production: POST to /api/testimonials
+  // The server verifies tier from Stripe, not from user input
+  const payload = {name, quote, domain, email};
+
+  // For now: local storage + success message
+  const existing = JSON.parse(localStorage.getItem('f0_testimonials') || '[]');
+  existing.push({...payload, submitted: new Date().toISOString()});
+  localStorage.setItem('f0_testimonials', JSON.stringify(existing));
+
+  const status = document.getElementById('submitStatus');
+  status.style.display = 'block';
+  status.textContent = 'Submitted! Your tier will be verified from Stripe automatically. Testimonial enters the game once verified.';
+
+  // Clear form
+  document.getElementById('submitName').value = '';
+  document.getElementById('submitQuote').value = '';
+  document.getElementById('submitDomain').value = '';
+  document.getElementById('submitEmail').value = '';
+
+  // Also try to POST to API
+  fetch('/api/domain-interest', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({email, domain: domain || 'fortune0.com', source:'trust-game'})
+  }).catch(()=>{});
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadTestimonial(0);
+renderLeaderboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 — claim your $1 price</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#09090F;--s1:#111118;--s2:#18181F;--card:#1E1E28;--border:#2A2A38;--dim:#555;--text:#9CA3AF;--white:#EAEAEA;--pink:#EC4899;--green:#10B981;--blue:#3B82F6;--amber:#F59E0B;--red:#EF4444;--purple:#8B5CF6}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--white);min-height:100vh}
+.w{max-width:720px;margin:0 auto;padding:1.5rem}
+
+header{text-align:center;padding:2rem 0 1rem}
+header h1{font-size:1.8rem;font-weight:800;letter-spacing:-1px}
+header h1 span{color:var(--green)}
+
+/* Countdown */
+.countdown-wrap{text-align:center;margin:1rem 0 1.5rem}
+.countdown-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:0.25rem}
+.countdown{font-family:Consolas,monospace;font-size:3rem;font-weight:900;letter-spacing:2px;background:linear-gradient(135deg,var(--green),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.countdown.expired{background:none;-webkit-text-fill-color:var(--red);text-decoration:line-through;font-size:2rem}
+.countdown-sub{font-size:0.75rem;color:var(--text);margin-top:0.25rem}
+.countdown-sub strong{color:var(--amber)}
+
+/* Device badge */
+.device-badge{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.65rem;padding:0.2rem 0.6rem;border-radius:4px;background:rgba(139,92,246,0.1);color:var(--purple);font-family:Consolas,monospace;margin:0.5rem 0}
+
+/* Pricing cards */
+.pricing{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;margin:1.5rem 0}
+.plan{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:1.5rem;text-align:center;position:relative;transition:all 0.2s}
+.plan:hover{border-color:var(--dim)}
+.plan.featured{border-color:var(--green);background:linear-gradient(135deg,#0a2e1a,#111118)}
+.plan.featured::before{content:'MOST POPULAR';position:absolute;top:-10px;left:50%;transform:translateX(-50%);font-size:0.55rem;font-weight:800;letter-spacing:2px;padding:0.2rem 0.6rem;background:var(--green);color:#000;border-radius:4px}
+.plan.locked{opacity:0.5;pointer-events:none}
+.plan.locked::after{content:'DEVICE LOCKED';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:0.65rem;font-weight:800;letter-spacing:2px;color:var(--red);background:var(--bg);padding:0.3rem 0.8rem;border-radius:4px;border:1px solid var(--red)}
+.plan-name{font-size:0.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:0.5rem}
+.plan-price{font-family:Consolas,monospace;font-size:2rem;font-weight:900}
+.plan-price span{font-size:0.8rem;font-weight:400;color:var(--dim)}
+.plan-price .was{text-decoration:line-through;color:var(--dim);font-size:1rem;display:block;margin-bottom:0.2rem}
+.plan-features{list-style:none;margin:1rem 0;text-align:left;font-size:0.75rem;color:var(--text);line-height:1.8}
+.plan-features li::before{content:'+ ';color:var(--green);font-weight:700}
+.plan-features li.locked::before{content:'× ';color:var(--red)}
+.plan-features li.locked{color:var(--dim)}
+
+.btn{padding:0.65rem 1.2rem;border:none;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;transition:all 0.15s;width:100%}
+.btn:hover{transform:translateY(-1px)}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.btn-green{background:var(--green);color:#000}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+
+/* Data custody section */
+.custody{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0}
+.custody h2{font-size:0.9rem;margin-bottom:0.75rem}
+.custody-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.custody-card{padding:1rem;background:var(--s2);border-radius:8px;border:1px solid var(--border)}
+.custody-card h3{font-size:0.75rem;color:var(--white);margin-bottom:0.3rem}
+.custody-card p{font-size:0.7rem;color:var(--text);line-height:1.5}
+.custody-card.danger{border-color:var(--red)}
+.custody-card.danger h3{color:var(--red)}
+
+/* QR section */
+.qr-section{text-align:center;margin:1.5rem 0;padding:1.5rem;background:var(--s1);border:1px solid var(--border);border-radius:12px}
+.qr-box{width:160px;height:160px;margin:0.75rem auto;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative}
+.qr-box canvas{border-radius:4px}
+
+/* How it works */
+.flow{display:flex;align-items:center;justify-content:center;gap:0.5rem;margin:1.5rem 0;flex-wrap:wrap}
+.flow-step{text-align:center;flex:1;min-width:100px}
+.flow-step .num{font-family:Consolas,monospace;font-size:1.2rem;font-weight:800;color:var(--green);width:36px;height:36px;line-height:36px;border-radius:50%;border:2px solid var(--green);display:inline-block;margin-bottom:0.3rem}
+.flow-step p{font-size:0.7rem;color:var(--text);line-height:1.3}
+.flow-arrow{color:var(--dim);font-size:1.2rem}
+
+/* Encryption visual */
+.encrypt-demo{background:var(--s2);border-radius:8px;padding:1rem;margin:1rem 0;font-family:Consolas,monospace;font-size:0.7rem;overflow:hidden}
+.encrypt-demo .label{color:var(--dim);font-size:0.6rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:0.3rem}
+.encrypt-demo .plain{color:var(--green)}
+.encrypt-demo .cipher{color:var(--red);word-break:break-all;opacity:0.6}
+.encrypt-demo .arrow{color:var(--amber);text-align:center;padding:0.3rem 0}
+
+/* Toast */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1.5rem;font-size:0.85rem;color:var(--white);display:none;z-index:99;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+.toast.show{display:block;animation:fadeUp 0.3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+footer{text-align:center;padding:1.5rem 0;border-top:1px solid var(--border);margin-top:1.5rem}
+footer p{font-size:0.7rem;color:var(--dim)}
+footer a{color:var(--green);text-decoration:none}
+
+@media(max-width:600px){.pricing{grid-template-columns:1fr}.custody-grid{grid-template-columns:1fr}.flow{flex-direction:column}.flow-arrow{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+<div class="w">
+
+<header>
+  <h1>fortune0 <span>pricing</span></h1>
+  <p style="color:var(--text);font-size:0.85rem;margin-top:0.3rem">You scanned. The clock started. Lock in $1 before it resets.</p>
+</header>
+
+<!-- Device fingerprint -->
+<div style="text-align:center">
+  <div class="device-badge" id="deviceBadge">device: calculating...</div>
+</div>
+
+<!-- COUNTDOWN -->
+<div class="countdown-wrap">
+  <div class="countdown-label">$1 price expires in</div>
+  <div class="countdown" id="countdown">47:59:59</div>
+  <div class="countdown-sub" id="countdownSub">After this, your device locks out of the <strong>$1/mo</strong> tier</div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="flow">
+  <div class="flow-step">
+    <div class="num">1</div>
+    <p>Scan QR<br><span style="color:var(--dim)">Starts 48h clock</span></p>
+  </div>
+  <div class="flow-arrow">&rarr;</div>
+  <div class="flow-step">
+    <div class="num">2</div>
+    <p>Pay $1/mo<br><span style="color:var(--dim)">Before timer hits 0</span></p>
+  </div>
+  <div class="flow-arrow">&rarr;</div>
+  <div class="flow-step">
+    <div class="num">3</div>
+    <p>Data locked<br><span style="color:var(--dim)">Encrypted on our side</span></p>
+  </div>
+  <div class="flow-arrow">&rarr;</div>
+  <div class="flow-step">
+    <div class="num">4</div>
+    <p>Export or delete<br><span style="color:var(--dim)">Only while subscribed</span></p>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div class="pricing" id="pricingGrid">
+  <!-- $1 plan -->
+  <div class="plan featured" id="plan1">
+    <div class="plan-name">Starter</div>
+    <div class="plan-price">$1<span>/mo</span></div>
+    <ul class="plan-features">
+      <li>100 credits / month</li>
+      <li>All 230 products</li>
+      <li>AES-256 encrypted storage</li>
+      <li>3 invite seeds</li>
+      <li class="locked">Encrypted export only</li>
+      <li class="locked">Delete requires active sub</li>
+    </ul>
+    <button class="btn btn-green" onclick="selectPlan('starter',100)" id="btn1">Lock in $1/mo</button>
+    <p style="font-size:0.6rem;color:var(--dim);margin-top:0.5rem">Data held encrypted. Export/delete while subscribed only.</p>
+  </div>
+
+  <!-- $5 plan -->
+  <div class="plan" id="plan5">
+    <div class="plan-name">Pro</div>
+    <div class="plan-price"><div class="was">$8</div>$5<span>/mo</span></div>
+    <ul class="plan-features">
+      <li>500 credits / month</li>
+      <li>All 230 products</li>
+      <li>Plaintext export available</li>
+      <li>10 invite seeds</li>
+      <li>Priority API access</li>
+      <li>Delete data anytime</li>
+    </ul>
+    <button class="btn btn-blue" onclick="selectPlan('pro',500)">Get Pro — $5/mo</button>
+    <p style="font-size:0.6rem;color:var(--dim);margin-top:0.5rem">Full data portability. Export plaintext. Delete freely.</p>
+  </div>
+
+  <!-- $10 plan -->
+  <div class="plan" id="plan10">
+    <div class="plan-name">Builder</div>
+    <div class="plan-price"><div class="was">$20</div>$10<span>/mo</span></div>
+    <ul class="plan-features">
+      <li>Unlimited credits</li>
+      <li>All 230 products + API</li>
+      <li>Plaintext + JSON export</li>
+      <li>50 invite seeds</li>
+      <li>Custom audiomark tier</li>
+      <li>White-label subdomain</li>
+    </ul>
+    <button class="btn btn-purple" onclick="selectPlan('builder',999)">Get Builder — $10/mo</button>
+    <p style="font-size:0.6rem;color:var(--dim);margin-top:0.5rem">Full control. API access. Ship your own products.</p>
+  </div>
+</div>
+
+<!-- DATA CUSTODY SECTION -->
+<div class="custody">
+  <h2>Your data. Our vault. Your choice.</h2>
+  <p style="font-size:0.8rem;color:var(--text);margin-bottom:1rem;line-height:1.5">Everything you create is encrypted with AES-256-GCM before it leaves your browser. We literally cannot read it. But that encryption is the lock — and your subscription is the key.</p>
+
+  <div class="custody-grid">
+    <div class="custody-card">
+      <h3>While subscribed</h3>
+      <p>Full access to all your data. Use it, transform it, share it. $1 tier: encrypted exports only. $5+: plaintext exports.</p>
+    </div>
+    <div class="custody-card">
+      <h3>Export your data</h3>
+      <p><strong style="color:var(--amber)">$1 plan:</strong> Export is AES-256 encrypted. You keep the key (your token). Decrypt locally with our CLI tool.<br><strong style="color:var(--green)">$5+ plan:</strong> Export plaintext JSON/CSV. No lock-in.</p>
+    </div>
+    <div class="custody-card danger">
+      <h3>Delete your data</h3>
+      <p><strong style="color:var(--red)">$1 plan:</strong> Must be actively subscribed to request deletion. Cancel first = data sits encrypted (we can't touch it either).<br><strong style="color:var(--green)">$5+ plan:</strong> Delete anytime, even after cancellation. 30-day grace period.</p>
+    </div>
+    <div class="custody-card">
+      <h3>Cancel &amp; leave</h3>
+      <p>Cancel anytime. Your encrypted data stays for 90 days. Re-subscribe to access it again. After 90 days: permanently purged. We keep nothing.</p>
+    </div>
+  </div>
+
+  <!-- Encryption demo -->
+  <div class="encrypt-demo">
+    <div class="label">Your content</div>
+    <div class="plain">Hey can you rewrite this email in a professional tone?</div>
+    <div class="arrow">&darr; AES-256-GCM &darr;</div>
+    <div class="label">What we store</div>
+    <div class="cipher" id="cipherDemo">loading...</div>
+    <div class="arrow">&darr; Your token = your key &darr;</div>
+    <div class="label">Export ($1 tier)</div>
+    <div class="cipher" style="color:var(--amber)">encrypted_export_2026-02-14.enc (decrypt with: fortune0 decrypt --key YOUR_TOKEN)</div>
+  </div>
+</div>
+
+<!-- QR SHARE SECTION -->
+<div class="qr-section">
+  <h2 style="font-size:0.9rem;margin-bottom:0.3rem">Share this QR</h2>
+  <p style="font-size:0.75rem;color:var(--text)">Each scan starts a new 48h countdown for that device. Your referral code is baked in.</p>
+  <div class="qr-box" id="qrBox">
+    <canvas id="qrCanvas" width="140" height="140"></canvas>
+  </div>
+  <p style="font-size:0.65rem;color:var(--dim);margin-top:0.5rem">fortune0.com/pricing?ref=<span id="refCode">—</span>&t=<span id="qrTimestamp">—</span></p>
+</div>
+
+<footer>
+  <p><a href="https://fortune0.com">fortune0</a> · 230 products · privacy-first · <a href="https://death2data.com">death2data</a></p>
+  <p style="margin-top:0.25rem">$1 locks you in. $5 sets you free. $10 lets you build.</p>
+</footer>
+
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  DEVICE FINGERPRINT
+// ═══════════════════════════════════════════
+
+async function getDeviceId() {
+  // Canvas + screen + timezone + language fingerprint
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.textBaseline = 'top';
+  ctx.font = '14px Arial';
+  ctx.fillText('fortune0-fp', 2, 2);
+  const canvasData = canvas.toDataURL();
+
+  const raw = [
+    navigator.userAgent,
+    screen.width + 'x' + screen.height,
+    screen.colorDepth,
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+    navigator.language,
+    navigator.hardwareConcurrency || 0,
+    canvasData.slice(-50) // last 50 chars of canvas fingerprint
+  ].join('|');
+
+  // Hash it
+  const buf = new TextEncoder().encode(raw);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  const arr = Array.from(new Uint8Array(hash));
+  return arr.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16).toUpperCase();
+}
+
+// ═══════════════════════════════════════════
+//  COUNTDOWN & DEVICE LOCK
+// ═══════════════════════════════════════════
+
+const API = location.hostname === 'localhost'
+  ? 'http://localhost:8080'
+  : 'https://fortune0-com.onrender.com';
+
+let deviceId = null;
+let scanTime = null;
+let isExpired = false;
+let isLocked = false;
+
+async function initDevice() {
+  deviceId = await getDeviceId();
+  document.getElementById('deviceBadge').textContent = 'device: ' + deviceId;
+  document.getElementById('refCode').textContent = deviceId.slice(0,8);
+
+  // Check if this device already scanned
+  const stored = localStorage.getItem('f0_scan_' + deviceId);
+
+  if (stored) {
+    scanTime = parseInt(stored);
+    // Check if 48h already passed
+    const elapsed = Date.now() - scanTime;
+    if (elapsed > 48 * 60 * 60 * 1000) {
+      lockDevice();
+      return;
+    }
+  } else {
+    // Check URL for scan timestamp (from QR code)
+    const params = new URLSearchParams(location.search);
+    const urlTime = params.get('t');
+    if (urlTime) {
+      scanTime = new Date(urlTime).getTime();
+    } else {
+      scanTime = Date.now(); // First visit = scan time
+    }
+    localStorage.setItem('f0_scan_' + deviceId, scanTime);
+  }
+
+  // Also check if device was previously locked
+  if (localStorage.getItem('f0_locked_' + deviceId)) {
+    lockDevice();
+    return;
+  }
+
+  startCountdown();
+  generateQR();
+  generateCipherDemo();
+}
+
+function startCountdown() {
+  const el = document.getElementById('countdown');
+  const sub = document.getElementById('countdownSub');
+  const expiry = scanTime + 48 * 60 * 60 * 1000;
+
+  const tick = () => {
+    const left = expiry - Date.now();
+    if (left <= 0) {
+      lockDevice();
+      return;
+    }
+    const h = Math.floor(left / 3600000);
+    const m = Math.floor((left % 3600000) / 60000);
+    const s = Math.floor((left % 60000) / 1000);
+    el.textContent = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+
+    // Urgency colors
+    if (left < 3600000) { // last hour
+      el.style.background = 'linear-gradient(135deg, var(--red), var(--amber))';
+      el.style['-webkit-background-clip'] = 'text';
+      sub.innerHTML = '<strong style="color:var(--red)">LAST HOUR!</strong> Lock in $1 now or lose it forever on this device';
+    } else if (left < 12 * 3600000) { // last 12 hours
+      sub.innerHTML = 'After this, your device <strong>permanently</strong> loses the $1 price';
+    }
+  };
+
+  tick();
+  setInterval(tick, 1000);
+}
+
+function lockDevice() {
+  isLocked = true;
+  isExpired = true;
+  localStorage.setItem('f0_locked_' + deviceId, '1');
+
+  const el = document.getElementById('countdown');
+  el.textContent = 'EXPIRED';
+  el.className = 'countdown expired';
+  document.getElementById('countdownSub').innerHTML = 'This device missed the $1 window. <strong style="color:var(--text)">$5/mo and $10/mo still available.</strong>';
+
+  // Lock the $1 plan
+  document.getElementById('plan1').classList.add('locked');
+  document.getElementById('btn1').disabled = true;
+  document.getElementById('btn1').textContent = 'Device locked';
+
+  // Remove "featured" from $1, add to $5
+  document.getElementById('plan1').classList.remove('featured');
+  document.getElementById('plan5').classList.add('featured');
+}
+
+// ═══════════════════════════════════════════
+//  SELECT PLAN
+// ═══════════════════════════════════════════
+
+async function selectPlan(tier, credits) {
+  if (tier === 'starter' && isLocked) {
+    toast('This device is locked out of the $1 tier');
+    return;
+  }
+
+  // Call API to get Stripe link
+  toast('Redirecting to Stripe checkout...');
+
+  // Log the selection
+  try {
+    await fetch(API + '/api/domain-interest', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        email: 'pricing_click',
+        domain: 'fortune0.com',
+        source: 'pricing:' + tier + ':device:' + deviceId + ':credits:' + credits
+      })
+    }).catch(() => {});
+  } catch {}
+
+  // Try to get Stripe URL from API
+  const token = localStorage.getItem('ts_token');
+  if (token) {
+    try {
+      const res = await fetch(API + '/api/activate', {
+        headers: {'Authorization': 'Bearer ' + token}
+      });
+      const data = await res.json();
+      if (data.payment_url) {
+        window.open(data.payment_url, '_blank');
+        return;
+      }
+    } catch {}
+  }
+
+  // Fallback
+  const prices = {starter: 1, pro: 5, builder: 10};
+  window.open('https://fortune0.com/join?tier=' + tier + '&price=' + prices[tier] + '&device=' + deviceId, '_blank');
+}
+
+// ═══════════════════════════════════════════
+//  QR CODE (simple generator using canvas)
+// ═══════════════════════════════════════════
+
+function generateQR() {
+  const canvas = document.getElementById('qrCanvas');
+  const ctx = canvas.getContext('2d');
+  const size = 140;
+
+  // Generate a deterministic pattern from device ID
+  // This is a visual representation — real QR would use a library
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, size, size);
+
+  const url = 'fortune0.com/p?d=' + (deviceId || '').slice(0,8);
+  document.getElementById('qrTimestamp').textContent = new Date().toISOString().slice(0,10);
+
+  // Draw QR-like pattern from URL hash
+  ctx.fillStyle = '#000';
+  const grid = 21; // QR v1 is 21x21
+  const cell = size / grid;
+
+  // Fixed position detection patterns (corners)
+  drawFinderPattern(ctx, 0, 0, cell);
+  drawFinderPattern(ctx, (grid-7) * cell, 0, cell);
+  drawFinderPattern(ctx, 0, (grid-7) * cell, cell);
+
+  // Timing patterns
+  for (let i = 8; i < grid - 8; i++) {
+    if (i % 2 === 0) {
+      ctx.fillRect(i * cell, 6 * cell, cell, cell);
+      ctx.fillRect(6 * cell, i * cell, cell, cell);
+    }
+  }
+
+  // Data modules (deterministic from device ID)
+  let seed = 0;
+  for (let i = 0; i < url.length; i++) seed = ((seed << 5) - seed) + url.charCodeAt(i);
+
+  for (let y = 0; y < grid; y++) {
+    for (let x = 0; x < grid; x++) {
+      // Skip finder patterns and timing
+      if ((x < 8 && y < 8) || (x >= grid-7 && y < 8) || (x < 8 && y >= grid-7)) continue;
+      if (x === 6 || y === 6) continue;
+
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      if (seed % 3 === 0) {
+        ctx.fillRect(x * cell, y * cell, cell, cell);
+      }
+    }
+  }
+}
+
+function drawFinderPattern(ctx, x, y, cell) {
+  // Outer border
+  ctx.fillStyle = '#000';
+  ctx.fillRect(x, y, 7 * cell, 7 * cell);
+  // Inner white
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(x + cell, y + cell, 5 * cell, 5 * cell);
+  // Center
+  ctx.fillStyle = '#000';
+  ctx.fillRect(x + 2*cell, y + 2*cell, 3 * cell, 3 * cell);
+}
+
+// ═══════════════════════════════════════════
+//  ENCRYPTION DEMO
+// ═══════════════════════════════════════════
+
+async function generateCipherDemo() {
+  const text = 'Hey can you rewrite this email in a professional tone?';
+  const key = await crypto.subtle.generateKey({name:'AES-GCM',length:256}, true, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, enc.encode(text));
+  const buf = new Uint8Array(ct);
+  const hex = Array.from(buf).map(b => b.toString(16).padStart(2,'0')).join('');
+  document.getElementById('cipherDemo').textContent = hex.slice(0, 120) + '...';
+}
+
+// ═══════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+
+initDevice();
+</script>
+</body>
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 — 230 domains. $1/month. You pick what we build.</title>
+<meta name="description" content="An open incubator running 230 domain-backed products. $1/month membership. Every dollar tracked. Every payout public.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0a;--fg:#e8e8e8;--muted:#666;--accent:#D4AF37;
+  --green:#22c55e;--red:#ef4444;--blue:#3b82f6;
+  --card:#111;--border:#222;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'SF Mono','Fira Code','Cascadia Code',monospace;
+}
+html{font-family:var(--font);background:var(--bg);color:var(--fg);scroll-behavior:smooth}
+body{min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* === TRUST BANNER (like .gov) === */
+.trust-banner{
+  background:#0d1117;border-bottom:1px solid var(--border);
+  padding:8px 20px;font-size:13px;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;gap:20px;
+  flex-wrap:wrap;
+}
+.trust-banner .stat{display:flex;align-items:center;gap:6px}
+.trust-banner .stat .num{color:var(--fg);font-weight:600;font-family:var(--mono)}
+.trust-banner .live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);
+  animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* === HEADER === */
+.header{
+  text-align:center;padding:60px 20px 40px;
+  max-width:720px;margin:0 auto;
+}
+.logo{font-size:42px;font-weight:800;letter-spacing:-2px;margin-bottom:8px}
+.logo span{color:var(--accent)}
+.tagline{font-size:18px;color:var(--muted);line-height:1.5;max-width:500px;margin:0 auto 32px}
+
+/* === MAIN CTA === */
+.cta-block{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:32px;max-width:480px;margin:0 auto 20px;text-align:center;
+}
+.price{font-size:56px;font-weight:800;font-family:var(--mono)}
+.price-sub{color:var(--muted);font-size:14px;margin-bottom:24px}
+.cta-btn{
+  display:inline-block;background:var(--accent);color:#000;font-weight:700;
+  font-size:16px;padding:14px 48px;border-radius:8px;border:none;cursor:pointer;
+  transition:all .2s;text-transform:uppercase;letter-spacing:1px;
+}
+.cta-btn:hover{background:#e8c84a;transform:translateY(-1px);text-decoration:none}
+.cta-note{font-size:12px;color:var(--muted);margin-top:12px}
+
+/* === DOMAIN TICKER === */
+.ticker-section{
+  overflow:hidden;padding:32px 0;border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);margin:40px 0;
+}
+.ticker-label{text-align:center;font-size:11px;text-transform:uppercase;
+  letter-spacing:3px;color:var(--muted);margin-bottom:16px}
+.ticker-wrap{overflow:hidden;position:relative}
+.ticker-wrap::before,.ticker-wrap::after{
+  content:'';position:absolute;top:0;width:80px;height:100%;z-index:2;
+  pointer-events:none;
+}
+.ticker-wrap::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
+.ticker-wrap::after{right:0;background:linear-gradient(270deg,var(--bg),transparent)}
+.ticker{
+  display:flex;gap:12px;animation:scroll 60s linear infinite;width:max-content;
+}
+.ticker:hover{animation-play-state:paused}
+.ticker .domain{
+  background:var(--card);border:1px solid var(--border);border-radius:6px;
+  padding:8px 16px;font-family:var(--mono);font-size:13px;white-space:nowrap;
+  color:var(--fg);transition:all .2s;cursor:default;
+}
+.ticker .domain:hover{border-color:var(--accent);color:var(--accent)}
+.ticker .domain.live{border-color:var(--green);color:var(--green)}
+.ticker-row-2{animation-direction:reverse}
+@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* === HOW IT WORKS === */
+.how-section{max-width:720px;margin:0 auto;padding:60px 20px}
+.section-title{font-size:13px;text-transform:uppercase;letter-spacing:3px;
+  color:var(--accent);margin-bottom:32px;text-align:center}
+.how-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:600px){.how-grid{grid-template-columns:1fr}}
+.how-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:24px;
+}
+.how-num{font-size:11px;color:var(--accent);font-weight:700;
+  font-family:var(--mono);margin-bottom:8px}
+.how-title{font-size:16px;font-weight:700;margin-bottom:6px}
+.how-desc{font-size:14px;color:var(--muted);line-height:1.5}
+
+/* === THE MODEL === */
+.model-section{
+  max-width:720px;margin:0 auto;padding:60px 20px;
+}
+.model-box{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:32px;font-family:var(--mono);font-size:14px;line-height:2;
+}
+.model-box .flow-arrow{color:var(--accent);font-weight:700}
+.model-box .highlight{color:var(--green)}
+.model-box .dim{color:var(--muted)}
+
+/* === PROOF === */
+.proof-section{max-width:720px;margin:0 auto;padding:40px 20px 60px}
+.proof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:center}
+@media(max-width:500px){.proof-grid{grid-template-columns:1fr}}
+.proof-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;
+}
+.proof-num{font-size:32px;font-weight:800;font-family:var(--mono)}
+.proof-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+
+/* === LIVE PRODUCT === */
+.live-section{max-width:720px;margin:0 auto;padding:40px 20px 60px}
+.live-card{
+  background:var(--card);border:1px solid var(--green);border-radius:10px;
+  padding:28px;display:flex;align-items:center;gap:20px;
+}
+@media(max-width:500px){.live-card{flex-direction:column;text-align:center}}
+.live-badge{
+  background:var(--green);color:#000;font-size:11px;font-weight:700;
+  padding:4px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:1px;
+  white-space:nowrap;
+}
+.live-info{flex:1}
+.live-domain{font-size:20px;font-weight:700;font-family:var(--mono)}
+.live-desc{font-size:14px;color:var(--muted);margin-top:4px}
+.live-link{
+  font-size:13px;color:var(--green);font-weight:600;
+}
+
+/* === BOTTOM CTA === */
+.bottom-cta{
+  text-align:center;padding:60px 20px;
+  border-top:1px solid var(--border);
+}
+.bottom-cta .price{font-size:42px}
+.bottom-cta .cta-btn{margin-top:20px}
+
+/* === FOOTER === */
+.footer{
+  text-align:center;padding:40px 20px;
+  border-top:1px solid var(--border);font-size:12px;color:var(--muted);
+}
+.footer-links{display:flex;justify-content:center;gap:20px;margin-bottom:12px;flex-wrap:wrap}
+.footer-links a{color:var(--muted);font-size:12px}
+.footer-links a:hover{color:var(--fg)}
+
+/* === DOMAIN SPOTLIGHT === */
+.spotlight-section{max-width:720px;margin:0 auto;padding:40px 20px}
+.spotlight-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:28px;text-align:center;cursor:pointer;transition:all .3s;
+}
+.spotlight-card:hover{border-color:var(--accent)}
+.spotlight-domain{font-size:28px;font-weight:800;font-family:var(--mono);margin-bottom:8px}
+.spotlight-concept{font-size:15px;color:var(--muted);margin-bottom:16px}
+.spotlight-meta{display:flex;justify-content:center;gap:16px;font-size:12px;color:var(--muted)}
+.spotlight-meta span{display:flex;align-items:center;gap:4px}
+.spotlight-btn{
+  font-size:12px;color:var(--accent);cursor:pointer;border:none;
+  background:none;margin-top:16px;font-family:var(--font);
+}
+.spotlight-btn:hover{text-decoration:underline}
+
+/* === PARTNER SECTION === */
+.partner-section{max-width:720px;margin:0 auto;padding:40px 20px}
+.partner-box{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:28px;
+}
+.partner-title{font-size:18px;font-weight:700;margin-bottom:12px}
+.partner-desc{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:20px}
+.partner-roles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.partner-roles{grid-template-columns:1fr}}
+.partner-role{
+  border:1px solid var(--border);border-radius:8px;padding:16px;
+}
+.partner-role-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.partner-role-cut{font-size:24px;font-weight:800;font-family:var(--mono);color:var(--accent)}
+.partner-role-desc{font-size:12px;color:var(--muted);margin-top:4px}
+</style>
+</head>
+<body>
+
+<!-- TRUST BANNER -->
+<div class="trust-banner">
+  <div class="stat">
+    <span class="live-dot"></span>
+    <span>An open incubator by <strong style="color:var(--fg)">fortune0</strong></span>
+  </div>
+  <div class="stat">
+    <span class="num" id="domainCount">230</span> registered domains
+  </div>
+  <div class="stat">
+    <span class="num" id="mrrDisplay">$6</span> MRR
+  </div>
+  <div class="stat">
+    <span class="num" id="memberCount">6</span> members
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">fortune<span>0</span></div>
+  <p class="tagline">230 domains. $1/month. You pick what we build next. Every dollar tracked. Every payout public.</p>
+</div>
+
+<!-- MAIN CTA -->
+<div class="cta-block">
+  <div class="price">$1<span style="font-size:24px;color:var(--muted)">/mo</span></div>
+  <div class="price-sub">Access everything. Cancel anytime. Your data stays yours.</div>
+  <a href="https://buy.stripe.com/cNieVd5Vjb6N2ZY6Fq4wM00" class="cta-btn">Join for $1</a>
+  <div class="cta-note">Stripe-secured. No contracts. Export your data on cancel.</div>
+</div>
+
+<!-- DOMAIN TICKER ROW 1 -->
+<div class="ticker-section">
+  <div class="ticker-label">The portfolio — every domain is a product waiting to ship</div>
+  <div class="ticker-wrap">
+    <div class="ticker" id="ticker1"></div>
+  </div>
+  <div class="ticker-wrap" style="margin-top:10px">
+    <div class="ticker ticker-row-2" id="ticker2"></div>
+  </div>
+</div>
+
+<!-- LIVE PRODUCT -->
+<div class="live-section">
+  <div class="section-title">Live now</div>
+  <div class="live-card">
+    <span class="live-badge">Live</span>
+    <div class="live-info">
+      <div class="live-domain">death2data.com</div>
+      <div class="live-desc">Private search engine. Your queries never leave your device. $1/month membership.</div>
+    </div>
+    <a href="https://death2data.com" class="live-link" target="_blank">Visit &rarr;</a>
+  </div>
+</div>
+
+<!-- DOMAIN SPOTLIGHT (random, changes on click) -->
+<div class="spotlight-section">
+  <div class="section-title">Random from the portfolio</div>
+  <div class="spotlight-card" id="spotlightCard" onclick="nextSpotlight()">
+    <div class="spotlight-domain" id="spotDomain">—</div>
+    <div class="spotlight-concept" id="spotConcept">—</div>
+    <div class="spotlight-meta">
+      <span id="spotCategory">—</span>
+      <span id="spotDifficulty">—</span>
+      <span id="spotScore">—</span>
+    </div>
+    <button class="spotlight-btn">tap for another &rarr;</button>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-section">
+  <div class="section-title">How it works</div>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="how-num">01</div>
+      <div class="how-title">You pay $1/month</div>
+      <div class="how-desc">One membership. Access every tool, every domain product, every update. Stripe handles billing.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">02</div>
+      <div class="how-title">We build what you vote for</div>
+      <div class="how-desc">230 domains ranked by score. Members pick what ships next. Top-voted domains get built first.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">03</div>
+      <div class="how-title">Partners get paid</div>
+      <div class="how-desc">Refer someone? You earn a cut. Host an event? You earn a cut. Build a feature? You earn a cut. All through Stripe Connect.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">04</div>
+      <div class="how-title">Everything is public</div>
+      <div class="how-desc">MRR, member count, payout history — all visible. No hidden fees. No platform tax beyond Stripe's 2.9%.</div>
+    </div>
+  </div>
+</div>
+
+<!-- THE MODEL -->
+<div class="model-section">
+  <div class="section-title">Where the money goes</div>
+  <div class="model-box">
+    <div><span class="dim">Member pays</span> <span class="highlight">$1/month</span></div>
+    <div class="flow-arrow">&darr;</div>
+    <div><span class="dim">Stripe takes</span> $0.33 <span class="dim">(2.9% + 30&cent;)</span></div>
+    <div class="flow-arrow">&darr;</div>
+    <div><span class="dim">fortune0 receives</span> <span class="highlight">$0.67</span></div>
+    <div class="flow-arrow">&darr;</div>
+    <div><span class="dim">Split via Stripe Connect:</span></div>
+    <div style="padding-left:20px">
+      <span class="highlight">$0.47</span> <span class="dim">&rarr; fortune0 (operations, builds, domains)</span><br>
+      <span style="color:var(--blue)">$0.13</span> <span class="dim">&rarr; affiliate who referred them</span><br>
+      <span style="color:var(--accent)">$0.07</span> <span class="dim">&rarr; local partner (venue, host, event)</span>
+    </div>
+  </div>
+</div>
+
+<!-- PROOF NUMBERS -->
+<div class="proof-section">
+  <div class="section-title">The math at scale</div>
+  <div class="proof-grid">
+    <div class="proof-card">
+      <div class="proof-num">100</div>
+      <div class="proof-label">members</div>
+      <div style="font-size:13px;color:var(--green);margin-top:8px;font-family:var(--mono)">$67/mo</div>
+    </div>
+    <div class="proof-card">
+      <div class="proof-num">1,000</div>
+      <div class="proof-label">members</div>
+      <div style="font-size:13px;color:var(--green);margin-top:8px;font-family:var(--mono)">$670/mo</div>
+    </div>
+    <div class="proof-card">
+      <div class="proof-num">10,000</div>
+      <div class="proof-label">members</div>
+      <div style="font-size:13px;color:var(--green);margin-top:8px;font-family:var(--mono)">$6,700/mo</div>
+    </div>
+  </div>
+  <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:16px">
+    Plus revenue from the products themselves. Each domain that ships adds its own MRR on top.
+  </p>
+</div>
+
+<!-- PARTNER SECTION -->
+<div class="partner-section">
+  <div class="section-title">Earn with us</div>
+  <div class="partner-box">
+    <div class="partner-title">Every seat at the table pays.</div>
+    <div class="partner-desc">Fortune0 uses Stripe Connect to split revenue automatically. No invoicing, no chasing payments, no platform fees beyond Stripe's standard rate.</div>
+    <div class="partner-roles">
+      <div class="partner-role">
+        <div class="partner-role-name">Affiliate</div>
+        <div class="partner-role-cut">20%</div>
+        <div class="partner-role-desc">Refer a member with your seed code. Earn 20% of their subscription, recurring.</div>
+      </div>
+      <div class="partner-role">
+        <div class="partner-role-name">Local Host</div>
+        <div class="partner-role-cut">10%</div>
+        <div class="partner-role-desc">Run an event, host a meetup, hand out cards. Earn from everyone who joins at your venue.</div>
+      </div>
+      <div class="partner-role">
+        <div class="partner-role-name">Builder</div>
+        <div class="partner-role-cut">shares</div>
+        <div class="partner-role-desc">Claim a domain, ship an MVP, earn equity shares. Currently $1/share (Tier 0).</div>
+      </div>
+      <div class="partner-role">
+        <div class="partner-role-name">Member</div>
+        <div class="partner-role-cut">vote</div>
+        <div class="partner-role-desc">Your $1 = your vote. Pick which domain ships next. Use every product we build.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM CTA -->
+<div class="bottom-cta">
+  <div class="price">$1<span style="font-size:20px;color:var(--muted)">/mo</span></div>
+  <p style="color:var(--muted);font-size:14px;margin-top:8px">230 domains. All products. Cancel anytime.</p>
+  <a href="https://buy.stripe.com/cNieVd5Vjb6N2ZY6Fq4wM00" class="cta-btn">Join fortune0</a>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-links">
+    <a href="https://death2data.com">death2data.com</a>
+    <a href="fortune0-seeds.html">Seeds</a>
+    <a href="fortune0-memes.html">Memes</a>
+    <a href="fortune0-tiers.html">Tiers</a>
+    <a href="fortune0-trust.html">Trust Game</a>
+    <a href="fortune0-scan.html">Scan</a>
+    <a href="fortune0-pricing.html">Pricing</a>
+  </div>
+  <div>&copy; 2024-2026 fortune0. All rights reserved. 230 domains, one membership.</div>
+</div>
+
+<script>
+// === DOMAIN DATA ===
+const DOMAINS = [
+  {d:"death2data.com",c:"Private search engine",cat:"saas",diff:"Medium",score:76.3,live:true},
+  {d:"sellthismvp.com",c:"AI sales copy from your MVP",cat:"ai",diff:"Easy",score:81.2},
+  {d:"toneswitch.com",c:"Rewrite anything in any tone",cat:"ai",diff:"Easy",score:80.1},
+  {d:"ghostmemeter.com",c:"Measures how hard you got ghosted",cat:"ai",diff:"Easy",score:78.0},
+  {d:"ipomyidea.com",c:"Get a fake IPO valuation for any idea",cat:"ai",diff:"Easy",score:77.1},
+  {d:"tweetaudit.com",c:"AI audit of your tweet history",cat:"ai",diff:"Easy",score:76.6},
+  {d:"knowwhatstuck.com",c:"Find what content actually resonated",cat:"ai",diff:"Easy",score:76.6},
+  {d:"whoswronghere.com",c:"AI mediator for arguments",cat:"ai",diff:"Easy",score:76.0},
+  {d:"adrgen.com",c:"AI ad copy generator",cat:"ai",diff:"Medium",score:75.7},
+  {d:"howmucharemyideasworth.com",c:"AI idea valuator",cat:"ai",diff:"Easy",score:75.4},
+  {d:"brandaidkit.com",c:"Instant brand identity builder",cat:"ai",diff:"Easy",score:74.9},
+  {d:"oofbuddy.com",c:"Rate how bad your day was",cat:"fun",diff:"Easy",score:74.0},
+  {d:"cringeproof.com",c:"Check if your post is cringe before posting",cat:"ai",diff:"Easy",score:73.5},
+  {d:"howwasthevibe.com",c:"Post-event vibe check",cat:"fun",diff:"Easy",score:72.8},
+  {d:"deluludrop.com",c:"Daily delusion affirmation drop",cat:"fun",diff:"Easy",score:72.0},
+  {d:"thevibetool.com",c:"Vibe check any situation",cat:"ai",diff:"Easy",score:71.5},
+  {d:"vibesandvalues.com",c:"Match on vibes, not resumes",cat:"saas",diff:"Medium",score:71.0},
+  {d:"nailedittracker.com",c:"Track your wins, not just tasks",cat:"tool",diff:"Easy",score:70.8},
+  {d:"vibestamped.com",c:"Timestamp your vibes",cat:"fun",diff:"Easy",score:70.2},
+  {d:"dollarsentence.com",c:"Explain any business in one sentence",cat:"ai",diff:"Easy",score:69.8},
+  {d:"calclip.com",c:"Clip and share calendar events",cat:"tool",diff:"Easy",score:69.5},
+  {d:"calriven.com",c:"Calendar analytics and optimization",cat:"saas",diff:"Medium",score:69.0},
+  {d:"deathtobigtech.com",c:"Track your big tech dependency",cat:"saas",diff:"Medium",score:68.5},
+  {d:"deathtomoney.com",c:"Visualize where your money actually goes",cat:"finance",diff:"Medium",score:68.0},
+  {d:"thebestcashflows.com",c:"Cash flow templates and analysis",cat:"finance",diff:"Medium",score:67.5},
+  {d:"thebestintro.com",c:"AI-powered professional introductions",cat:"ai",diff:"Easy",score:67.0},
+  {d:"stpetepros.com",c:"St. Pete professional network",cat:"local",diff:"Medium",score:66.5},
+  {d:"soulfra.ai",c:"AI infrastructure framework",cat:"saas",diff:"Hard",score:66.0},
+  {d:"vibe-browser.com",c:"Browse the web by vibe, not URL",cat:"ai",diff:"Hard",score:65.5},
+  {d:"onedollarnotebook.com",c:"$1 encrypted notebook",cat:"saas",diff:"Easy",score:65.0},
+  {d:"mascotmurder.com",c:"Roast any brand mascot",cat:"fun",diff:"Easy",score:64.5},
+  {d:"finishthisidea.com",c:"AI completes your half-baked ideas",cat:"ai",diff:"Easy",score:64.0},
+  {d:"finishthisrepo.com",c:"Find abandoned repos worth finishing",cat:"tool",diff:"Medium",score:63.5},
+  {d:"accentwars.com",c:"Accent battle game — who does it best?",cat:"fun",diff:"Medium",score:63.0},
+  {d:"coldstartkit.com",c:"Cold start problem solver toolkit",cat:"ai",diff:"Medium",score:62.5},
+  {d:"thebestrateofreturn.com",c:"Rate of return calculator & education",cat:"finance",diff:"Medium",score:62.0},
+  {d:"saveorsink.com",c:"Personal finance gamification platform",cat:"finance",diff:"Medium",score:61.5},
+  {d:"roastthebrand.com",c:"Comedic brand roasting game",cat:"fun",diff:"Easy",score:61.0},
+  {d:"blamechain.com",c:"Accountability chain for team projects",cat:"saas",diff:"Medium",score:60.5},
+  {d:"wrongtab.com",c:"Browser extension for accidental tab detection",cat:"tool",diff:"Easy",score:60.0},
+];
+
+// === TICKER ===
+function buildTicker(el, domains, offset){
+  const slice = domains.slice(offset, offset + Math.ceil(domains.length/2));
+  const html = slice.map(d =>
+    `<div class="domain${d.live?' live':''}">${d.d}</div>`
+  ).join('');
+  el.innerHTML = html + html; // duplicate for infinite scroll
+}
+buildTicker(document.getElementById('ticker1'), DOMAINS, 0);
+buildTicker(document.getElementById('ticker2'), DOMAINS, 20);
+
+// === SPOTLIGHT ===
+let spotIdx = Math.floor(Math.random() * DOMAINS.length);
+function showSpotlight(idx){
+  const d = DOMAINS[idx];
+  document.getElementById('spotDomain').textContent = d.d;
+  document.getElementById('spotConcept').textContent = d.c;
+  document.getElementById('spotCategory').textContent = d.cat;
+  document.getElementById('spotDifficulty').textContent = d.diff;
+  document.getElementById('spotScore').textContent = 'Score: ' + d.score;
+}
+function nextSpotlight(){
+  spotIdx = (spotIdx + 1) % DOMAINS.length;
+  const card = document.getElementById('spotlightCard');
+  card.style.transform = 'scale(0.97)';
+  card.style.opacity = '0.7';
+  setTimeout(() => {
+    showSpotlight(spotIdx);
+    card.style.transform = 'scale(1)';
+    card.style.opacity = '1';
+  }, 150);
+}
+showSpotlight(spotIdx);
+
+// === LIVE STATS FROM RENDER (server.py has Stripe keys) ===
+fetch('/health')
+  .then(r => r.json())
+  .then(d => {
+    // active_users = paid members (tier='active' in DB, synced from Stripe)
+    // real MRR = active_users × $1/mo
+    const members = d.active_users || 0;
+    const totalUsers = d.users || 0;
+    if(members > 0) {
+      document.getElementById('mrrDisplay').textContent = '$' + members;
+      document.getElementById('memberCount').textContent = members;
+    } else if(totalUsers > 0) {
+      // show signups even if nobody paid yet
+      document.getElementById('memberCount').textContent = totalUsers + ' signed up';
+    }
+  })
+  .catch(() => {
+    // offline or local dev — defaults stay as-is
+  });
+</script>
+</body>
+</html>

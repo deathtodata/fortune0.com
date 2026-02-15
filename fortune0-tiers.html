@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fortune0 — domain tiers</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#09090F;--s1:#111118;--s2:#18181F;--card:#1E1E28;--border:#2A2A38;--dim:#555;--text:#9CA3AF;--white:#EAEAEA;--pink:#EC4899;--green:#10B981;--blue:#3B82F6;--amber:#F59E0B;--red:#EF4444;--purple:#8B5CF6;--cyan:#06B6D4}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--white);min-height:100vh;overflow-x:hidden}
+.w{max-width:720px;margin:0 auto;padding:1.5rem}
+
+header{text-align:center;padding:2rem 0 1rem}
+header h1{font-size:2rem;font-weight:900;letter-spacing:-1.5px}
+header h1 .t1{color:var(--pink)}
+header h1 .t2{color:var(--amber)}
+.tagline{color:var(--dim);font-size:0.8rem;margin-top:0.3rem;letter-spacing:0.5px}
+
+/* ═══ SPECTRUM BAR ═══ */
+.spectrum{margin:2rem 0}
+.spectrum-bar{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--pink),var(--purple),var(--blue),var(--green),var(--amber));margin:1rem 0 0.3rem;position:relative}
+.spectrum-labels{display:flex;justify-content:space-between;font-size:0.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+.spectrum-dot{position:absolute;width:10px;height:10px;border-radius:50%;top:-2px;transform:translateX(-50%);cursor:pointer;transition:all 0.15s;z-index:2}
+.spectrum-dot:hover{transform:translateX(-50%) scale(1.5)}
+.spectrum-tooltip{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);border-radius:6px;padding:0.3rem 0.6rem;font-size:0.65rem;white-space:nowrap;color:var(--white);pointer-events:none;opacity:0;transition:opacity 0.15s;z-index:10}
+.spectrum-dot:hover .spectrum-tooltip{opacity:1}
+
+/* ═══ TIER SECTIONS ═══ */
+.tier{margin:2rem 0;padding:1.5rem;background:var(--s1);border:1px solid var(--border);border-radius:12px}
+.tier-header{display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem}
+.tier-badge{font-size:0.6rem;font-weight:800;text-transform:uppercase;letter-spacing:2px;padding:0.2rem 0.6rem;border-radius:4px;flex-shrink:0}
+.tier-count{font-size:0.65rem;color:var(--dim);margin-left:auto;font-family:Consolas,monospace}
+.tier-desc{font-size:0.8rem;color:var(--text);margin-bottom:1rem;line-height:1.5}
+
+/* ═══ DOMAIN CARDS ═══ */
+.domain-list{display:flex;flex-direction:column;gap:0.3rem}
+.d-row{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.6rem;background:var(--s2);border:1px solid transparent;border-radius:8px;cursor:pointer;transition:all 0.15s;font-size:0.8rem}
+.d-row:hover{border-color:var(--border);transform:translateX(3px)}
+.d-name{flex:1;font-weight:700;letter-spacing:-0.3px;word-break:break-all;line-height:1.2}
+.d-len{font-family:Consolas,monospace;font-size:0.6rem;color:var(--dim);flex-shrink:0;width:28px;text-align:right}
+.d-shock{font-family:Consolas,monospace;font-size:0.6rem;color:var(--pink);flex-shrink:0;width:20px;text-align:right}
+.d-cat{font-size:0.55rem;text-transform:uppercase;letter-spacing:1px;padding:0.1rem 0.35rem;border-radius:3px;background:rgba(255,255,255,0.04);color:var(--dim);flex-shrink:0}
+
+/* ═══ PHONE PREVIEW ═══ */
+.phone-section{margin:2rem 0;text-align:center}
+.phone-section h2{font-size:0.7rem;text-transform:uppercase;letter-spacing:3px;color:var(--dim);margin-bottom:1rem}
+.phone-frame{display:inline-block;background:#000;border:3px solid #333;border-radius:28px;padding:12px 8px 16px;width:280px;position:relative}
+.phone-notch{width:80px;height:20px;background:#000;border-radius:0 0 12px 12px;position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:5}
+.phone-screen{background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1a 100%);border-radius:20px;padding:2rem 0.75rem 1rem;min-height:400px}
+.phone-status{display:flex;justify-content:space-between;font-size:0.55rem;color:rgba(255,255,255,0.5);padding:0 0.25rem;margin-bottom:1rem}
+.phone-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem}
+.app-icon{text-align:center}
+.app-dot{width:48px;height:48px;border-radius:12px;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:900;position:relative;overflow:hidden}
+.app-dot::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent);pointer-events:none}
+.app-label{font-size:0.5rem;color:rgba(255,255,255,0.7);margin-top:0.25rem;line-height:1.15;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:auto;margin-right:auto}
+.app-label.sentence{white-space:normal;font-size:0.45rem;max-width:64px;height:2.2em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+/* ═══ SENTENCE SPOTLIGHT ═══ */
+.sentence-section{margin:2rem 0}
+.sentence-section h2{font-size:0.7rem;text-transform:uppercase;letter-spacing:3px;color:var(--amber);margin-bottom:0.5rem;text-align:center}
+.sentence-sub{font-size:0.75rem;color:var(--text);text-align:center;margin-bottom:1rem}
+.sentence-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:0.5rem;cursor:pointer;transition:all 0.2s}
+.sentence-card:hover{border-color:var(--amber);transform:translateX(3px)}
+.sentence-domain{font-size:1.1rem;font-weight:900;letter-spacing:-0.5px;word-break:break-all}
+.sentence-meta{display:flex;gap:1rem;margin-top:0.4rem;font-size:0.65rem;color:var(--dim)}
+.sentence-read{font-style:italic;color:var(--text);font-size:0.8rem;margin-top:0.3rem}
+
+/* ═══ CROSS-AXIS SCATTER ═══ */
+.scatter-section{margin:2rem 0}
+.scatter-section h2{font-size:0.7rem;text-transform:uppercase;letter-spacing:3px;color:var(--dim);margin-bottom:1rem;text-align:center}
+.scatter{position:relative;width:100%;height:300px;background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.scatter-x{position:absolute;bottom:8px;left:0;right:0;display:flex;justify-content:space-between;padding:0 12px;font-size:0.55rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+.scatter-y{position:absolute;top:0;bottom:0;left:8px;display:flex;flex-direction:column;justify-content:space-between;padding:8px 0;font-size:0.55rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px;writing-mode:vertical-lr;transform:rotate(180deg)}
+.scatter-dot{position:absolute;width:8px;height:8px;border-radius:50%;cursor:pointer;transition:all 0.15s;z-index:2}
+.scatter-dot:hover{transform:scale(2);z-index:10}
+.scatter-label{position:absolute;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:0.2rem 0.4rem;font-size:0.6rem;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.15s;z-index:20}
+.scatter-dot:hover+.scatter-label,.scatter-dot:hover~.scatter-label{opacity:1}
+/* Quadrant lines */
+.scatter::after{content:'';position:absolute;top:50%;left:50%;width:1px;height:100%;background:rgba(255,255,255,0.03);transform:translate(-50%,-50%)}
+.scatter::before{content:'';position:absolute;top:50%;left:0;width:100%;height:1px;background:rgba(255,255,255,0.03)}
+
+/* ═══ FILTERS ═══ */
+.filters{display:flex;gap:0.3rem;flex-wrap:wrap;justify-content:center;margin:1rem 0}
+.filter-chip{font-size:0.65rem;padding:0.2rem 0.5rem;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;transition:all 0.15s}
+.filter-chip:hover{border-color:var(--dim)}
+.filter-chip.active{border-color:var(--pink);color:var(--pink);background:rgba(236,72,153,0.1)}
+
+.btn{padding:0.6rem 1.2rem;border:none;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;transition:all 0.15s;display:inline-block}
+.btn:hover{transform:translateY(-1px)}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-pink{background:var(--pink);color:#fff}
+.btn-amber{background:var(--amber);color:#000}
+
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1.5rem;font-size:0.85rem;color:var(--white);display:none;z-index:99;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+.toast.show{display:block;animation:fadeUp 0.3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+footer{text-align:center;padding:1.5rem 0;border-top:1px solid var(--border);margin-top:1.5rem}
+footer p{font-size:0.7rem;color:var(--dim)}
+footer a{color:var(--green);text-decoration:none}
+
+@media(max-width:500px){.phone-frame{width:240px}.phone-grid{gap:0.5rem}.app-dot{width:40px;height:40px}.scatter{height:250px}.shock-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="w">
+
+<header>
+  <h1>fortune0 <span class="t1">tiers</span></h1>
+  <p class="tagline">230 domains ranked by meme power vs seriousness. the name is everything.</p>
+</header>
+
+<!-- ═══ FILTERS ═══ -->
+<div class="filters" id="filters"></div>
+
+<!-- ═══ SPECTRUM ═══ -->
+<div class="spectrum">
+  <div class="spectrum-bar" id="spectrumBar"></div>
+  <div class="spectrum-labels">
+    <span>pure meme</span>
+    <span>attention grab</span>
+    <span>real product</span>
+    <span>serious saas</span>
+  </div>
+</div>
+
+<!-- ═══ SCATTER PLOT: meme power vs seriousness ═══ -->
+<div class="scatter-section">
+  <h2>Meme Power vs Seriousness</h2>
+  <div class="scatter" id="scatterPlot">
+    <div class="scatter-x"><span>serious</span><span>meme</span></div>
+    <div class="scatter-y"><span>short</span><span>sentence</span></div>
+  </div>
+</div>
+
+<!-- ═══ PHONE PREVIEW ═══ -->
+<div class="phone-section">
+  <h2>How they look on your phone</h2>
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+      <div class="phone-status">
+        <span>9:41</span>
+        <span>fortune0</span>
+      </div>
+      <div class="phone-grid" id="phoneGrid"></div>
+    </div>
+  </div>
+  <div style="margin-top:0.75rem">
+    <button class="btn btn-ghost" onclick="shufflePhone()">Shuffle apps</button>
+  </div>
+</div>
+
+<!-- ═══ SENTENCE-LENGTH SPOTLIGHT ═══ -->
+<div class="sentence-section">
+  <h2>Sentence Domains</h2>
+  <p class="sentence-sub">The long ones that read like bumper stickers. These are the most shareable.</p>
+  <div id="sentenceList"></div>
+</div>
+
+<!-- ═══ TIER BREAKDOWN ═══ -->
+<div id="tierSections"></div>
+
+<footer>
+  <p><a href="https://fortune0.com">fortune0</a> · <a href="fortune0-memes.html">memes</a> · <a href="fortune0-seeds.html">seeds</a> · <a href="fortune0-challenge.html">challenge</a> · <a href="fortune0-pricing.html">pricing</a></p>
+  <p style="margin-top:0.25rem">Every name is a bet. Every bet is a meme. Every meme is a product.</p>
+</footer>
+
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  ALL 230 DOMAINS with full metadata
+// ═══════════════════════════════════════════
+
+const DOMAINS = [
+  // AI
+  {d:"toneswitch.com",cat:"ai",diff:"easy"},{d:"brandaidkit.com",cat:"ai",diff:"medium"},
+  {d:"onedollaragent.com",cat:"ai",diff:"medium"},{d:"calriven.com",cat:"ai",diff:"hard"},
+  {d:"tweetaudit.com",cat:"ai",diff:"easy"},{d:"ghostmemeter.com",cat:"ai",diff:"medium"},
+  {d:"sellthismvp.com",cat:"ai",diff:"easy"},{d:"knowwhatstuck.com",cat:"ai",diff:"medium"},
+  {d:"ipomyidea.com",cat:"ai",diff:"hard"},{d:"whoswronghere.com",cat:"ai",diff:"medium"},
+  {d:"howmucharemyideasworth.com",cat:"ai",diff:"medium"},{d:"adrgen.com",cat:"ai",diff:"medium"},
+  {d:"interviewvoicecoach.com",cat:"ai",diff:"medium"},{d:"dynamictoolintelligence.com",cat:"ai",diff:"hard"},
+  {d:"finishthisrepo.ai",cat:"ai",diff:"hard"},{d:"finishthisidea.ai",cat:"ai",diff:"hard"},
+  {d:"soulfra.ai",cat:"ai",diff:"hard"},
+  // Fun
+  {d:"hollowtown.com",cat:"fun",diff:"hard"},{d:"accentwars.com",cat:"fun",diff:"medium"},
+  {d:"mascotrooms.com",cat:"fun",diff:"medium"},{d:"roastthebrand.com",cat:"fun",diff:"easy"},
+  {d:"gachavibe.com",cat:"fun",diff:"medium"},{d:"softthrowdown.com",cat:"fun",diff:"easy"},
+  {d:"vibecastgame.com",cat:"fun",diff:"medium"},{d:"mascotmurder.com",cat:"fun",diff:"hard"},
+  {d:"trilliondollarsite.com",cat:"fun",diff:"easy"},{d:"dealordelete.com",cat:"fun",diff:"easy"},
+  {d:"cringerelay.com",cat:"fun",diff:"easy"},{d:"onepennymeme.com",cat:"fun",diff:"easy"},
+  {d:"finishmeme.com",cat:"fun",diff:"easy"},{d:"xchangememe.com",cat:"fun",diff:"medium"},
+  {d:"jkyousuck.com",cat:"fun",diff:"easy"},{d:"stillnolaunch.com",cat:"fun",diff:"easy"},
+  {d:"fartjokesonline.com",cat:"fun",diff:"easy"},{d:"thestartupbash.com",cat:"fun",diff:"easy"},
+  {d:"simptag.com",cat:"fun",diff:"medium"},{d:"theworstshow.com",cat:"fun",diff:"easy"},
+  {d:"bashthenews.com",cat:"fun",diff:"easy"},{d:"bashjaws.com",cat:"fun",diff:"medium"},
+  {d:"clankerclash.com",cat:"fun",diff:"hard"},{d:"calmutants.com",cat:"fun",diff:"medium"},
+  {d:"perfectshrugs.com",cat:"fun",diff:"easy"},{d:"privacyasentertainment.com",cat:"fun",diff:"easy"},
+  {d:"fireworkssuck.com",cat:"fun",diff:"easy"},{d:"finishthismeme.com",cat:"fun",diff:"medium"},
+  {d:"reproducethismeme.com",cat:"fun",diff:"medium"},{d:"reproducethisspeech.com",cat:"fun",diff:"medium"},
+  // Finance
+  {d:"saveorsink.com",cat:"finance",diff:"medium"},{d:"ipomyagent.com",cat:"finance",diff:"hard"},
+  {d:"thebestcashflows.com",cat:"finance",diff:"medium"},{d:"thebestrateofreturn.com",cat:"finance",diff:"medium"},
+  // SaaS
+  {d:"installkernel.com",cat:"saas",diff:"hard"},{d:"vaultdaemon.com",cat:"saas",diff:"hard"},
+  {d:"blamechain.com",cat:"saas",diff:"medium"},{d:"traitapi.com",cat:"saas",diff:"hard"},
+  {d:"death2data.com",cat:"saas",diff:"hard"},{d:"tagoftrust.com",cat:"saas",diff:"medium"},
+  {d:"proofofvibe.com",cat:"saas",diff:"medium"},{d:"proofofemotion.com",cat:"saas",diff:"hard"},
+  {d:"proofofworkplace.com",cat:"saas",diff:"medium"},{d:"soulprintid.com",cat:"saas",diff:"hard"},
+  {d:"souloneth.com",cat:"saas",diff:"hard"},{d:"calvaults.com",cat:"saas",diff:"hard"},
+  {d:"perplexityvault.com",cat:"saas",diff:"medium"},{d:"calcollar.com",cat:"saas",diff:"medium"},
+  {d:"sentanyway.com",cat:"saas",diff:"medium"},{d:"shareditanyway.com",cat:"saas",diff:"hard"},
+  {d:"onedollarnotebook.com",cat:"saas",diff:"easy"},{d:"deathtodata.com",cat:"saas",diff:"hard"},
+  {d:"vibedevice.com",cat:"saas",diff:"hard"},{d:"agentportalpro.com",cat:"saas",diff:"hard"},
+  {d:"finishthissale.com",cat:"saas",diff:"medium"},{d:"youleftproof.com",cat:"saas",diff:"medium"},
+  {d:"careproof.org",cat:"saas",diff:"medium"},{d:"thiswasforyou.com",cat:"saas",diff:"medium"},
+  {d:"classrecordhq.com",cat:"saas",diff:"medium"},{d:"skilltracksuite.com",cat:"saas",diff:"medium"},
+  {d:"soulfraapi.com",cat:"saas",diff:"hard"},
+  // Tool
+  {d:"wrongtab.com",cat:"tool",diff:"easy"},{d:"calclip.com",cat:"tool",diff:"easy"},
+  {d:"monstercal.com",cat:"tool",diff:"easy"},{d:"slamcal.com",cat:"tool",diff:"easy"},
+  {d:"fakefocus.com",cat:"tool",diff:"easy"},{d:"dollarsentence.com",cat:"tool",diff:"easy"},
+  {d:"finishthisidea.com",cat:"tool",diff:"easy"},{d:"pimpmychrome.com",cat:"tool",diff:"medium"},
+  {d:"lowkeydrop.com",cat:"tool",diff:"easy"},{d:"planmodeagain.com",cat:"tool",diff:"easy"},
+  {d:"vibesandvalues.com",cat:"tool",diff:"easy"},{d:"howwasthevibe.com",cat:"tool",diff:"easy"},
+  {d:"onedollarsignature.com",cat:"tool",diff:"easy"},{d:"kidsknowwhatscool.com",cat:"tool",diff:"hard"},
+  {d:"isthisspotavibe.com",cat:"tool",diff:"medium"},{d:"vibewithcal.com",cat:"tool",diff:"medium"},
+  {d:"trialbymascot.com",cat:"tool",diff:"medium"},{d:"civicresume.com",cat:"tool",diff:"medium"},
+  {d:"calmonsters.com",cat:"tool",diff:"medium"},{d:"caltemplate.com",cat:"tool",diff:"medium"},
+  {d:"thebestthanks.com",cat:"tool",diff:"medium"},{d:"routereaper.com",cat:"tool",diff:"hard"},
+  // Community
+  {d:"kindstamp.com",cat:"community",diff:"medium"},{d:"oofbox.com",cat:"community",diff:"easy"},
+  {d:"dropyourvoice.com",cat:"community",diff:"medium"},{d:"pumptrash.com",cat:"community",diff:"medium"},
+  {d:"niceleak.com",cat:"community",diff:"medium"},{d:"jawsbash.com",cat:"community",diff:"medium"},
+  {d:"mascotmonday.com",cat:"community",diff:"medium"},{d:"itwasavibe.com",cat:"community",diff:"medium"},
+  {d:"leftitthere.com",cat:"community",diff:"medium"},{d:"whatyouleft.com",cat:"community",diff:"medium"},
+  {d:"confessitanyway.com",cat:"community",diff:"medium"},{d:"swipeandscar.com",cat:"community",diff:"hard"},
+  {d:"notryhards.com",cat:"community",diff:"medium"},{d:"feltforreal.com",cat:"community",diff:"medium"},
+  {d:"weacceptvibes.com",cat:"community",diff:"medium"},{d:"talkshitwithfriends.com",cat:"community",diff:"medium"},
+  {d:"nosnapdidnthappen.com",cat:"community",diff:"easy"},{d:"canyouratemyidea.com",cat:"community",diff:"medium"},
+  {d:"reflectionarena.com",cat:"community",diff:"hard"},{d:"getheartfelt.com",cat:"community",diff:"medium"},
+  // Health
+  {d:"cringeproof.com",cat:"health",diff:"medium"},{d:"oofbuddy.com",cat:"health",diff:"medium"},
+  {d:"halfwaytomax.com",cat:"health",diff:"easy"},{d:"scaredofshipping.com",cat:"health",diff:"easy"},
+  {d:"deluludrop.com",cat:"health",diff:"easy"},{d:"yikesbuddy.com",cat:"health",diff:"easy"},
+  {d:"ruinmesoftly.com",cat:"health",diff:"medium"},{d:"nailedittracker.com",cat:"health",diff:"easy"},
+  {d:"vibestamped.com",cat:"health",diff:"easy"},{d:"thevibetool.com",cat:"health",diff:"easy"},
+  {d:"keptitin.com",cat:"health",diff:"easy"},{d:"softheld.com",cat:"health",diff:"medium"},
+  {d:"traitkeep.com",cat:"health",diff:"hard"},{d:"learntoreflect.com",cat:"health",diff:"medium"},
+  {d:"tryoutsareover.com",cat:"health",diff:"easy"},{d:"calmutation.com",cat:"health",diff:"hard"},
+  {d:"whathitme.com",cat:"health",diff:"medium"},{d:"itwasdelulu.com",cat:"health",diff:"easy"},
+  {d:"buydumbshitfeelsad.com",cat:"health",diff:"easy"},
+  // Education
+  {d:"hookclinic.com",cat:"education",diff:"easy"},{d:"coldstartkit.com",cat:"education",diff:"medium"},
+  {d:"thebestintro.com",cat:"education",diff:"easy"},{d:"bootstrapprotocol.com",cat:"education",diff:"easy"},
+  {d:"memoryscaffolding.com",cat:"education",diff:"medium"},{d:"thebestgrant.com",cat:"education",diff:"medium"},
+  {d:"thebestlesson.com",cat:"education",diff:"medium"},{d:"planyourlesson.com",cat:"education",diff:"medium"},
+  {d:"crampal.com",cat:"education",diff:"medium"},{d:"innerdegree.com",cat:"education",diff:"medium"},
+  {d:"tattoocertify.com",cat:"education",diff:"medium"},{d:"thebesteulogy.com",cat:"education",diff:"medium"},
+  {d:"deathtobigtech.com",cat:"education",diff:"easy"},{d:"howtodeletedata.com",cat:"education",diff:"easy"},
+  {d:"essentialprivacyeducation.com",cat:"education",diff:"easy"},{d:"localhomeownerplaybook.com",cat:"education",diff:"easy"},
+  {d:"localhomeownersplaybook.com",cat:"education",diff:"easy"},{d:"osstemplate.com",cat:"education",diff:"medium"},
+  {d:"reproducethisconcept.com",cat:"education",diff:"medium"},{d:"thebestsermon.com",cat:"education",diff:"medium"},
+  {d:"vibecodingvault.com",cat:"education",diff:"medium"},{d:"bloodbornecourse.com",cat:"education",diff:"medium"},
+  {d:"naileditspeech.com",cat:"education",diff:"medium"},{d:"theunreadbible.com",cat:"education",diff:"medium"},
+  {d:"drivecoachhq.com",cat:"education",diff:"hard"},{d:"reproducethisexperiment.com",cat:"education",diff:"hard"},
+  {d:"howdoigetfireworks.com",cat:"education",diff:"easy"},{d:"floridatattoolicense.com",cat:"education",diff:"medium"},
+  {d:"floridatattootraining.com",cat:"education",diff:"medium"},{d:"inksafecourses.com",cat:"education",diff:"medium"},
+  // Content
+  {d:"gulfcoastglow.com",cat:"content",diff:"easy"},{d:"hustlenice.com",cat:"content",diff:"easy"},
+  {d:"feelslikework.com",cat:"content",diff:"easy"},{d:"thebestspeech.com",cat:"content",diff:"medium"},
+  {d:"exchangelore.com",cat:"content",diff:"medium"},{d:"coastaleasy.com",cat:"content",diff:"easy"},
+  {d:"deathtomoney.com",cat:"content",diff:"easy"},{d:"thebestobituary.com",cat:"content",diff:"medium"},
+  {d:"xchangelore.com",cat:"content",diff:"medium"},{d:"hitandkept.com",cat:"content",diff:"medium"},
+  {d:"wasallyou.com",cat:"content",diff:"medium"},{d:"hearditspeak.com",cat:"content",diff:"medium"},
+  {d:"howtocookathome.com",cat:"content",diff:"easy"},{d:"peoplearetheprotocol.com",cat:"content",diff:"easy"},
+  {d:"theworsthook.com",cat:"content",diff:"easy"},{d:"trilliondollarnews.com",cat:"content",diff:"easy"},
+  {d:"leftonreadbygod.com",cat:"content",diff:"easy"},{d:"busyisntforward.com",cat:"content",diff:"easy"},
+  // Local
+  {d:"stpetepros.com",cat:"local",diff:"easy"},{d:"tampatechhive.com",cat:"local",diff:"medium"},
+  {d:"localserviceclub.com",cat:"local",diff:"medium"},{d:"joinheartfelt.com",cat:"local",diff:"medium"},
+  {d:"easypermithub.com",cat:"local",diff:"medium"},{d:"contractorconnectfl.com",cat:"local",diff:"medium"},
+  {d:"localhomeownerservices.com",cat:"local",diff:"medium"},{d:"localservicesformyhome.com",cat:"local",diff:"medium"},
+  {d:"localservicesformyhouse.com",cat:"local",diff:"medium"},{d:"localserviceforhomeowners.com",cat:"local",diff:"hard"},
+  {d:"localservicesforhomeowners.com",cat:"local",diff:"hard"},{d:"trustedhomeownerlist.com",cat:"local",diff:"medium"},
+  {d:"thetrustedhomeownerlist.com",cat:"local",diff:"medium"},{d:"fastroofpermits.com",cat:"local",diff:"medium"},
+  {d:"getthinstpete.com",cat:"local",diff:"medium"},{d:"wheredoifindfireworks.com",cat:"local",diff:"medium"},
+  {d:"weightlossdealsfl.com",cat:"local",diff:"medium"},{d:"stpeteweightlossdeals.com",cat:"local",diff:"medium"},
+  // Marketplace
+  {d:"fortune0.com",cat:"marketplace",diff:"hard"},{d:"soulfra.com",cat:"marketplace",diff:"hard"},
+  {d:"getpaidtojoin.com",cat:"marketplace",diff:"hard"},{d:"vibetrial.com",cat:"marketplace",diff:"hard"},
+  {d:"vibeskins.com",cat:"marketplace",diff:"medium"},{d:"roughsparks.com",cat:"marketplace",diff:"medium"},
+  {d:"pfpxchange.com",cat:"marketplace",diff:"hard"},{d:"remixritual.com",cat:"marketplace",diff:"hard"},
+  {d:"finishthisrepo.com",cat:"marketplace",diff:"hard"},{d:"finishthisgame.com",cat:"marketplace",diff:"hard"},
+  {d:"reproducethisidea.com",cat:"marketplace",diff:"hard"},{d:"reproducethismodel.com",cat:"marketplace",diff:"hard"},
+  {d:"reproducethispart.com",cat:"marketplace",diff:"hard"},{d:"heartfeltperks.com",cat:"marketplace",diff:"medium"},
+  {d:"realtorrecommendation.com",cat:"marketplace",diff:"medium"},{d:"realtorrecommended.com",cat:"marketplace",diff:"medium"},
+  {d:"buymysim.com",cat:"marketplace",diff:"medium"},{d:"finishthisidea.net",cat:"marketplace",diff:"medium"},
+  {d:"finishthisidea.xyz",cat:"marketplace",diff:"hard"},{d:"finishthisidea.io",cat:"marketplace",diff:"hard"},
+  {d:"finishthisrepo.net",cat:"marketplace",diff:"hard"},{d:"finishthisrepo.io",cat:"marketplace",diff:"hard"},
+  {d:"heartfeltperks.org",cat:"community",diff:"medium"},
+];
+
+const RARITY_MAP = {tool:'common',content:'common',education:'uncommon',community:'uncommon',local:'uncommon',health:'rare',fun:'rare',ai:'epic',saas:'epic',finance:'legendary',marketplace:'legendary'};
+const RARITY_COLORS = {common:'#9CA3AF',uncommon:'#10B981',rare:'#3B82F6',epic:'#8B5CF6',legendary:'#F59E0B'};
+const CATEGORIES = [...new Set(DOMAINS.map(d=>d.cat))].sort();
+
+// ═══════════════════════════════════════════
+//  SCORING ENGINES
+// ═══════════════════════════════════════════
+
+const SHOCK_WORDS = ['death','kill','murder','suck','shit','dumb','trash','cringe','oof','yikes','ruin','ghost','blame','scam','fake','wrong','roast','bash','war','clash','leak','scary','delulu','fart','pimp'];
+const SERIOUS_WORDS = ['api','pro','hq','suite','kernel','vault','daemon','proof','track','record','cert','protocol','template','license','training','service','permit','course'];
+
+function memeScore(domain) {
+  const d = domain.toLowerCase().replace(/\.(com|ai|io|net|xyz|org)$/,'');
+  let score = 0;
+  SHOCK_WORDS.forEach(w => { if(d.includes(w)) score += 4; });
+  // Sentence-length bonus (longer = more meme potential)
+  const words = d.replace(/([a-z])([A-Z])/g,'$1 $2').split(/(?=[A-Z])|[^a-z0-9]/i).filter(Boolean);
+  if(words.length >= 4) score += 3;
+  if(words.length >= 5) score += 2;
+  if(d.length > 20) score += 2;
+  if(d.length > 25) score += 2;
+  // Fun/health categories get meme bonus
+  const cat = DOMAINS.find(x=>x.d===domain)?.cat;
+  if(cat==='fun') score += 2;
+  if(cat==='health' && SHOCK_WORDS.some(w=>d.includes(w))) score += 1;
+  return score;
+}
+
+function seriousScore(domain) {
+  const d = domain.toLowerCase().replace(/\.(com|ai|io|net|xyz|org)$/,'');
+  let score = 0;
+  SERIOUS_WORDS.forEach(w => { if(d.includes(w)) score += 3; });
+  // Short = more serious/brandable
+  if(d.length < 12) score += 3;
+  if(d.length < 9) score += 2;
+  // Hard difficulty = serious
+  const diff = DOMAINS.find(x=>x.d===domain)?.diff;
+  if(diff==='hard') score += 2;
+  // SaaS/Finance categories
+  const cat = DOMAINS.find(x=>x.d===domain)?.cat;
+  if(cat==='saas') score += 3;
+  if(cat==='finance') score += 3;
+  if(cat==='marketplace') score += 2;
+  if(cat==='ai') score += 1;
+  return score;
+}
+
+function getRarity(cat){return RARITY_MAP[cat]||'common'}
+
+// ═══════════════════════════════════════════
+//  TIER CLASSIFICATION
+// ═══════════════════════════════════════════
+
+function classifyTier(d) {
+  const m = memeScore(d.d);
+  const s = seriousScore(d.d);
+  if(m >= 6) return 'meme';       // Pure meme — shock value carries it
+  if(m >= 3 && s <= 3) return 'attention';  // Attention grab — name does the selling
+  if(s >= 6) return 'serious';    // Serious SaaS — professional naming
+  if(s >= 3) return 'product';    // Real product — functional naming
+  return 'middle';                // Middle ground — could go either way
+}
+
+const TIER_CONFIG = {
+  meme:      {label:'Pure Meme',      color:'var(--pink)',   bg:'rgba(236,72,153,0.08)', desc:'The name IS the joke. Screenshot bait. People share these before they even click.'},
+  attention: {label:'Attention Grab',  color:'var(--amber)',  bg:'rgba(245,158,11,0.08)', desc:'Not quite a joke, but the name stops your scroll. These are bumper stickers that happen to be products.'},
+  middle:    {label:'Both',            color:'var(--purple)', bg:'rgba(139,92,246,0.08)', desc:'The tension zone. Name sounds like a meme but there\'s a real product behind it. This is where the magic happens.'},
+  product:   {label:'Real Product',    color:'var(--blue)',   bg:'rgba(59,130,246,0.08)', desc:'Functional naming with personality. You can tell what it does, and you might actually pay for it.'},
+  serious:   {label:'Serious SaaS',    color:'var(--green)',  bg:'rgba(16,185,129,0.08)', desc:'Professional-grade naming. These are the backbone — CRMs, vaults, APIs. The money is here.'},
+};
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+
+let activeFilter = 'all';
+
+// ═══════════════════════════════════════════
+//  RENDER FILTERS
+// ═══════════════════════════════════════════
+
+function renderFilters() {
+  const el = document.getElementById('filters');
+  const cats = ['all',...CATEGORIES];
+  el.innerHTML = cats.map(c =>
+    `<div class="filter-chip${activeFilter===c?' active':''}" onclick="setFilter('${c}')">${c==='all'?'All ('+DOMAINS.length+')':c+' ('+DOMAINS.filter(d=>d.cat===c).length+')'}</div>`
+  ).join('');
+}
+
+function setFilter(cat) {
+  activeFilter = cat;
+  renderFilters();
+  renderAll();
+}
+
+function getFiltered() {
+  return activeFilter === 'all' ? DOMAINS : DOMAINS.filter(d => d.cat === activeFilter);
+}
+
+// ═══════════════════════════════════════════
+//  SCATTER PLOT
+// ═══════════════════════════════════════════
+
+function renderScatter() {
+  const el = document.getElementById('scatterPlot');
+  // Remove old dots
+  el.querySelectorAll('.scatter-dot,.scatter-label').forEach(n=>n.remove());
+
+  const filtered = getFiltered();
+  const maxM = Math.max(...filtered.map(d=>memeScore(d.d)),1);
+  const maxLen = Math.max(...filtered.map(d=>d.d.length),1);
+
+  filtered.forEach(d => {
+    const m = memeScore(d.d);
+    const len = d.d.length;
+    const rarity = getRarity(d.cat);
+    const color = RARITY_COLORS[rarity];
+
+    // X = meme power (0=left=serious, 1=right=meme)
+    const x = Math.min(m / maxM, 1);
+    // Y = domain length (0=bottom=short, 1=top=sentence)
+    const y = Math.min(len / maxLen, 1);
+
+    // Map to pixel positions (with padding)
+    const px = 30 + x * (el.clientWidth - 60);
+    const py = (1 - y) * (el.clientHeight - 40) + 20;
+
+    const dot = document.createElement('div');
+    dot.className = 'scatter-dot';
+    dot.style.left = px + 'px';
+    dot.style.top = py + 'px';
+    dot.style.background = color;
+    dot.title = d.d;
+    dot.onclick = () => {
+      window.open('fortune0-memes.html?d='+encodeURIComponent(d.d),'_blank');
+    };
+
+    // Hover label
+    const label = document.createElement('div');
+    label.className = 'scatter-label';
+    label.textContent = d.d;
+    label.style.left = (px + 12) + 'px';
+    label.style.top = (py - 8) + 'px';
+
+    dot.onmouseenter = () => label.style.opacity = '1';
+    dot.onmouseleave = () => label.style.opacity = '0';
+
+    el.appendChild(dot);
+    el.appendChild(label);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  SPECTRUM BAR
+// ═══════════════════════════════════════════
+
+function renderSpectrum() {
+  const el = document.getElementById('spectrumBar');
+  el.querySelectorAll('.spectrum-dot').forEach(n=>n.remove());
+
+  const filtered = getFiltered();
+  const maxM = Math.max(...filtered.map(d=>memeScore(d.d)),1);
+  const maxS = Math.max(...filtered.map(d=>seriousScore(d.d)),1);
+
+  filtered.forEach(d => {
+    const m = memeScore(d.d);
+    const s = seriousScore(d.d);
+    // Position: 0=pure serious, 1=pure meme
+    const ratio = (m/(maxM||1)) / ((m/(maxM||1)) + (s/(maxS||1)) + 0.01);
+    const pct = ratio * 100;
+
+    const rarity = getRarity(d.cat);
+    const color = RARITY_COLORS[rarity];
+
+    const dot = document.createElement('div');
+    dot.className = 'spectrum-dot';
+    dot.style.left = pct + '%';
+    dot.style.background = color;
+    dot.innerHTML = `<div class="spectrum-tooltip">${d.d}</div>`;
+    el.appendChild(dot);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  PHONE PREVIEW
+// ═══════════════════════════════════════════
+
+const APP_COLORS = {
+  ai:'linear-gradient(135deg,#8B5CF6,#6D28D9)',
+  fun:'linear-gradient(135deg,#EC4899,#BE185D)',
+  finance:'linear-gradient(135deg,#F59E0B,#D97706)',
+  saas:'linear-gradient(135deg,#10B981,#059669)',
+  tool:'linear-gradient(135deg,#6B7280,#4B5563)',
+  community:'linear-gradient(135deg,#06B6D4,#0891B2)',
+  health:'linear-gradient(135deg,#3B82F6,#2563EB)',
+  education:'linear-gradient(135deg,#14B8A6,#0D9488)',
+  content:'linear-gradient(135deg,#F97316,#EA580C)',
+  marketplace:'linear-gradient(135deg,#EAB308,#CA8A04)',
+  local:'linear-gradient(135deg,#84CC16,#65A30D)',
+};
+
+function getAppInitials(domain) {
+  const name = domain.replace(/\.(com|ai|io|net|xyz|org)$/,'');
+  if(name.length <= 3) return name.toUpperCase();
+  // Try to get initials from camelCase or word boundaries
+  const words = name.match(/[a-z]+/gi) || [name];
+  if(words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  return name.slice(0,2).toUpperCase();
+}
+
+function renderPhone() {
+  const grid = document.getElementById('phoneGrid');
+  const shuffled = [...getFiltered()].sort(() => Math.random() - 0.5);
+  const picks = shuffled.slice(0, 12);
+
+  grid.innerHTML = picks.map(d => {
+    const name = d.d.replace(/\.(com|ai|io|net|xyz|org)$/,'');
+    const isSentence = name.length > 16;
+    const bg = APP_COLORS[d.cat] || APP_COLORS.tool;
+    return `<div class="app-icon">
+      <div class="app-dot" style="background:${bg}">${getAppInitials(d.d)}</div>
+      <div class="app-label${isSentence?' sentence':''}">${name}</div>
+    </div>`;
+  }).join('');
+}
+
+function shufflePhone() { renderPhone(); }
+
+// ═══════════════════════════════════════════
+//  SENTENCE-LENGTH DOMAINS
+// ═══════════════════════════════════════════
+
+function renderSentences() {
+  const el = document.getElementById('sentenceList');
+  const filtered = getFiltered();
+
+  // Sentence = domain name (without TLD) has 4+ "words" or 20+ chars
+  const sentences = filtered.filter(d => {
+    const name = d.d.replace(/\.(com|ai|io|net|xyz|org)$/,'');
+    return name.length >= 18;
+  }).sort((a,b) => b.d.length - a.d.length);
+
+  if(sentences.length === 0) {
+    el.innerHTML = '<p style="text-align:center;color:var(--dim);font-size:0.8rem">No sentence-length domains in this filter</p>';
+    return;
+  }
+
+  el.innerHTML = sentences.slice(0, 15).map(d => {
+    const rarity = getRarity(d.cat);
+    const color = RARITY_COLORS[rarity];
+    const m = memeScore(d.d);
+    const s = seriousScore(d.d);
+    const tier = classifyTier(d);
+    const tConfig = TIER_CONFIG[tier];
+    // Generate a "read it out loud" version
+    const name = d.d.replace(/\.(com|ai|io|net|xyz|org)$/,'');
+    const spoken = name.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/([a-zA-Z])(\d)/g,'$1 $2').toLowerCase();
+
+    return `<div class="sentence-card" style="border-left:3px solid ${color}" onclick="window.open('fortune0-memes.html?d=${encodeURIComponent(d.d)}','_blank')">
+      <div class="sentence-domain" style="color:${color}">${d.d}</div>
+      <div class="sentence-read">"${spoken}"</div>
+      <div class="sentence-meta">
+        <span style="color:${tConfig.color}">${tConfig.label}</span>
+        <span>meme: ${m}</span>
+        <span>serious: ${s}</span>
+        <span>${d.d.length} chars</span>
+        <span style="color:${color}">${rarity}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  TIER SECTIONS
+// ═══════════════════════════════════════════
+
+function renderTiers() {
+  const el = document.getElementById('tierSections');
+  const filtered = getFiltered();
+
+  const tiers = {};
+  filtered.forEach(d => {
+    const t = classifyTier(d);
+    if(!tiers[t]) tiers[t] = [];
+    tiers[t].push(d);
+  });
+
+  // Order: meme → attention → middle → product → serious
+  const order = ['meme','attention','middle','product','serious'];
+
+  el.innerHTML = order.filter(t => tiers[t]?.length > 0).map(t => {
+    const conf = TIER_CONFIG[t];
+    const domains = tiers[t].sort((a,b) => memeScore(b.d) - memeScore(a.d));
+
+    return `<div class="tier" style="border-color:${conf.color}20">
+      <div class="tier-header">
+        <span class="tier-badge" style="background:${conf.bg};color:${conf.color}">${conf.label}</span>
+        <span class="tier-count">${domains.length} domains</span>
+      </div>
+      <div class="tier-desc">${conf.desc}</div>
+      <div class="domain-list">
+        ${domains.map(d => {
+          const rarity = getRarity(d.cat);
+          const color = RARITY_COLORS[rarity];
+          const m = memeScore(d.d);
+          return `<div class="d-row" onclick="window.open('fortune0-memes.html?d=${encodeURIComponent(d.d)}','_blank')">
+            <div class="d-name" style="color:${color}">${d.d}</div>
+            <div class="d-cat">${d.cat}</div>
+            <div class="d-len">${d.d.length}c</div>
+            <div class="d-shock">${m>0?m:''}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  RENDER ALL
+// ═══════════════════════════════════════════
+
+function renderAll() {
+  renderSpectrum();
+  renderScatter();
+  renderPhone();
+  renderSentences();
+  renderTiers();
+}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000)}
+
+function init() {
+  renderFilters();
+  renderAll();
+}
+
+init();
+</script>
+</body>
+</html>

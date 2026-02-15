@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>fortune0 challenge — explain this domain</title>
+<meta property="og:title" content="Can you explain this domain in 3 minutes?">
+<meta property="og:description" content="One domain. Five questions. Your answers become the content. fortune0.com">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#09090F;--s1:#111118;--s2:#18181F;--card:#1E1E28;--border:#2A2A38;--dim:#555;--text:#9CA3AF;--white:#EAEAEA;--pink:#EC4899;--green:#10B981;--blue:#3B82F6;--amber:#F59E0B;--red:#EF4444;--purple:#8B5CF6;--cyan:#06B6D4}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--white);min-height:100vh;min-height:100dvh;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+.w{max-width:640px;margin:0 auto;padding:1rem;width:100%}
+
+/* ═══ HEADER — compact, mobile-first ═══ */
+header{text-align:center;padding:1rem 0 0.5rem}
+header h1{font-size:1.6rem;font-weight:900;letter-spacing:-1.5px}
+header h1 span{color:var(--amber)}
+.tagline{color:var(--dim);font-size:0.7rem;margin-top:0.2rem;letter-spacing:1px}
+
+/* ═══ REC INDICATOR — the "we're recording" feel ═══ */
+.rec-bar{display:none;align-items:center;justify-content:space-between;padding:0.5rem 0.75rem;background:var(--s1);border:1px solid var(--border);border-radius:10px;margin:0.75rem 0;gap:0.5rem}
+.rec-bar.active{display:flex}
+.rec-left{display:flex;align-items:center;gap:0.4rem}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 4px rgba(239,68,68,0.5)}50%{opacity:0.3;box-shadow:0 0 12px rgba(239,68,68,0.8)}}
+.rec-label{font-size:0.6rem;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:2px}
+.rec-elapsed{font-family:Consolas,monospace;font-size:0.75rem;color:var(--text);letter-spacing:1px}
+.rec-domain{font-size:0.65rem;color:var(--dim);font-weight:700;letter-spacing:-0.3px;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ═══ VIDEO TIMELINE — chapter markers for questions ═══ */
+.timeline{margin:0.5rem 0;position:relative}
+.timeline-bar{width:100%;height:6px;background:var(--s2);border-radius:3px;overflow:hidden;position:relative}
+.timeline-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--amber));border-radius:3px;transition:width 0.3s;position:relative}
+.timeline-fill::after{content:'';position:absolute;right:-1px;top:-3px;width:12px;height:12px;background:var(--white);border-radius:50%;box-shadow:0 0 8px rgba(255,255,255,0.3)}
+.timeline-chapters{display:flex;justify-content:space-between;margin-top:0.4rem;position:relative}
+.chapter-mark{font-size:0.5rem;color:var(--dim);text-align:center;text-transform:uppercase;letter-spacing:0.5px;cursor:default;flex:1;transition:color 0.3s}
+.chapter-mark.active{color:var(--amber);font-weight:700}
+.chapter-mark.done{color:var(--green)}
+.chapter-mark.curveball{color:var(--pink)}
+
+/* ═══ COUNTDOWN — overlaid on everything ═══ */
+.countdown-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(9,9,15,0.95);z-index:100;align-items:center;justify-content:center;flex-direction:column}
+.countdown-overlay.active{display:flex}
+.countdown-big{font-family:Consolas,monospace;font-size:6rem;font-weight:900;color:var(--amber);animation:countPulse 1s ease infinite}
+@keyframes countPulse{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+.countdown-sub{font-size:0.8rem;color:var(--dim);margin-top:1rem;text-transform:uppercase;letter-spacing:3px}
+
+/* ═══ PHASES ═══ */
+.phase{display:none;animation:fadeIn 0.3s ease}
+.phase.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ START SCREEN ═══ */
+.start-hero{text-align:center;padding:2rem 0}
+.start-hero p{font-size:0.85rem;color:var(--text);margin-bottom:0.75rem;line-height:1.5}
+.format-pills{display:flex;flex-wrap:wrap;gap:0.4rem;justify-content:center;margin:1.5rem 0}
+.format-pill{font-size:0.6rem;padding:0.25rem 0.65rem;border-radius:20px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--dim);letter-spacing:0.5px}
+.format-pill.highlight{border-color:var(--amber);color:var(--amber);background:rgba(245,158,11,0.06)}
+.seed-input-row{margin-top:1rem;display:flex;gap:0.5rem;justify-content:center;align-items:center;flex-wrap:wrap}
+.seed-input-row input{padding:0.5rem 0.75rem;background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:Consolas,monospace;font-size:0.8rem;text-align:center;width:180px}
+.seed-input-row input:focus{outline:none;border-color:var(--amber)}
+
+/* ═══ DOMAIN REVEAL ═══ */
+.domain-reveal{text-align:center;padding:1.5rem 0}
+.domain-name{font-size:1.8rem;font-weight:900;letter-spacing:-1.5px;word-break:break-all;line-height:1.1}
+.domain-mystery{font-size:0.8rem;color:var(--dim);margin-top:0.4rem;font-style:italic}
+.domain-rarity{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;padding:0.15rem 0.5rem;border-radius:4px;background:rgba(255,255,255,0.05);margin-top:0.4rem}
+.domain-rarity .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.sponsored-tag{font-size:0.5rem;color:var(--cyan);text-transform:uppercase;letter-spacing:3px;margin-top:0.75rem;opacity:0.6}
+
+/* ═══ QUESTION — teleprompter style ═══ */
+.question-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin:0.75rem 0;position:relative}
+.question-num{font-size:0.55rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:0.4rem}
+.question-text{font-size:1rem;font-weight:700;line-height:1.4;margin-bottom:0.5rem}
+.question-hint{font-size:0.65rem;color:var(--dim);margin-bottom:0.75rem;font-style:italic}
+.curveball-tag{display:inline-block;font-size:0.5rem;text-transform:uppercase;letter-spacing:2px;padding:0.1rem 0.45rem;border-radius:4px;background:rgba(236,72,153,0.1);color:var(--pink);margin-bottom:0.4rem}
+
+/* ═══ RESPONSE INPUT — mobile-friendly ═══ */
+.response-area{width:100%;min-height:80px;padding:0.75rem;background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:inherit;font-size:16px;resize:none;line-height:1.5;-webkit-appearance:none}
+.response-area:focus{outline:none;border-color:var(--green)}
+.response-area::placeholder{color:var(--dim)}
+.char-row{display:flex;justify-content:space-between;align-items:center;margin-top:0.3rem}
+.char-count{font-size:0.55rem;color:var(--dim)}
+.timer-mini{font-family:Consolas,monospace;font-size:0.75rem;color:var(--text)}
+.timer-mini.warn{color:var(--amber)}
+.timer-mini.danger{color:var(--red)}
+
+/* ═══ CONTROLS — always visible ═══ */
+.controls{display:flex;gap:0.5rem;justify-content:center;margin-top:0.75rem;flex-wrap:wrap}
+
+/* ═══ LIVE TRANSCRIPT — building as you go ═══ */
+.transcript-live{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:0.75rem;margin:1rem 0;max-height:200px;overflow-y:auto;display:none}
+.transcript-live.active{display:block}
+.transcript-live h3{font-size:0.55rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:0.5rem}
+.t-entry{padding:0.4rem 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.75rem;line-height:1.4}
+.t-entry:last-child{border-bottom:none}
+.t-q{color:var(--amber);font-weight:700;font-size:0.65rem}
+.t-a{color:var(--text);margin-top:0.15rem}
+.t-sponsored{font-size:0.5rem;color:var(--cyan);opacity:0.5;margin-top:0.1rem}
+
+/* ═══ SCORE CARD ═══ */
+.score-card{background:linear-gradient(135deg,#111118,#1a1a2e);border:2px solid var(--amber);border-radius:16px;padding:1.5rem;margin:1rem 0;text-align:center;position:relative;overflow:hidden}
+.score-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent,rgba(245,158,11,0.04),transparent,rgba(236,72,153,0.04),transparent);animation:spin 15s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.score-card>*{position:relative;z-index:1}
+.score-big{font-size:2.5rem;font-weight:900;color:var(--amber)}
+.score-label{font-size:0.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:3px;margin-top:0.2rem}
+.score-breakdown{display:flex;justify-content:center;gap:1rem;margin-top:0.75rem;flex-wrap:wrap}
+.score-item{text-align:center}
+.score-item .num{font-family:Consolas,monospace;font-size:1rem;font-weight:800}
+.score-item .lbl{font-size:0.55rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+
+/* ═══ FULL TRANSCRIPT OUTPUT ═══ */
+.transcript-full{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin:1rem 0;position:relative}
+.transcript-full h2{font-size:0.6rem;text-transform:uppercase;letter-spacing:3px;color:var(--cyan);margin-bottom:0.75rem;text-align:center}
+.transcript-header{font-size:0.6rem;color:var(--dim);line-height:1.8;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border)}
+.transcript-body .tf-entry{margin-bottom:1rem}
+.tf-timestamp{font-family:Consolas,monospace;font-size:0.55rem;color:var(--dim)}
+.tf-speaker{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-top:0.15rem}
+.tf-speaker.host{color:var(--amber)}
+.tf-speaker.guest{color:var(--green)}
+.tf-speaker.sponsor{color:var(--cyan)}
+.tf-text{font-size:0.8rem;color:var(--text);line-height:1.5;margin-top:0.15rem}
+.tf-text.domain-mention{color:var(--white);font-weight:700}
+.transcript-copy{position:absolute;top:0.75rem;right:0.75rem;font-size:0.55rem;color:var(--dim);padding:0.2rem 0.5rem;border:1px solid var(--border);border-radius:4px;cursor:pointer}
+.transcript-copy:hover{color:var(--white);border-color:var(--dim)}
+
+/* ═══ CLIP CARDS ═══ */
+.clip-section{margin:1.5rem 0}
+.clip-section h2{font-size:0.6rem;text-transform:uppercase;letter-spacing:3px;color:var(--amber);margin-bottom:0.75rem;text-align:center}
+.clip-card{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:1rem;margin:0.4rem 0;position:relative;overflow:hidden;cursor:pointer;transition:all 0.2s}
+.clip-card:hover{border-color:var(--pink);transform:translateY(-1px)}
+.clip-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:3px 3px 0 0}
+.clip-card.tone-original::before{background:var(--white)}
+.clip-card.tone-hype::before{background:var(--pink)}
+.clip-card.tone-chill::before{background:var(--blue)}
+.clip-card.tone-unhinged::before{background:var(--red)}
+.clip-card.tone-corporate::before{background:var(--green)}
+.clip-tone{font-size:0.5rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:0.2rem}
+.clip-quote{font-size:0.8rem;line-height:1.5;font-style:italic}
+.clip-domain{font-size:0.65rem;color:var(--dim);margin-top:0.4rem}
+.clip-copy{position:absolute;top:0.6rem;right:0.6rem;font-size:0.55rem;color:var(--dim);padding:0.15rem 0.4rem;border:1px solid var(--border);border-radius:4px;cursor:pointer}
+.clip-copy:hover{color:var(--white);border-color:var(--dim)}
+
+/* ═══ BUTTONS ═══ */
+.btn{padding:0.6rem 1.25rem;border:none;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;transition:all 0.15s;display:inline-block;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-green{background:var(--green);color:#000}
+.btn-pink{background:var(--pink);color:#fff}
+.btn-amber{background:var(--amber);color:#000}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-cyan{background:var(--cyan);color:#000}
+.btn-red{background:var(--red);color:#fff}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-big{padding:0.9rem 2rem;font-size:1rem}
+
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.6rem 1.25rem;font-size:0.8rem;color:var(--white);display:none;z-index:99;box-shadow:0 4px 20px rgba(0,0,0,0.5);max-width:90%;text-align:center}
+.toast.show{display:block;animation:fadeIn 0.3s ease}
+
+footer{text-align:center;padding:1rem 0;border-top:1px solid var(--border);margin-top:1rem}
+footer p{font-size:0.65rem;color:var(--dim)}
+footer a{color:var(--green);text-decoration:none}
+
+/* ═══ MOBILE-FIRST RESPONSIVE ═══ */
+@media(max-width:500px){
+  .w{padding:0.75rem}
+  header h1{font-size:1.3rem}
+  .domain-name{font-size:1.4rem}
+  .score-big{font-size:2rem}
+  .score-breakdown{gap:0.6rem}
+  .question-text{font-size:0.9rem}
+  .btn{padding:0.5rem 1rem;font-size:0.75rem}
+  .btn-big{padding:0.7rem 1.5rem;font-size:0.9rem}
+  .clip-quote{font-size:0.75rem}
+  .rec-domain{max-width:30%}
+  .countdown-big{font-size:4rem}
+}
+@media(min-width:501px) and (max-width:768px){
+  header h1{font-size:1.5rem}
+  .domain-name{font-size:1.6rem}
+}
+/* ═══ LANDSCAPE MODE ═══ */
+@media(max-height:500px) and (orientation:landscape){
+  .w{padding:0.5rem 1rem}
+  header{padding:0.5rem 0 0.25rem}
+  header h1{font-size:1.2rem}
+  .domain-reveal{padding:0.5rem 0}
+  .domain-name{font-size:1.3rem}
+  .question-card{padding:0.75rem;margin:0.4rem 0}
+  .response-area{min-height:50px}
+  .score-card{padding:1rem;margin:0.5rem 0}
+  .countdown-big{font-size:3.5rem}
+  .start-hero{padding:0.5rem 0}
+  .start-hero p{font-size:0.75rem;margin-bottom:0.4rem}
+}
+</style>
+</head>
+<body>
+<div class="w">
+
+<header>
+  <h1>fortune0 <span>challenge</span></h1>
+  <p class="tagline">one domain. five questions. your answers become the content.</p>
+</header>
+
+<!-- ═══ REC BAR — visible during recording ═══ -->
+<div class="rec-bar" id="recBar">
+  <div class="rec-left">
+    <div class="rec-dot"></div>
+    <span class="rec-label">REC</span>
+    <span class="rec-elapsed" id="recElapsed">0:00</span>
+  </div>
+  <span class="rec-domain" id="recDomain">—</span>
+</div>
+
+<!-- ═══ VIDEO TIMELINE ═══ -->
+<div class="timeline" id="timeline" style="display:none">
+  <div class="timeline-bar">
+    <div class="timeline-fill" id="timelineFill" style="width:0%"></div>
+  </div>
+  <div class="timeline-chapters" id="timelineChapters"></div>
+</div>
+
+<!-- ═══ COUNTDOWN OVERLAY ═══ -->
+<div class="countdown-overlay" id="countdownOverlay">
+  <div class="countdown-big" id="countdownNum">3</div>
+  <div class="countdown-sub">recording starts in...</div>
+</div>
+
+<!-- ═══ PHASE 0: START ═══ -->
+<div class="phase active" id="phaseStart">
+  <div class="start-hero">
+    <p>You get a random domain from the fortune0 portfolio. No context. Just the name.</p>
+    <p>5 questions. 3 minutes. Some are curveballs. We're recording everything.</p>
+    <div class="format-pills">
+      <span class="format-pill">3 min timer</span>
+      <span class="format-pill">5 questions</span>
+      <span class="format-pill highlight">curveballs</span>
+      <span class="format-pill">live transcript</span>
+      <span class="format-pill highlight">tone-switched clips</span>
+    </div>
+    <button class="btn btn-amber btn-big" onclick="startChallenge()" style="margin-top:1rem">Draw a domain</button>
+    <div class="seed-input-row">
+      <span style="font-size:0.7rem;color:var(--dim)">or challenge a specific domain:</span>
+      <input type="text" id="seedInput" placeholder="domain or seed ID">
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PHASE 1: DOMAIN REVEAL ═══ -->
+<div class="phase" id="phaseReveal">
+  <div class="domain-reveal">
+    <div class="domain-rarity" id="revealRarity"><span class="dot"></span> <span id="revealRarityText">—</span></div>
+    <div class="domain-name" id="revealDomain">—</div>
+    <div class="domain-mystery" id="revealMystery">—</div>
+    <div class="sponsored-tag">sponsored question</div>
+  </div>
+  <div style="text-align:center">
+    <p style="font-size:0.8rem;color:var(--text);margin-bottom:1rem;line-height:1.5">You have 3 minutes. 5 questions. The domain name is all you get.<br>Your answers go into the transcript. We're recording.</p>
+    <button class="btn btn-red btn-big" onclick="beginCountdown()">Start recording</button>
+  </div>
+</div>
+
+<!-- ═══ PHASE 2: QUESTIONS (recording) ═══ -->
+<div class="phase" id="phaseQuestions">
+  <div id="questionContainer"></div>
+  <div class="char-row">
+    <span class="char-count"><span id="charCount">0</span> chars</span>
+    <span class="timer-mini" id="timerMini">3:00</span>
+  </div>
+  <div class="controls" id="questionControls">
+    <button class="btn btn-green" onclick="submitAnswer()" id="submitBtn">Next</button>
+    <button class="btn btn-ghost" onclick="skipQuestion()">Skip</button>
+  </div>
+  <!-- Live transcript preview -->
+  <div class="transcript-live" id="transcriptLive">
+    <h3>Live transcript</h3>
+    <div id="transcriptLiveEntries"></div>
+  </div>
+</div>
+
+<!-- ═══ PHASE 3: RESULTS ═══ -->
+<div class="phase" id="phaseResults">
+  <div class="score-card" id="scoreCard">
+    <div class="score-big" id="scoreBig">—</div>
+    <div class="score-label">Challenge Score</div>
+    <div class="score-breakdown" id="scoreBreakdown"></div>
+  </div>
+
+  <!-- Concept reveal -->
+  <div class="domain-reveal" style="padding:0.75rem 0">
+    <div class="domain-name" id="resultDomain" style="font-size:1.3rem">—</div>
+    <div class="domain-mystery" id="resultConcept">—</div>
+  </div>
+
+  <!-- Full transcript -->
+  <div class="transcript-full" id="transcriptFull">
+    <span class="transcript-copy" onclick="copyTranscript()">copy</span>
+    <h2>Full transcript</h2>
+    <div class="transcript-header" id="transcriptHeader"></div>
+    <div class="transcript-body" id="transcriptBody"></div>
+  </div>
+
+  <!-- Tone-switched clips -->
+  <div class="clip-section">
+    <h2>Clippable moments</h2>
+    <div id="clipCards"></div>
+  </div>
+
+  <!-- Actions -->
+  <div class="controls" style="margin:1rem 0">
+    <button class="btn btn-pink" onclick="copyAllClips()">Copy all clips</button>
+    <button class="btn btn-purple" onclick="shareChallenge()">Share link</button>
+    <button class="btn btn-amber" onclick="openAsMeme()">Open as meme</button>
+    <button class="btn btn-ghost" onclick="newChallenge()">New challenge</button>
+  </div>
+</div>
+
+<footer>
+  <p><a href="fortune0-seeds.html">seeds</a> · <a href="fortune0-memes.html">memes</a> · <a href="fortune0-tiers.html">tiers</a> · <a href="https://fortune0.com">fortune0</a></p>
+  <p style="margin-top:0.2rem">your answers are the content. the content is the marketing.</p>
+</footer>
+
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  DOMAINS
+// ═══════════════════════════════════════════
+const DOMAINS = [
+  {d:"toneswitch.com",c:"AI tool that adjusts writing tone",cat:"ai"},
+  {d:"brandaidkit.com",c:"AI-powered brand identity builder",cat:"ai"},
+  {d:"ghostmemeter.com",c:"AI that detects when you're being ghosted",cat:"ai"},
+  {d:"sellthismvp.com",c:"AI generates sales copy for your MVP",cat:"ai"},
+  {d:"whoswronghere.com",c:"AI argument mediator",cat:"ai"},
+  {d:"ipomyidea.com",c:"AI valuates your startup idea",cat:"ai"},
+  {d:"howmucharemyideasworth.com",c:"AI-powered idea valuation engine",cat:"ai"},
+  {d:"knowwhatstuck.com",c:"AI analyzes what content resonated most",cat:"ai"},
+  {d:"tweetaudit.com",c:"AI-powered social media audit tool",cat:"ai"},
+  {d:"mascotmurder.com",c:"Whodunit mystery with brand mascots",cat:"fun"},
+  {d:"jkyousuck.com",c:"Roast battle tournament simulator",cat:"fun"},
+  {d:"fartjokesonline.com",c:"Exactly what it sounds like",cat:"fun"},
+  {d:"roastthebrand.com",c:"Comedic brand roasting game",cat:"fun"},
+  {d:"accentwars.com",c:"Accent battle game",cat:"fun"},
+  {d:"dealordelete.com",c:"Quick-fire deal negotiation game",cat:"fun"},
+  {d:"cringerelay.com",c:"Pass the cringe — social relay game",cat:"fun"},
+  {d:"onepennymeme.com",c:"Meme marketplace at 1 cent each",cat:"fun"},
+  {d:"xchangememe.com",c:"Meme stock exchange",cat:"fun"},
+  {d:"stillnolaunch.com",c:"Countdown to never launching",cat:"fun"},
+  {d:"trilliondollarsite.com",c:"Million dollar homepage but way bigger",cat:"fun"},
+  {d:"death2data.com",c:"Privacy-first search engine",cat:"saas"},
+  {d:"installkernel.com",c:"Real estate CRM with local-first data",cat:"saas"},
+  {d:"vaultdaemon.com",c:"Encrypted vault management daemon",cat:"saas"},
+  {d:"blamechain.com",c:"Accountability chain for team projects",cat:"saas"},
+  {d:"proofofvibe.com",c:"Vibe verification protocol",cat:"saas"},
+  {d:"fortune0.com",c:"Open incubator — 230 domains, one membership",cat:"marketplace"},
+  {d:"soulfra.com",c:"Work-to-earn co-op",cat:"marketplace"},
+  {d:"saveorsink.com",c:"Personal finance gamification platform",cat:"finance"},
+  {d:"buydumbshitfeelsad.com",c:"Accountability app preventing impulse purchases",cat:"health"},
+  {d:"deluludrop.com",c:"Reality check app for delusional thinking",cat:"health"},
+  {d:"cringeproof.com",c:"Social anxiety training with exposure therapy",cat:"health"},
+  {d:"scaredofshipping.com",c:"Ship anxiety therapy for creators",cat:"health"},
+  {d:"oofbuddy.com",c:"Emotional support for rough moments",cat:"health"},
+  {d:"ruinmesoftly.com",c:"Rejection therapy delivering gentle criticism",cat:"health"},
+  {d:"fakefocus.com",c:"Focus simulator for remote workers",cat:"tool"},
+  {d:"wrongtab.com",c:"Browser extension for accidental tab detection",cat:"tool"},
+  {d:"dollarsentence.com",c:"Write a sentence, earn a dollar",cat:"tool"},
+  {d:"pimpmychrome.com",c:"Chrome browser customization toolkit",cat:"tool"},
+  {d:"leftonreadbygod.com",c:"Existential philosophy blog about being ignored",cat:"content"},
+  {d:"nosnapdidnthappen.com",c:"Denial support group for dating app ghosting",cat:"community"},
+  {d:"talkshitwithfriends.com",c:"Gossip-friendly chat app for friend groups",cat:"community"},
+  {d:"hookclinic.com",c:"Learn to write killer hooks",cat:"education"},
+  {d:"deathtobigtech.com",c:"Open-source alternatives to Big Tech",cat:"education"},
+  {d:"stpetepros.com",c:"St. Pete professional services directory",cat:"local"},
+  {d:"tampatechhive.com",c:"Tampa Bay tech community hub",cat:"local"},
+  {d:"hollowtown.com",c:"Atmospheric horror narrative platform",cat:"fun"},
+  {d:"gachavibe.com",c:"Gacha-style random vibe generator",cat:"fun"},
+  {d:"mascotrooms.com",c:"Create and battle custom mascots",cat:"fun"},
+  {d:"softthrowdown.com",c:"Gentle competition platform",cat:"fun"},
+];
+
+const RARITY_MAP = {tool:'common',content:'common',education:'uncommon',community:'uncommon',local:'uncommon',health:'rare',fun:'rare',ai:'epic',saas:'epic',finance:'legendary',marketplace:'legendary'};
+const RARITY_COLORS = {common:'#9CA3AF',uncommon:'#10B981',rare:'#3B82F6',epic:'#8B5CF6',legendary:'#F59E0B'};
+
+function getRarity(cat){return RARITY_MAP[cat]||'common'}
+function seedRandom(str){let h=0;for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0}return Math.abs(h)}
+
+// ═══════════════════════════════════════════
+//  QUESTION GENERATOR
+// ═══════════════════════════════════════════
+
+function getCoreQuestions(domain) {
+  return [
+    {q:`Look at "${domain.d}" — what do you think this product does?`, hint:'The domain name is your only clue. Pitch it.', type:'core'},
+    {q:`Who is the target audience for ${domain.d}?`, hint:'Be specific — age, mindset, what problem they have.', type:'core'},
+    {q:`How would you monetize ${domain.d}?`, hint:'$1/mo? Freemium? Ads? Marketplace cut?', type:'core'},
+  ];
+}
+
+const CURVEBALLS = {
+  ai: [
+    {q:'If this AI hallucinated 30% of the time, would people still pay? Why?', hint:'Trust vs entertainment value.'},
+    {q:'Competitor launched the same thing for free. What do you do in 24 hours?', hint:'Price isn\'t the only lever.'},
+    {q:'Explain this to someone who thinks AI is dangerous. Go.', hint:'Fear is a real objection.'},
+    {q:'What\'s the worst thing that happens if this goes viral tomorrow?', hint:'Scale breaks things.'},
+    {q:'Name 3 features you\'d NEVER add. Why?', hint:'What you don\'t build matters.'},
+  ],
+  fun: [
+    {q:'How do you keep people coming back after the first laugh?', hint:'Retention is the hard part of fun.'},
+    {q:'A parent finds their kid using this. Worried or amused?', hint:'Audience matters.'},
+    {q:'Make this go viral with zero budget. How?', hint:'The name is the hint.'},
+    {q:'Where\'s the line between funny and offensive here?', hint:'Comedy is subjective.'},
+    {q:'Explain this at a job interview. Go.', hint:'Fun products need serious pitches.'},
+  ],
+  health: [
+    {q:'A therapist sees this product. Recommend it or report it?', hint:'Health products carry responsibility.'},
+    {q:'Someone uses this at 3am during a bad night. What should happen?', hint:'Edge cases matter.'},
+    {q:'How do you prove this helps and isn\'t just a gimmick?', hint:'Outcomes vs entertainment.'},
+    {q:'What data are you collecting and who should NEVER see it?', hint:'Health data is sacred.'},
+    {q:'A user says this changed their life. How do you feel about that?', hint:'Responsibility comes with impact.'},
+  ],
+  saas: [
+    {q:'Biggest customer wants a feature that ruins it for everyone else. What do you say?', hint:'Enterprise pressure is real.'},
+    {q:'Explain the architecture in one sentence. No jargon.', hint:'If you can\'t simplify it...'},
+    {q:'Server goes down on launch day. First move?', hint:'Incident response reveals character.'},
+    {q:'Hacker finds a vulnerability. Pay the bounty or fix quietly?', hint:'Security culture.'},
+    {q:'Company dies tomorrow. What happens to user data?', hint:'Data custody is moral.'},
+  ],
+  finance: [
+    {q:'Someone loses money using your advice. Whose fault?', hint:'Finance = real liability.'},
+    {q:'How do you make finance fun without making it gambling?', hint:'The line is thin.'},
+    {q:'A 16-year-old signs up. What do you do?', hint:'Compliance, education, age.'},
+    {q:'Market crashes. Users panic. Now what?', hint:'Good-weather products fail in storms.'},
+  ],
+  marketplace: [
+    {q:'How do you get the first 100 sellers before you have buyers?', hint:'Chicken and egg.'},
+    {q:'Someone lists something illegal. How fast do you catch it?', hint:'Moderation at scale.'},
+    {q:'Sellers leaving because your take rate is too high. What do you cut?', hint:'Marketplace economics are fragile.'},
+  ],
+  tool: [
+    {q:'Chrome already has an extension for this. Why switch?', hint:'Distribution beats features.'},
+    {q:'Your tool breaks someone\'s workflow. How do you know before they churn?', hint:'Silent churn is the worst.'},
+    {q:'Free alternatives exist. Why would anyone pay for this?', hint:'Value isn\'t just features.'},
+  ],
+  content: [
+    {q:'10,000 readers. How do you make money without ads?', hint:'Content monetization is hard.'},
+    {q:'AI generates this for free now. Why does yours matter?', hint:'Curation vs generation.'},
+  ],
+  community: [
+    {q:'50 active users, 3 trolls. How do you handle it?', hint:'Small community = personal moderation.'},
+    {q:'Novelty wore off. What makes someone stay?', hint:'Belonging is earned.'},
+  ],
+  education: [
+    {q:'Student cheats using your platform. Your problem?', hint:'Platforms enable good and bad.'},
+    {q:'How do you know someone LEARNED something vs just clicked through?', hint:'Completion rates lie.'},
+  ],
+  local: [
+    {q:'One city only. How do you expand without losing the local feel?', hint:'Local is the feature.'},
+    {q:'National competitor enters with bigger budget. Your move?', hint:'Local trust is a moat.'},
+  ],
+};
+
+// Tone transforms
+const TONES = {
+  original: {label:'Original', emoji:'', transform: t => t},
+  hype: {label:'Hype', emoji:'', transform: t => {
+    let h = t.toUpperCase();
+    if(!h.endsWith('!')) h += '!!!';
+    h = h.replace(/\./g, '!!').replace(/,/g,' —');
+    return h;
+  }},
+  chill: {label:'Chill', emoji:'', transform: t => {
+    let c = t.toLowerCase();
+    c = c.replace(/!/g, '').replace(/\?/g, ' idk');
+    if(c.length > 120) c = c.slice(0,120) + '... yeah';
+    return c;
+  }},
+  unhinged: {label:'Unhinged', emoji:'', transform: t => {
+    let u = '';
+    for(let i=0;i<t.length;i++) u += i%2===0?t[i].toLowerCase():t[i].toUpperCase();
+    return u;
+  }},
+  corporate: {label:'Corporate', emoji:'', transform: t => {
+    let c = 'Per our analysis, ' + t.charAt(0).toLowerCase() + t.slice(1);
+    c = c.replace(/!/g, '.').replace(/lol/gi, '').replace(/idk/gi, 'further research is needed');
+    if(!c.endsWith('.')) c += '.';
+    return c + ' Please advise.';
+  }},
+};
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+
+let currentDomain = null;
+let questions = [];
+let currentQ = 0;
+let answers = [];
+let timerInterval = null;
+let recInterval = null;
+let timeLeft = 180;
+let totalTime = 180;
+let recSeconds = 0;
+let challengeStarted = false;
+
+// ═══════════════════════════════════════════
+//  CHALLENGE FLOW
+// ═══════════════════════════════════════════
+
+function showPhase(id) {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startChallenge() {
+  const seedInput = document.getElementById('seedInput').value.trim();
+  if (seedInput) {
+    // Try to find domain by name first
+    const byName = DOMAINS.find(x => x.d.toLowerCase() === seedInput.toLowerCase() || x.d.toLowerCase() === seedInput.toLowerCase() + '.com');
+    if (byName) {
+      currentDomain = byName;
+    } else {
+      const idx = seedRandom(seedInput) % DOMAINS.length;
+      currentDomain = DOMAINS[idx];
+    }
+  } else {
+    currentDomain = DOMAINS[Math.floor(Math.random() * DOMAINS.length)];
+  }
+
+  const rarity = getRarity(currentDomain.cat);
+  const color = RARITY_COLORS[rarity];
+
+  document.getElementById('revealDomain').textContent = currentDomain.d;
+  document.getElementById('revealDomain').style.color = color;
+  document.getElementById('revealRarity').querySelector('.dot').style.background = color;
+  document.getElementById('revealRarityText').textContent = rarity;
+  document.getElementById('revealRarityText').style.color = color;
+
+  const mysteries = ['what is this?','you tell us.','explain this.','go.','the name is all you get.','figure it out.','say it out loud.'];
+  document.getElementById('revealMystery').textContent = mysteries[Math.floor(Math.random()*mysteries.length)];
+
+  showPhase('phaseReveal');
+}
+
+// 3-2-1 countdown before recording starts
+function beginCountdown() {
+  const overlay = document.getElementById('countdownOverlay');
+  const num = document.getElementById('countdownNum');
+  overlay.classList.add('active');
+
+  let count = 3;
+  num.textContent = count;
+
+  const countInterval = setInterval(() => {
+    count--;
+    if (count <= 0) {
+      clearInterval(countInterval);
+      overlay.classList.remove('active');
+      beginQuestions();
+    } else {
+      num.textContent = count;
+    }
+  }, 1000);
+}
+
+function beginQuestions() {
+  const core = getCoreQuestions(currentDomain);
+  const catCurves = CURVEBALLS[currentDomain.cat] || CURVEBALLS.tool;
+  const shuffledCurves = [...catCurves].sort(() => Math.random() - 0.5);
+  const picked = shuffledCurves.slice(0, 2).map(q => ({...q, type:'curveball'}));
+
+  // Interleave: core, core, curveball, core, curveball
+  questions = [core[0], core[1], picked[0], core[2], picked[1]];
+  currentQ = 0;
+  answers = [];
+  timeLeft = totalTime;
+  recSeconds = 0;
+  challengeStarted = true;
+
+  // Show rec bar + timeline
+  document.getElementById('recBar').classList.add('active');
+  document.getElementById('recDomain').textContent = currentDomain.d;
+  document.getElementById('timeline').style.display = 'block';
+
+  renderTimeline();
+  showQuestion(0);
+  startTimer();
+  startRecTimer();
+  showPhase('phaseQuestions');
+
+  // Focus textarea after render
+  setTimeout(() => {
+    const area = document.getElementById('responseArea');
+    if(area) area.focus();
+  }, 100);
+}
+
+function renderTimeline() {
+  const el = document.getElementById('timelineChapters');
+  el.innerHTML = questions.map((q, i) => {
+    const label = q.type === 'curveball' ? 'CB' : ('Q' + (i+1));
+    return `<span class="chapter-mark${i === currentQ ? ' active' : ''}${i < currentQ ? ' done' : ''}${q.type === 'curveball' ? ' curveball' : ''}" id="ch${i}">${label}</span>`;
+  }).join('');
+  // Update fill
+  const pct = ((currentQ) / questions.length) * 100;
+  document.getElementById('timelineFill').style.width = pct + '%';
+}
+
+function showQuestion(idx) {
+  const q = questions[idx];
+  const container = document.getElementById('questionContainer');
+  container.innerHTML = `
+    <div class="question-card">
+      ${q.type === 'curveball' ? '<div class="curveball-tag">curveball</div>' : ''}
+      <div class="question-num">Question ${idx + 1} of ${questions.length}</div>
+      <div class="question-text">${q.q}</div>
+      <div class="question-hint">${q.hint}</div>
+      <textarea class="response-area" id="responseArea" placeholder="Type your answer..." rows="3"></textarea>
+    </div>
+  `;
+
+  document.getElementById('responseArea').addEventListener('input', function() {
+    document.getElementById('charCount').textContent = this.value.length;
+  });
+
+  // Enter to submit on desktop
+  document.getElementById('responseArea').addEventListener('keydown', function(e) {
+    if(e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      submitAnswer();
+    }
+  });
+
+  document.getElementById('submitBtn').textContent = idx === questions.length - 1 ? 'Finish' : 'Next';
+  renderTimeline();
+}
+
+function submitAnswer() {
+  const area = document.getElementById('responseArea');
+  const answer = area ? area.value.trim() : '';
+  answers.push({
+    question: questions[currentQ].q,
+    answer: answer || '(skipped)',
+    type: questions[currentQ].type,
+    timestamp: formatTime(recSeconds),
+  });
+
+  // Update live transcript
+  updateLiveTranscript();
+
+  currentQ++;
+  if (currentQ >= questions.length) {
+    finishChallenge();
+  } else {
+    showQuestion(currentQ);
+    setTimeout(() => {
+      const newArea = document.getElementById('responseArea');
+      if(newArea) newArea.focus();
+    }, 100);
+  }
+}
+
+function skipQuestion() {
+  answers.push({
+    question: questions[currentQ].q,
+    answer: '(skipped)',
+    type: questions[currentQ].type,
+    timestamp: formatTime(recSeconds),
+  });
+  updateLiveTranscript();
+  currentQ++;
+  if (currentQ >= questions.length) {
+    finishChallenge();
+  } else {
+    showQuestion(currentQ);
+  }
+}
+
+function updateLiveTranscript() {
+  const el = document.getElementById('transcriptLive');
+  const entries = document.getElementById('transcriptLiveEntries');
+  el.classList.add('active');
+
+  const last = answers[answers.length - 1];
+  if (!last || last.answer === '(skipped)') return;
+
+  const div = document.createElement('div');
+  div.className = 't-entry';
+  div.innerHTML = `
+    <div class="t-q">${last.question}</div>
+    <div class="t-a">${last.answer.slice(0, 100)}${last.answer.length > 100 ? '...' : ''}</div>
+    <div class="t-sponsored">sponsored by ${currentDomain.d}</div>
+  `;
+  entries.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ═══════════════════════════════════════════
+//  TIMER + REC CLOCK
+// ═══════════════════════════════════════════
+
+function startTimer() {
+  const mini = document.getElementById('timerMini');
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      while (currentQ < questions.length) {
+        answers.push({question: questions[currentQ].q, answer: '(time\'s up)', type: questions[currentQ].type, timestamp: formatTime(recSeconds)});
+        currentQ++;
+      }
+      finishChallenge();
+      return;
+    }
+    const m = Math.floor(timeLeft / 60);
+    const s = timeLeft % 60;
+    const display = m + ':' + String(s).padStart(2, '0');
+    mini.textContent = display;
+    mini.className = 'timer-mini' + (timeLeft < 30 ? ' danger' : timeLeft < 60 ? ' warn' : '');
+  }, 1000);
+}
+
+function startRecTimer() {
+  const elapsed = document.getElementById('recElapsed');
+  recInterval = setInterval(() => {
+    recSeconds++;
+    elapsed.textContent = formatTime(recSeconds);
+  }, 1000);
+}
+
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return m + ':' + String(s).padStart(2, '0');
+}
+
+// ═══════════════════════════════════════════
+//  SCORING + RESULTS
+// ═══════════════════════════════════════════
+
+function finishChallenge() {
+  if (timerInterval) clearInterval(timerInterval);
+  if (recInterval) clearInterval(recInterval);
+  challengeStarted = false;
+
+  // Hide rec bar
+  document.getElementById('recBar').classList.remove('active');
+  document.getElementById('timeline').style.display = 'none';
+
+  // Score
+  let depthScore = 0, speedScore = 0, curveballScore = 0, completionScore = 0;
+  const answered = answers.filter(a => a.answer !== '(skipped)' && a.answer !== '(time\'s up)');
+  completionScore = Math.round((answered.length / answers.length) * 25);
+
+  answered.forEach(a => {
+    const len = a.answer.length;
+    if (len > 200) depthScore += 8;
+    else if (len > 100) depthScore += 5;
+    else if (len > 30) depthScore += 3;
+    else depthScore += 1;
+    if (a.type === 'curveball' && a.answer !== '(skipped)') curveballScore += 10;
+  });
+
+  depthScore = Math.min(depthScore, 35);
+  curveballScore = Math.min(curveballScore, 20);
+  speedScore = Math.min(Math.round((timeLeft / totalTime) * 20), 20);
+
+  const total = depthScore + speedScore + curveballScore + completionScore;
+
+  // Render score
+  document.getElementById('scoreBig').textContent = total;
+  document.getElementById('scoreBig').style.color = total >= 70 ? 'var(--green)' : total >= 40 ? 'var(--amber)' : 'var(--red)';
+
+  document.getElementById('scoreBreakdown').innerHTML = [
+    {num: depthScore, lbl: 'Depth', max: 35},
+    {num: speedScore, lbl: 'Speed', max: 20},
+    {num: curveballScore, lbl: 'Curves', max: 20},
+    {num: completionScore, lbl: 'Complete', max: 25},
+  ].map(s => `<div class="score-item"><div class="num" style="color:${s.num >= s.max*0.7?'var(--green)':'var(--amber)'}">${s.num}/${s.max}</div><div class="lbl">${s.lbl}</div></div>`).join('');
+
+  const rarity = getRarity(currentDomain.cat);
+  const color = RARITY_COLORS[rarity];
+  document.getElementById('resultDomain').textContent = currentDomain.d;
+  document.getElementById('resultDomain').style.color = color;
+  document.getElementById('resultConcept').textContent = 'Actual product: ' + currentDomain.c;
+
+  // Build full transcript
+  buildTranscript();
+  // Generate clips
+  generateClips();
+  showPhase('phaseResults');
+}
+
+// ═══════════════════════════════════════════
+//  FULL TRANSCRIPT — podcast/video format
+// ═══════════════════════════════════════════
+
+function buildTranscript() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+
+  document.getElementById('transcriptHeader').innerHTML = `
+    <strong>fortune0 challenge transcript</strong><br>
+    Domain: ${currentDomain.d}<br>
+    Category: ${currentDomain.cat} | Rarity: ${getRarity(currentDomain.cat)}<br>
+    Date: ${dateStr} | Duration: ${formatTime(recSeconds)}<br>
+    <span style="color:var(--cyan)">Sponsored question: ${currentDomain.d}</span>
+  `;
+
+  const body = document.getElementById('transcriptBody');
+  let html = '';
+
+  // Opening — host introduces the domain
+  html += `<div class="tf-entry">
+    <div class="tf-timestamp">[0:00]</div>
+    <div class="tf-speaker host">HOST</div>
+    <div class="tf-text">Today's sponsored question is <span class="domain-mention">${currentDomain.d}</span>. No context. No hints. Just the domain name. Let's see what you've got.</div>
+  </div>`;
+
+  // Q&A entries
+  answers.forEach((a, i) => {
+    const qType = a.type === 'curveball' ? 'HOST (CURVEBALL)' : 'HOST';
+    html += `<div class="tf-entry">
+      <div class="tf-timestamp">[${a.timestamp}]</div>
+      <div class="tf-speaker host">${qType}</div>
+      <div class="tf-text">${a.question}</div>
+    </div>`;
+
+    if (a.answer !== '(skipped)' && a.answer !== "(time's up)") {
+      html += `<div class="tf-entry">
+        <div class="tf-timestamp">[${a.timestamp}]</div>
+        <div class="tf-speaker guest">GUEST</div>
+        <div class="tf-text">${escapeHtml(a.answer)}</div>
+      </div>`;
+    } else {
+      html += `<div class="tf-entry">
+        <div class="tf-timestamp">[${a.timestamp}]</div>
+        <div class="tf-speaker guest">GUEST</div>
+        <div class="tf-text" style="color:var(--dim);font-style:italic">${a.answer}</div>
+      </div>`;
+    }
+  });
+
+  // Closing — reveal
+  html += `<div class="tf-entry">
+    <div class="tf-timestamp">[${formatTime(recSeconds)}]</div>
+    <div class="tf-speaker sponsor">REVEAL</div>
+    <div class="tf-text"><span class="domain-mention">${currentDomain.d}</span> is actually: ${currentDomain.c}.</div>
+  </div>`;
+
+  // Sponsored tag
+  html += `<div class="tf-entry" style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border)">
+    <div class="tf-speaker sponsor">SPONSORED BY</div>
+    <div class="tf-text">This challenge was brought to you by <span class="domain-mention">${currentDomain.d}</span> — part of the fortune0 portfolio. 230 domains. $1/mo. fortune0.com</div>
+  </div>`;
+
+  body.innerHTML = html;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function copyTranscript() {
+  let text = `FORTUNE0 CHALLENGE TRANSCRIPT\n`;
+  text += `Domain: ${currentDomain.d}\n`;
+  text += `Category: ${currentDomain.cat} | Rarity: ${getRarity(currentDomain.cat)}\n`;
+  text += `Duration: ${formatTime(recSeconds)}\n`;
+  text += `Sponsored question: ${currentDomain.d}\n`;
+  text += `${'='.repeat(40)}\n\n`;
+
+  text += `[0:00] HOST: Today's sponsored question is ${currentDomain.d}. No context. No hints. Just the domain name.\n\n`;
+
+  answers.forEach(a => {
+    const speaker = a.type === 'curveball' ? 'HOST (CURVEBALL)' : 'HOST';
+    text += `[${a.timestamp}] ${speaker}: ${a.question}\n`;
+    text += `[${a.timestamp}] GUEST: ${a.answer}\n\n`;
+  });
+
+  text += `[${formatTime(recSeconds)}] REVEAL: ${currentDomain.d} is actually: ${currentDomain.c}\n\n`;
+  text += `---\nSponsored by ${currentDomain.d} — fortune0.com\n`;
+
+  navigator.clipboard.writeText(text).then(() => toast('Transcript copied — paste it anywhere')).catch(()=>{});
+}
+
+// ═══════════════════════════════════════════
+//  CLIP GENERATION
+// ═══════════════════════════════════════════
+
+function generateClips() {
+  const el = document.getElementById('clipCards');
+  const clips = [];
+
+  const real = answers.filter(a => a.answer !== '(skipped)' && a.answer !== "(time's up)" && a.answer.length > 20);
+  real.sort((a, b) => b.answer.length - a.answer.length);
+  const best = real.slice(0, 2);
+
+  best.forEach(a => {
+    const raw = a.answer.length > 280 ? a.answer.slice(0, 277) + '...' : a.answer;
+    Object.entries(TONES).forEach(([key, tone]) => {
+      clips.push({
+        tone: key,
+        toneLabel: tone.label,
+        text: tone.transform(raw),
+        question: a.question,
+        domain: currentDomain.d,
+        timestamp: a.timestamp,
+      });
+    });
+  });
+
+  if (clips.length === 0) {
+    clips.push({
+      tone: 'original', toneLabel: 'Original',
+      text: `I looked at ${currentDomain.d} and honestly had no idea what to say.`,
+      question: 'General', domain: currentDomain.d, timestamp: '0:00',
+    });
+  }
+
+  el.innerHTML = clips.map((c, i) => `
+    <div class="clip-card tone-${c.tone}" onclick="copyClip(${i})" data-text="${encodeURIComponent(c.text)}">
+      <div class="clip-copy" onclick="event.stopPropagation();copyClip(${i})">copy</div>
+      <div class="clip-tone">${c.toneLabel} · ${c.timestamp}</div>
+      <div class="clip-quote">"${escapeHtml(c.text)}"</div>
+      <div class="clip-domain">— on ${c.domain} · fortune0 challenge</div>
+    </div>
+  `).join('');
+
+  window._allClips = clips;
+}
+
+function copyClip(idx) {
+  const clip = window._allClips[idx];
+  if (!clip) return;
+  const text = `"${clip.text}"\n\n— on ${clip.domain}\nfortune0.com/challenge`;
+  navigator.clipboard.writeText(text).then(() => toast('Clip copied')).catch(()=>{});
+}
+
+function copyAllClips() {
+  if (!window._allClips) return;
+  const text = window._allClips.map(c =>
+    `[${c.toneLabel}]\n"${c.text}"\n— on ${c.domain}`
+  ).join('\n\n---\n\n');
+  navigator.clipboard.writeText(text + '\n\nfortune0.com/challenge').then(() => toast('All clips copied')).catch(()=>{});
+}
+
+function shareChallenge() {
+  const url = location.origin + location.pathname + '?d=' + encodeURIComponent(currentDomain.d);
+  navigator.clipboard.writeText(url).then(() => toast('Challenge link copied — dare someone')).catch(()=>{});
+}
+
+function openAsMeme() {
+  window.open('fortune0-memes.html?d=' + encodeURIComponent(currentDomain.d), '_blank');
+}
+
+function newChallenge() {
+  currentDomain = null;
+  questions = [];
+  currentQ = 0;
+  answers = [];
+  timeLeft = totalTime;
+  recSeconds = 0;
+  document.getElementById('seedInput').value = '';
+  document.getElementById('transcriptLiveEntries').innerHTML = '';
+  document.getElementById('transcriptLive').classList.remove('active');
+  showPhase('phaseStart');
+}
+
+// ═══════════════════════════════════════════
+//  DEEP LINK
+// ═══════════════════════════════════════════
+
+function checkDeepLink() {
+  const params = new URLSearchParams(location.search);
+  const d = params.get('d');
+  if (d) {
+    const found = DOMAINS.find(x => x.d === d || x.d === decodeURIComponent(d));
+    if (found) {
+      currentDomain = found;
+      const rarity = getRarity(found.cat);
+      const color = RARITY_COLORS[rarity];
+      document.getElementById('revealDomain').textContent = found.d;
+      document.getElementById('revealDomain').style.color = color;
+      document.getElementById('revealRarity').querySelector('.dot').style.background = color;
+      document.getElementById('revealRarityText').textContent = rarity;
+      document.getElementById('revealRarityText').style.color = color;
+      document.getElementById('revealMystery').textContent = 'someone dared you. explain this.';
+      showPhase('phaseReveal');
+    }
+    history.replaceState({}, '', location.pathname);
+  }
+}
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000)}
+
+checkDeepLink();
+</script>
+</body>
+</html>

@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>fortune0 — claim your seed</title>
+<meta name="description" content="You scanned a fortune0 card. Choose your domain.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0a; --card:#111; --border:#222;
+  --green:#00ff88; --gold:#f5c842; --purple:#8B5CF6; --red:#ef4444; --blue:#3B82F6;
+  --white:#fff; --gray:#888; --dim:#333; --light:#ccc;
+}
+body{background:var(--bg);color:var(--white);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden}
+a{color:var(--green);text-decoration:none}
+
+/* ─── HEADER ─── */
+.header{text-align:center;padding:30px 20px 10px}
+.logo{font-size:28px;font-weight:800;letter-spacing:-1px}
+.logo span{color:var(--green)}
+.tagline{color:var(--gray);font-size:12px;margin-top:4px}
+
+/* ─── SEED VALIDATION ─── */
+.seed-display{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 24px;margin:16px 20px;text-align:center;max-width:400px;width:calc(100% - 40px)}
+.seed-label{color:var(--gold);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.seed-code{font-family:'Courier New',monospace;font-size:22px;font-weight:700;margin:6px 0;letter-spacing:1px}
+.seed-status{color:var(--green);font-size:11px}
+
+/* ─── MODE PICKER ─── */
+.mode-picker{display:flex;gap:8px;margin:20px 20px 10px;max-width:400px;width:calc(100% - 40px)}
+.mode-btn{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .2s}
+.mode-btn:hover,.mode-btn.active{border-color:var(--green);background:#0d1f15}
+.mode-btn .icon{font-size:24px;display:block;margin-bottom:4px}
+.mode-btn .label{font-size:10px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.mode-btn.active .label{color:var(--green)}
+
+/* ─── GAME AREA ─── */
+.game-area{max-width:420px;width:calc(100% - 40px);margin:16px 20px;min-height:300px}
+
+/* ─── PICK 3 MODE ─── */
+.pick3-grid{display:flex;flex-direction:column;gap:10px}
+.domain-card{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.domain-card:hover{border-color:var(--green);transform:translateY(-2px)}
+.domain-card.selected{border-color:var(--gold);background:#1a1508}
+.domain-card .d-name{font-size:18px;font-weight:700;margin-bottom:4px}
+.domain-card .d-concept{color:var(--gray);font-size:12px}
+.domain-card .d-meta{display:flex;gap:8px;margin-top:8px}
+.domain-card .d-tag{font-size:9px;padding:2px 8px;border-radius:20px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.d-tag.cat{background:#1a2e1a;color:var(--green)}
+.d-tag.rarity-common{background:#1a1a2a;color:#9CA3AF}
+.d-tag.rarity-uncommon{background:#0a2a1a;color:#10B981}
+.d-tag.rarity-rare{background:#0a1a2a;color:#3B82F6}
+.d-tag.rarity-epic{background:#1a0a2a;color:#8B5CF6}
+.d-tag.rarity-legendary{background:#2a1a0a;color:#F59E0B}
+.domain-card .d-diff{font-size:9px;color:var(--dim);position:absolute;top:8px;right:12px}
+
+/* ─── WHEEL MODE ─── */
+.wheel-container{text-align:center}
+.wheel-display{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:30px;margin-bottom:16px;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.wheel-domain{font-size:26px;font-weight:800;transition:opacity .1s}
+.wheel-domain.spinning{animation:wheelFlip .08s linear}
+@keyframes wheelFlip{0%{opacity:1;transform:translateY(0)}50%{opacity:0;transform:translateY(-20px)}51%{transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
+.wheel-concept{color:var(--gray);font-size:13px;margin-top:8px;min-height:20px}
+.wheel-rarity{margin-top:10px}
+.spin-btn{background:var(--green);color:#000;border:none;border-radius:10px;padding:14px 40px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:1px}
+.spin-btn:hover{background:#00cc6e;transform:scale(1.02)}
+.spin-btn:disabled{background:var(--dim);color:var(--gray);cursor:default;transform:none}
+.spin-counter{color:var(--gray);font-size:11px;margin-top:8px}
+
+/* ─── SPEED MATCH MODE ─── */
+.speed-container{text-align:center}
+.speed-display{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:24px;margin-bottom:12px;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.speed-timer{font-size:48px;font-weight:800;font-family:'Courier New',monospace;color:var(--gold)}
+.speed-domain{font-size:20px;font-weight:700;margin:10px 0}
+.speed-hint{color:var(--gray);font-size:11px}
+.speed-bar{width:100%;height:6px;background:var(--border);border-radius:3px;margin:12px 0;overflow:hidden}
+.speed-fill{height:100%;background:var(--green);border-radius:3px;transition:width .1s linear}
+.speed-btn{background:var(--green);color:#000;border:none;border-radius:10px;padding:14px 40px;font-size:16px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:1px}
+.speed-result{margin-top:16px}
+.speed-result .big{font-size:22px;font-weight:700}
+.speed-result .sub{color:var(--gray);font-size:12px;margin-top:4px}
+
+/* ─── CLAIM SECTION ─── */
+.claim-section{max-width:420px;width:calc(100% - 40px);margin:20px;text-align:center;display:none}
+.claim-section.visible{display:block}
+.claim-domain{font-size:28px;font-weight:800;margin:10px 0}
+.claim-concept{color:var(--gray);font-size:14px;margin-bottom:16px}
+.claim-options{display:flex;flex-direction:column;gap:10px}
+.claim-btn{padding:16px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;border:2px solid;transition:all .2s;text-align:center}
+.claim-btn.primary{background:var(--green);color:#000;border-color:var(--green)}
+.claim-btn.primary:hover{background:#00cc6e}
+.claim-btn.secondary{background:transparent;color:var(--white);border-color:var(--border)}
+.claim-btn.secondary:hover{border-color:var(--green)}
+.claim-btn .btn-sub{font-size:10px;font-weight:400;opacity:.7;margin-top:2px}
+
+/* ─── D2D OFFER ─── */
+.d2d-offer{background:linear-gradient(135deg,#0d1f15,#111);border:1px solid var(--green);border-radius:12px;padding:20px;margin:16px 0;text-align:left}
+.d2d-offer .offer-tag{color:var(--gold);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px}
+.d2d-offer .offer-price{font-size:32px;font-weight:800;margin:6px 0}
+.d2d-offer .offer-price span{font-size:14px;color:var(--gray);font-weight:400}
+.d2d-offer .offer-desc{color:var(--gray);font-size:12px;line-height:1.5}
+
+/* ─── FOOTER ─── */
+.footer{text-align:center;padding:30px 20px;color:var(--dim);font-size:10px}
+.footer a{color:var(--gray)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:380px){
+  .seed-code{font-size:18px}
+  .wheel-domain{font-size:20px}
+  .claim-domain{font-size:22px}
+  .mode-btn{padding:10px 6px}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">fortune<span>0</span></div>
+  <div class="tagline">you scanned a card — nice</div>
+</div>
+
+<!-- SEED DISPLAY -->
+<div class="seed-display">
+  <div class="seed-label">seed code</div>
+  <div class="seed-code" id="seedCode">—</div>
+  <div class="seed-status" id="seedStatus">validating...</div>
+</div>
+
+<!-- MODE PICKER -->
+<div class="mode-picker" id="modePicker" style="display:none">
+  <div class="mode-btn active" onclick="setMode('pick3')" id="modeP3">
+    <span class="icon">🎯</span>
+    <span class="label">Pick 3</span>
+  </div>
+  <div class="mode-btn" onclick="setMode('wheel')" id="modeW">
+    <span class="icon">🎰</span>
+    <span class="label">Wheel</span>
+  </div>
+  <div class="mode-btn" onclick="setMode('speed')" id="modeS">
+    <span class="icon">⚡</span>
+    <span class="label">Speed</span>
+  </div>
+</div>
+
+<!-- GAME AREA -->
+<div class="game-area" id="gameArea"></div>
+
+<!-- CLAIM SECTION (shown after choosing) -->
+<div class="claim-section" id="claimSection">
+  <div class="seed-label">you chose</div>
+  <div class="claim-domain" id="claimDomain"></div>
+  <div class="claim-concept" id="claimConcept"></div>
+
+  <div class="d2d-offer">
+    <div class="offer-tag">scanned card exclusive</div>
+    <div class="offer-price">$1<span>/month</span></div>
+    <div class="offer-desc">
+      Death2Data membership — privacy tools, all 230+ fortune0 domains,
+      local-first apps, and your claimed seed priority.
+      Only available through physical card scan.
+    </div>
+  </div>
+
+  <div class="claim-options">
+    <div class="claim-btn primary" onclick="claimWithD2D()">
+      Claim with $1/month membership
+      <div class="btn-sub">Death2Data — includes this domain + all 230</div>
+    </div>
+    <div class="claim-btn secondary" onclick="claimFree()">
+      Claim free (limited)
+      <div class="btn-sub">Seed only — no membership perks</div>
+    </div>
+    <div class="claim-btn secondary" onclick="reshuffleDomains()">
+      ↻ Reshuffle — try different domains
+      <div class="btn-sub">Pick again from a new random set</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <a href="fortune0-seeds.html">seeds</a> · <a href="fortune0-memes.html">memes</a> · <a href="fortune0-challenge.html">challenge</a> · <a href="fortune0-tiers.html">tiers</a><br>
+  &copy; 2026 fortune0.com — where domains become businesses
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  DOMAINS (same pool as seeds system)
+// ═══════════════════════════════════════════
+const DOMAINS = [
+  {d:"toneswitch.com",c:"AI tool that adjusts writing tone",cat:"ai",diff:"easy"},
+  {d:"brandaidkit.com",c:"AI-powered brand identity builder",cat:"ai",diff:"medium"},
+  {d:"onedollaragent.com",c:"AI agent marketplace at $1 each",cat:"ai",diff:"medium"},
+  {d:"calriven.com",c:"AI calendar intelligence engine",cat:"ai",diff:"hard"},
+  {d:"tweetaudit.com",c:"AI-powered social media audit tool",cat:"ai",diff:"easy"},
+  {d:"ghostmemeter.com",c:"AI that detects when you're being ghosted",cat:"ai",diff:"medium"},
+  {d:"sellthismvp.com",c:"AI generates sales copy for your MVP",cat:"ai",diff:"easy"},
+  {d:"knowwhatstuck.com",c:"AI analyzes what content resonated most",cat:"ai",diff:"medium"},
+  {d:"ipomyidea.com",c:"AI valuates your startup idea",cat:"ai",diff:"hard"},
+  {d:"whoswronghere.com",c:"AI argument mediator",cat:"ai",diff:"medium"},
+  {d:"howmucharemyideasworth.com",c:"AI-powered idea valuation engine",cat:"ai",diff:"medium"},
+  {d:"hollowtown.com",c:"Atmospheric horror narrative platform",cat:"fun",diff:"hard"},
+  {d:"accentwars.com",c:"Accent battle game — who does it best?",cat:"fun",diff:"medium"},
+  {d:"mascotrooms.com",c:"Create and battle custom mascots",cat:"fun",diff:"medium"},
+  {d:"roastthebrand.com",c:"Comedic brand roasting game",cat:"fun",diff:"easy"},
+  {d:"gachavibe.com",c:"Gacha-style random vibe generator",cat:"fun",diff:"medium"},
+  {d:"softthrowdown.com",c:"Gentle competition platform",cat:"fun",diff:"easy"},
+  {d:"vibecastgame.com",c:"Cast vibes and see who matches",cat:"fun",diff:"medium"},
+  {d:"mascotmurder.com",c:"Whodunit mystery with brand mascots",cat:"fun",diff:"hard"},
+  {d:"trilliondollarsite.com",c:"Million dollar homepage but way bigger",cat:"fun",diff:"easy"},
+  {d:"dealordelete.com",c:"Quick-fire deal negotiation game",cat:"fun",diff:"easy"},
+  {d:"cringerelay.com",c:"Pass the cringe — social relay game",cat:"fun",diff:"easy"},
+  {d:"onepennymeme.com",c:"Meme marketplace at 1 cent each",cat:"fun",diff:"easy"},
+  {d:"finishmeme.com",c:"Collaborative meme finishing game",cat:"fun",diff:"easy"},
+  {d:"xchangememe.com",c:"Meme stock exchange",cat:"fun",diff:"medium"},
+  {d:"jkyousuck.com",c:"Joke roast generator",cat:"fun",diff:"easy"},
+  {d:"stillnolaunch.com",c:"Countdown to never launching",cat:"fun",diff:"easy"},
+  {d:"fartjokesonline.com",c:"Exactly what it sounds like",cat:"fun",diff:"easy"},
+  {d:"thestartupbash.com",c:"Startup roasting social event",cat:"fun",diff:"easy"},
+  {d:"saveorsink.com",c:"Personal finance gamification platform",cat:"finance",diff:"medium"},
+  {d:"ipomyagent.com",c:"Agent-based IPO simulator",cat:"finance",diff:"hard"},
+  {d:"thebestcashflows.com",c:"Cash flow analysis templates",cat:"finance",diff:"medium"},
+  {d:"thebestrateofreturn.com",c:"Rate of return calculator & education",cat:"finance",diff:"medium"},
+  {d:"installkernel.com",c:"Real estate CRM with local-first data",cat:"saas",diff:"hard"},
+  {d:"vaultdaemon.com",c:"Encrypted vault management daemon",cat:"saas",diff:"hard"},
+  {d:"blamechain.com",c:"Accountability chain for team projects",cat:"saas",diff:"medium"},
+  {d:"traitapi.com",c:"Personality trait API for apps",cat:"saas",diff:"hard"},
+  {d:"death2data.com",c:"Privacy-first search engine",cat:"saas",diff:"hard"},
+  {d:"tagoftrust.com",c:"Trust verification tagging system",cat:"saas",diff:"medium"},
+  {d:"proofofvibe.com",c:"Vibe verification protocol",cat:"saas",diff:"medium"},
+  {d:"fortune0.com",c:"Open incubator — 230 domains, one membership",cat:"marketplace",diff:"hard"},
+  {d:"soulfra.com",c:"Soul-based infrastructure marketplace",cat:"marketplace",diff:"hard"},
+  {d:"wrongtab.com",c:"Browser extension for accidental tab detection",cat:"tool",diff:"easy"},
+  {d:"calclip.com",c:"Clipboard calculator for video calls",cat:"tool",diff:"easy"},
+  {d:"monstercal.com",c:"Monster-themed calendar app",cat:"tool",diff:"easy"},
+  {d:"slamcal.com",c:"Aggressive scheduling tool",cat:"tool",diff:"easy"},
+  {d:"fakefocus.com",c:"Focus simulator for remote workers",cat:"tool",diff:"easy"},
+  {d:"dollarsentence.com",c:"Write a sentence, earn a dollar",cat:"tool",diff:"easy"},
+  {d:"finishthisidea.com",c:"Idea completion accountability tool",cat:"tool",diff:"easy"},
+  {d:"pimpmychrome.com",c:"Chrome browser customization toolkit",cat:"tool",diff:"medium"},
+  {d:"lowkeydrop.com",c:"Anonymous content dropping tool",cat:"tool",diff:"easy"},
+  {d:"planmodeagain.com",c:"Recursive planning tool",cat:"tool",diff:"easy"},
+  {d:"kindstamp.com",c:"Digital stamp tracking random acts of kindness",cat:"community",diff:"medium"},
+  {d:"oofbox.com",c:"Share your biggest oof moments",cat:"community",diff:"easy"},
+  {d:"dropyourvoice.com",c:"Anonymous voice message board",cat:"community",diff:"medium"},
+  {d:"cringeproof.com",c:"Cringe analysis & immunity building",cat:"health",diff:"medium"},
+  {d:"oofbuddy.com",c:"Emotional support for rough moments",cat:"health",diff:"medium"},
+  {d:"halfwaytomax.com",c:"Halfway progress tracker & motivator",cat:"health",diff:"easy"},
+  {d:"scaredofshipping.com",c:"Ship anxiety therapy for creators",cat:"health",diff:"easy"},
+  {d:"hookclinic.com",c:"Learn to write killer hooks",cat:"education",diff:"easy"},
+  {d:"coldstartkit.com",c:"Cold start problem solver toolkit",cat:"education",diff:"medium"},
+  {d:"gulfcoastglow.com",c:"Gulf Coast lifestyle & culture content",cat:"content",diff:"easy"},
+  {d:"hustlenice.com",c:"Hustle culture — but make it kind",cat:"content",diff:"easy"},
+  {d:"stpetepros.com",c:"St. Pete professional services directory",cat:"local",diff:"easy"},
+  {d:"tampatechhive.com",c:"Tampa Bay tech community hub",cat:"local",diff:"medium"},
+];
+
+const RARITY_MAP = {tool:'common',content:'common',education:'uncommon',community:'uncommon',local:'uncommon',health:'rare',fun:'rare',ai:'epic',saas:'epic',finance:'legendary',marketplace:'legendary'};
+const RARITY_COLORS = {common:'#9CA3AF',uncommon:'#10B981',rare:'#3B82F6',epic:'#8B5CF6',legendary:'#F59E0B'};
+
+function getRarity(cat){return RARITY_MAP[cat]||'common'}
+
+// ═══════════════════════════════════════════
+//  SEED-BASED DETERMINISTIC RANDOM
+// ═══════════════════════════════════════════
+// The seed code determines WHICH domains you get — same card always = same 3 domains
+function seedHash(str){
+  let h=0;
+  for(let i=0;i<str.length;i++){h=((h<<5)-h)+str.charCodeAt(i);h|=0}
+  return Math.abs(h);
+}
+
+function getDomainsForSeed(seedCode, count=3){
+  // Deterministic shuffle based on seed code
+  const h = seedHash(seedCode);
+  const shuffled = [...DOMAINS].sort((a,b)=>{
+    const ha = seedHash(seedCode+a.d);
+    const hb = seedHash(seedCode+b.d);
+    return ha - hb;
+  });
+  return shuffled.slice(0, count);
+}
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let currentSeed = null;
+let currentDomains = [];
+let selectedDomain = null;
+let currentMode = 'pick3';
+let wheelInterval = null;
+let speedInterval = null;
+let reshuffleCount = 0;
+
+// ═══════════════════════════════════════════
+//  INIT — read seed from URL
+// ═══════════════════════════════════════════
+function init(){
+  const params = new URLSearchParams(window.location.search);
+  currentSeed = params.get('seed');
+
+  if(!currentSeed){
+    document.getElementById('seedCode').textContent = 'NO CODE';
+    document.getElementById('seedStatus').textContent = 'no seed code found — visit fortune0.com';
+    document.getElementById('seedStatus').style.color = 'var(--red)';
+    return;
+  }
+
+  document.getElementById('seedCode').textContent = currentSeed;
+  document.getElementById('seedStatus').textContent = '✓ valid seed — scanned card detected';
+
+  // Get deterministic domains for this seed
+  currentDomains = getDomainsForSeed(currentSeed);
+
+  // Show mode picker
+  setTimeout(()=>{
+    document.getElementById('modePicker').style.display = 'flex';
+    setMode('pick3');
+  }, 600);
+}
+
+// ═══════════════════════════════════════════
+//  MODE SWITCHING
+// ═══════════════════════════════════════════
+function setMode(mode){
+  currentMode = mode;
+  selectedDomain = null;
+  document.getElementById('claimSection').classList.remove('visible');
+
+  // Kill any running intervals
+  if(wheelInterval){clearInterval(wheelInterval);wheelInterval=null}
+  if(speedInterval){clearInterval(speedInterval);speedInterval=null}
+
+  // Update button states
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(mode==='pick3'?'modeP3':mode==='wheel'?'modeW':'modeS').classList.add('active');
+
+  if(mode==='pick3') renderPick3();
+  else if(mode==='wheel') renderWheel();
+  else if(mode==='speed') renderSpeed();
+}
+
+// ═══════════════════════════════════════════
+//  MODE 1: PICK 3
+// ═══════════════════════════════════════════
+function renderPick3(){
+  const area = document.getElementById('gameArea');
+  let html = '<div class="pick3-grid">';
+
+  currentDomains.forEach((dom, i)=>{
+    const rarity = getRarity(dom.cat);
+    html += `
+      <div class="domain-card" onclick="selectDomain(${i})" id="dc${i}">
+        <div class="d-diff">${dom.diff}</div>
+        <div class="d-name">${dom.d}</div>
+        <div class="d-concept">${dom.c}</div>
+        <div class="d-meta">
+          <span class="d-tag cat">${dom.cat}</span>
+          <span class="d-tag rarity-${rarity}">${rarity}</span>
+        </div>
+      </div>`;
+  });
+
+  html += '</div>';
+  area.innerHTML = html;
+}
+
+function selectDomain(i){
+  selectedDomain = currentDomains[i];
+  document.querySelectorAll('.domain-card').forEach((el,j)=>{
+    el.classList.toggle('selected', j===i);
+  });
+  showClaim(selectedDomain);
+}
+
+// ═══════════════════════════════════════════
+//  MODE 2: WHEEL (slot machine style)
+// ═══════════════════════════════════════════
+function renderWheel(){
+  const area = document.getElementById('gameArea');
+  area.innerHTML = `
+    <div class="wheel-container">
+      <div class="wheel-display">
+        <div class="wheel-domain" id="wheelDom">—</div>
+        <div class="wheel-concept" id="wheelCon"></div>
+        <div class="wheel-rarity" id="wheelRar"></div>
+      </div>
+      <button class="spin-btn" id="spinBtn" onclick="spinWheel()">SPIN</button>
+      <div class="spin-counter" id="spinCount"></div>
+    </div>`;
+}
+
+function spinWheel(){
+  const btn = document.getElementById('spinBtn');
+  btn.disabled = true;
+  btn.textContent = 'SPINNING...';
+
+  const domEl = document.getElementById('wheelDom');
+  const conEl = document.getElementById('wheelCon');
+  const rarEl = document.getElementById('wheelRar');
+
+  const totalTicks = 25 + Math.floor(Math.random()*15);
+  let tick = 0;
+
+  function doTick(){
+    tick++;
+    const rand = DOMAINS[Math.floor(Math.random()*DOMAINS.length)];
+    domEl.textContent = rand.d;
+    conEl.textContent = '';
+    rarEl.innerHTML = '';
+
+    if(tick >= totalTicks){
+      // Land on one of the seed's domains
+      const winner = currentDomains[Math.floor(Math.random()*currentDomains.length)];
+      const rarity = getRarity(winner.cat);
+      domEl.textContent = winner.d;
+      domEl.style.color = RARITY_COLORS[rarity];
+      conEl.textContent = winner.c;
+      rarEl.innerHTML = `<span class="d-tag rarity-${rarity}" style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600">${rarity.toUpperCase()}</span>`;
+      btn.textContent = 'SPIN AGAIN';
+      btn.disabled = false;
+      selectedDomain = winner;
+      setTimeout(()=>showClaim(winner), 800);
+      return;
+    }
+
+    // Speed: fast at start, slowing down at end
+    const progress = tick / totalTicks;
+    const delay = progress < 0.6 ? 60 : 60 + (progress - 0.6) * 800;
+    setTimeout(doTick, delay);
+  }
+
+  doTick();
+}
+
+// ═══════════════════════════════════════════
+//  MODE 3: SPEED MATCH
+// ═══════════════════════════════════════════
+let speedTarget = null;
+let speedStartTime = 0;
+let speedTimeLimit = 0;
+
+function renderSpeed(){
+  const area = document.getElementById('gameArea');
+  area.innerHTML = `
+    <div class="speed-container">
+      <div class="speed-display">
+        <div class="speed-timer" id="speedTimer">0.00</div>
+        <div class="speed-domain" id="speedDom">press start to begin</div>
+        <div class="speed-hint" id="speedHint">shorter domain = less time · longer domain = more time</div>
+        <div class="speed-bar"><div class="speed-fill" id="speedFill" style="width:100%"></div></div>
+      </div>
+      <button class="speed-btn" id="speedBtn" onclick="startSpeedRound()">START</button>
+      <div class="speed-result" id="speedResult"></div>
+    </div>`;
+}
+
+function startSpeedRound(){
+  // Pick a random domain from the seed's set
+  speedTarget = currentDomains[Math.floor(Math.random()*currentDomains.length)];
+
+  // Time limit based on domain length
+  // Short domains (≤12 chars) = 3 seconds
+  // Long domains (>20 chars) = 8 seconds
+  const len = speedTarget.d.length;
+  speedTimeLimit = Math.max(3, Math.min(8, len * 0.35));
+
+  document.getElementById('speedDom').textContent = speedTarget.d;
+  document.getElementById('speedHint').textContent = `tap CLAIM before time runs out! (${speedTimeLimit.toFixed(1)}s)`;
+  document.getElementById('speedTimer').textContent = speedTimeLimit.toFixed(2);
+  document.getElementById('speedTimer').style.color = 'var(--gold)';
+  document.getElementById('speedFill').style.width = '100%';
+  document.getElementById('speedResult').innerHTML = '';
+
+  const btn = document.getElementById('speedBtn');
+  btn.textContent = 'CLAIM IT!';
+  btn.onclick = claimSpeedRound;
+
+  speedStartTime = Date.now();
+
+  speedInterval = setInterval(()=>{
+    const elapsed = (Date.now() - speedStartTime) / 1000;
+    const remaining = Math.max(0, speedTimeLimit - elapsed);
+    const pct = (remaining / speedTimeLimit) * 100;
+
+    document.getElementById('speedTimer').textContent = remaining.toFixed(2);
+    document.getElementById('speedFill').style.width = pct + '%';
+
+    if(remaining <= speedTimeLimit * 0.3){
+      document.getElementById('speedTimer').style.color = 'var(--red)';
+      document.getElementById('speedFill').style.background = 'var(--red)';
+    }
+
+    if(remaining <= 0){
+      clearInterval(speedInterval);
+      speedInterval = null;
+      // Time's up — shuffle to next domain
+      document.getElementById('speedResult').innerHTML = `
+        <div class="big" style="color:var(--red)">TOO SLOW</div>
+        <div class="sub">that domain slipped away — try again</div>`;
+      btn.textContent = 'TRY AGAIN';
+      btn.onclick = startSpeedRound;
+      document.getElementById('speedFill').style.background = 'var(--green)';
+    }
+  }, 50);
+}
+
+function claimSpeedRound(){
+  clearInterval(speedInterval);
+  speedInterval = null;
+
+  const elapsed = (Date.now() - speedStartTime) / 1000;
+  const rarity = getRarity(speedTarget.cat);
+
+  document.getElementById('speedResult').innerHTML = `
+    <div class="big" style="color:var(--green)">${elapsed.toFixed(2)}s — CLAIMED!</div>
+    <div class="sub">${speedTarget.d} · ${rarity} · ${speedTarget.c}</div>`;
+
+  document.getElementById('speedFill').style.background = 'var(--green)';
+
+  const btn = document.getElementById('speedBtn');
+  btn.textContent = 'SPEED RUN AGAIN';
+  btn.onclick = startSpeedRound;
+
+  selectedDomain = speedTarget;
+  setTimeout(()=>showClaim(speedTarget), 600);
+}
+
+// ═══════════════════════════════════════════
+//  CLAIM UI
+// ═══════════════════════════════════════════
+function showClaim(domain){
+  const section = document.getElementById('claimSection');
+  document.getElementById('claimDomain').textContent = domain.d;
+  document.getElementById('claimConcept').textContent = domain.c;
+  section.classList.add('visible');
+  section.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function claimWithD2D(){
+  // Redirect to $1/month D2D membership with seed + domain context
+  const url = `https://death2data.com/join?seed=${encodeURIComponent(currentSeed)}&domain=${encodeURIComponent(selectedDomain.d)}&src=card`;
+  window.location.href = url;
+}
+
+function claimFree(){
+  // Go to fortune0 seeds page with the domain
+  window.location.href = `fortune0-seeds.html?seed=${encodeURIComponent(currentSeed)}`;
+}
+
+function reshuffleDomains(){
+  reshuffleCount++;
+  // Use reshuffle count to get different domains from the pool
+  currentDomains = getDomainsForSeed(currentSeed + '_r' + reshuffleCount);
+  document.getElementById('claimSection').classList.remove('visible');
+  setMode(currentMode);
+}
+
+// ═══════════════════════════════════════════
+//  GO
+// ═══════════════════════════════════════════
+init();
+</script>
+</body>
+</html>

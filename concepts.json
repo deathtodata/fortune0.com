@@ -1,0 +1,1382 @@
+{
+  "civicresume.com": {
+    "concept": "Build a civic engagement resume highlighting volunteering & activism",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "toneswitch.com": {
+    "concept": "AI tool that adjusts writing tone (formal, casual, sarcastic, etc.)",
+    "category": "ai",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "vibedevice.com": {
+    "concept": "Smart device that measures room ambiance & suggests mood settings",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "kindstamp.com": {
+    "concept": "Digital stamp that records random acts of kindness daily",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "hollowtown.com": {
+    "concept": "Indie game/story platform for atmospheric horror narratives",
+    "category": "fun",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "wrongtab.com": {
+    "concept": "Browser extension that warns you about accidentally opened tabs",
+    "category": "tool",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "calclip.com": {
+    "concept": "Clip-on calculator tool for quick math during video calls",
+    "category": "tool",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "saveorsink.com": {
+    "concept": "Personal finance planner that gamifies savings goals",
+    "category": "finance",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "thebestspeech.com": {
+    "concept": "Repository of viral & memorable speeches with analysis",
+    "category": "content",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "simptag.com": {
+    "concept": "Social tag system that tracks 'simping' behavior trends",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "getpaidtojoin.com": {
+    "concept": "Platform matching paid community memberships & focus groups",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "whathitme.com": {
+    "concept": "Accountability tool that tracks what caused your mood swings",
+    "category": "health",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "reflectionarena.com": {
+    "concept": "Debate platform where users reflect & discuss ideas civilly",
+    "category": "community",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "brandaidkit.com": {
+    "concept": "Quick-start branding kit for solopreneurs.",
+    "category": "ai",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "thebestgrant.com": {
+    "concept": "Database & guides for finding grants by category",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "fakefocus.com": {
+    "concept": "Productivity app that creates fake 'busy' signals while focusing",
+    "category": "tool",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "localserviceclub.com": {
+    "concept": "Social club connecting locals for service projects",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "planyourlesson.com": {
+    "concept": "AI lesson planner for teachers that generates daily plans",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "vibesandvalues.com": {
+    "concept": "Personality quiz matching life values with side hustles",
+    "category": "tool",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "feelslikework.com": {
+    "concept": "Wellness blog about recognizing burnout before it hits",
+    "category": "content",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "notryhards.com": {
+    "concept": "Community of people rejecting hustle culture",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "onedollaragent.com": {
+    "concept": "$1 AI micro-agent. Quick task completion.",
+    "category": "ai",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "thebestlesson.com": {
+    "concept": "Curated library of the best teaching methods by subject",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "theworstshow.com": {
+    "concept": "Comedy show archive celebrating bad ideas & epic failures",
+    "category": "fun",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "howtocookathome.com": {
+    "concept": "Beginner-friendly cooking guides with budget meal plans",
+    "category": "content",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "agentportalpro.com": {
+    "concept": "Agent portal for installkernel. CRM + listings.",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "monstercal.com": {
+    "concept": "Calendar app for tracking monster movies & horror events",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "trilliondollarsite.com": {
+    "concept": "Satirical startup valuator. Roasts unicorn metrics.",
+    "category": "fun",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "adrgen.com": {
+    "concept": "Ad creative generator for social media campaigns",
+    "category": "ai",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "vibetrial.com": {
+    "concept": "Test drive premium experiences before buying",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "hookclinic.com": {
+    "concept": "Fishing technique tutorials & rod maintenance guides",
+    "category": "education",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "pumptrash.com": {
+    "concept": "Gym community roasting bad workout trends",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "exchangelore.com": {
+    "concept": "Folklore & mythology database with community translations",
+    "category": "content",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "calcollar.com": {
+    "concept": "Pet collar tracker with calendar sync for vet appointments",
+    "category": "saas",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "niceleak.com": {
+    "concept": "Anonymous feedback platform for constructive criticism",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "vibeskins.com": {
+    "concept": "Phone case & aesthetic design marketplace",
+    "category": "marketplace",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "getheartfelt.com": {
+    "concept": "Platform for sharing & receiving genuine handwritten messages",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "coastaleasy.com": {
+    "concept": "Coastal lifestyle blog with travel & home decor tips",
+    "category": "content",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "hustlenice.com": {
+    "concept": "Newsletter highlighting kind entrepreneurship stories",
+    "category": "content",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "slamcal.com": {
+    "concept": "Sports event calendar with fantasy league integration",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "soulfra.com": {
+    "concept": "Work-to-earn co-op. Build domains, earn shares.",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "vaultdaemon.com": {
+    "concept": "Encrypted digital vault for storing sensitive documents",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "calvaults.com": {
+    "concept": "Calendar-based password manager with time-locked vaults",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "tweetaudit.com": {
+    "concept": "Analyze your Twitter tone + suggest improvements.",
+    "category": "ai",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "innerdegree.com": {
+    "concept": "Online degree aggregator with cost-benefit comparisons",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "accentwars.com": {
+    "concept": "Game where players guess regional accents & dialects",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "buymysim.com": {
+    "concept": "Marketplace for buying/selling used SIM cards & plans",
+    "category": "marketplace",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "calmonsters.com": {
+    "concept": "Calendar app where you defeat productivity monsters daily",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "oofbox.com": {
+    "concept": "Anonymous cringe confessional where you share awkward moments",
+    "category": "community",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "finishmeme.com": {
+    "concept": "Meme template completion game with community voting",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "oofbuddy.com": {
+    "concept": "Empathy chatbot that validates your bad days",
+    "category": "health",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "crampal.com": {
+    "concept": "Study buddy app that gamifies exam prep sessions",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "joinheartfelt.com": {
+    "concept": "Community platform for volunteers matching with causes",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "blamechain.com": {
+    "concept": "Blockchain-based accountability ledger for promises",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "whatyouleft.com": {
+    "concept": "Archive of forgotten items left on public transport",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "calriven.com": {
+    "concept": "AI CTO agent. Builds + deploys fortune0 domains.",
+    "category": "ai",
+    "difficulty": "hard",
+    "aiReady": true
+  },
+  "ipomyagent.com": {
+    "concept": "IPO tracking dashboard for real estate agent portfolios",
+    "category": "finance",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "vibestamped.com": {
+    "concept": "Digital stamps for tracking good vibes throughout your day",
+    "category": "health",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "installkernel.com": {
+    "concept": "Real estate CRM. Sphere-of-influence + referrals.",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "keptitin.com": {
+    "concept": "Journal prompt app for processing what you bottled up",
+    "category": "health",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "memoryscaffolding.com": {
+    "concept": "Study method tool using memory palace techniques",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "bashthenews.com": {
+    "concept": "Satirical news outlet roasting current events",
+    "category": "fun",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "routereaper.com": {
+    "concept": "Network diagnostics tool for dead router detection",
+    "category": "tool",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "jawsbash.com": {
+    "concept": "Shark documentary fan community & trivia game",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "softheld.com": {
+    "concept": "Sensitive people support platform for emotional intelligence",
+    "category": "health",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "bashjaws.com": {
+    "concept": "Roast battle simulator featuring sea creatures",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "thebestthanks.com": {
+    "concept": "Thank you note templates & delivery service coordinator",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "calmutation.com": {
+    "concept": "Meditation app tracking genetic stress resilience",
+    "category": "health",
+    "difficulty": "hard",
+    "aiReady": true
+  },
+  "tattoocertify.com": {
+    "concept": "Tattoo artist certification & portfolio verification",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "traitapi.com": {
+    "concept": "API for retrieving personality traits in bulk",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "realtorrecommendation.com": {
+    "concept": "Platform for getting referred to trusted real estate agents",
+    "category": "marketplace",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "mascotrooms.com": {
+    "concept": "Online gaming rooms with mascot-themed team spaces",
+    "category": "fun",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "pfpxchange.com": {
+    "concept": "NFT-style profile picture marketplace & trading",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "fortune0.com": {
+    "concept": "Open incubator exchange. 230 domains, 41K shares.",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "bootstrapprotocol.com": {
+    "concept": "Fortune0 launch playbook. How to build a $1 domain.",
+    "category": "education",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "traitkeep.com": {
+    "concept": "Genetic trait tracker for ancestry & health insights",
+    "category": "health",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "deathtodata.com": {
+    "concept": "Privacy-first analytics. Anti-tracking dashboard.",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "gulfcoastglow.com": {
+    "concept": "Sunset photography & Gulf Coast travel guide blog",
+    "category": "content",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "learntoreflect.com": {
+    "concept": "Guided reflection journal app with AI prompts",
+    "category": "health",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "deathtomoney.com": {
+    "concept": "Alternative economies blog. Share-based, not cash.",
+    "category": "content",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "remixritual.com": {
+    "concept": "Music remix sharing & collaboration platform",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "roastthebrand.com": {
+    "concept": "Satirical brand review platform. Comedy roasts.",
+    "category": "fun",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "roughsparks.com": {
+    "concept": "Indie artist showcase for raw & unpolished talent",
+    "category": "marketplace",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "thebestobituary.com": {
+    "concept": "Celebration of life stories with memorial pages",
+    "category": "content",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "xchangememe.com": {
+    "concept": "International meme exchange with cultural context",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "dealordelete.com": {
+    "concept": "Game where you pick between bad deal offers or quit",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "mascotmonday.com": {
+    "concept": "Weekly mascot voting & design showcase series",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "souloneth.com": {
+    "concept": "Blockchain-based soul mate certification contracts",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "realtorrecommended.com": {
+    "concept": "Directory of agent-recommended local service providers",
+    "category": "marketplace",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "thebestintro.com": {
+    "concept": "Database of viral introduction techniques by category",
+    "category": "education",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "xchangelore.com": {
+    "concept": "Cultural mythology exchange platform",
+    "category": "content",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "cringeproof.com": {
+    "concept": "Social anxiety training app with exposure therapy games",
+    "category": "health",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "dropyourvoice.com": {
+    "concept": "Anonymous voice message confessional app",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "finishthisgame.com": {
+    "concept": "Unfinished indie games marketplace for developers",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "perfectshrugs.com": {
+    "concept": "Meme generator for indifference & apathy reactions",
+    "category": "fun",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "thevibetool.com": {
+    "concept": "Mood tracker that analyzes your daily vibes",
+    "category": "health",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "dollarsentence.com": {
+    "concept": "Tool that prices your writing by word value",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "ipomyidea.com": {
+    "concept": "IPO simulator for startup ideas. AI valuation.",
+    "category": "ai",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "tagoftrust.com": {
+    "concept": "Verification badge system for authentic creators",
+    "category": "saas",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "calmutants.com": {
+    "concept": "Superhero academy for people with calm superpowers",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "vibewithcal.com": {
+    "concept": "Calendar meets astrology for vibe-aligned scheduling",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "trilliondollarnews.com": {
+    "concept": "Satire newsletter roasting startup hype cycles.",
+    "category": "content",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "xchangepfp.com": {
+    "concept": "Profile picture NFT exchange & authentication",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "halfwaytomax.com": {
+    "concept": "Fitness tracking app celebrating half-way achievement",
+    "category": "health",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "gachavibe.com": {
+    "concept": "Gacha game about collecting positive vibes & moments",
+    "category": "fun",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "heartfeltperks.com": {
+    "concept": "Loyalty rewards program focused on genuine experiences",
+    "category": "marketplace",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "proofofworkplace.com": {
+    "concept": "Badge verification system for workplace achievements",
+    "category": "saas",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "soulprintid.com": {
+    "concept": "Biometric identity verification using personality",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "hitandkept.com": {
+    "concept": "Nostalgia archive for hit songs & when you loved them",
+    "category": "content",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "itwasavibe.com": {
+    "concept": "Memory sharing app for capturing fleeting moments",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "soulfraapi.com": {
+    "concept": "API for soulfra co-op. Builder matching + shares.",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "yikesbuddy.com": {
+    "concept": "Chatbot that commiserates with your awkward situations",
+    "category": "health",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "localhomeownerservices.com": {
+    "concept": "Directory connecting homeowners with local contractors",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "proofofemotion.com": {
+    "concept": "Blockchain certificates for authentic emotional moments",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "sentanyway.com": {
+    "concept": "App for sending delayed or anonymous messages",
+    "category": "saas",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "proofofvibe.com": {
+    "concept": "NFT certificates capturing moments & emotional states",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "leftitthere.com": {
+    "concept": "Lost & found registry for abandoned personal items",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "cringerelay.com": {
+    "concept": "Game where you tell embarrassing stories in relay",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "sellthismvp.com": {
+    "concept": "AI pitch deck generator. Describe MVP, get a deck.",
+    "category": "ai",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "howtodeletedata.com": {
+    "concept": "Step-by-step data deletion guides. D2D utility.",
+    "category": "education",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "pimpmychrome.com": {
+    "concept": "Chrome extension marketplace & customization guide",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "swipeandscar.com": {
+    "concept": "Dating app focused on authentic scar stories",
+    "category": "community",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "knowwhatstuck.com": {
+    "concept": "AI debugging assistant. What went wrong and why.",
+    "category": "ai",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "lowkeydrop.com": {
+    "concept": "Subtle music drop notification app for your vibe",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "peoplearetheprotocol.com": {
+    "concept": "Soulfra manifesto. Humans > algorithms.",
+    "category": "content",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "caltemplate.com": {
+    "concept": "Calendar template library for organizing any event",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "clankerclash.com": {
+    "concept": "Battle game featuring sentient kitchen tools",
+    "category": "fun",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "shareditanyway.com": {
+    "concept": "Secure file sharing that self-destructs after viewing",
+    "category": "saas",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "thebesteulogy.com": {
+    "concept": "Template & coaching for writing memorable eulogies",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "ruinmesoftly.com": {
+    "concept": "Rejection therapy game delivering gentle criticism",
+    "category": "health",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "coldstartkit.com": {
+    "concept": "Starter kit for launching fortune0 domains from zero.",
+    "category": "education",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "finishthisidea.com": {
+    "concept": "Collaborative tool for finishing unfinished projects",
+    "category": "tool",
+    "difficulty": "hard",
+    "aiReady": true
+  },
+  "deluludrop.com": {
+    "concept": "Reality check app that pops delusional thinking",
+    "category": "health",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "wasallyou.com": {
+    "concept": "Nostalgia archive of your digital footprints",
+    "category": "content",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "finishthisrepo.com": {
+    "concept": "Marketplace matching devs with abandoned code repos",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "finishthissale.com": {
+    "concept": "Sales CRM focused on closing unfinished deals",
+    "category": "saas",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "hearditspeak.com": {
+    "concept": "Podcast clip archive searchable by memorable quotes",
+    "category": "content",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "trialbymascot.com": {
+    "concept": "Team mascot selection platform with voting system",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "nailedittracker.com": {
+    "concept": "Achievement tracker celebrating your wins daily",
+    "category": "health",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "softthrowdown.com": {
+    "concept": "Conflict resolution game with gentle debate mechanics",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "theunreadbible.com": {
+    "concept": "Reading guide & commentary for Bible passages",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "weacceptvibes.com": {
+    "concept": "Community space celebrating all emotional expressions",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "youleftproof.com": {
+    "concept": "Digital evidence archive for proving you tried",
+    "category": "saas",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "easypermithub.com": {
+    "concept": "Construction permit application guide & filing service",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "onepennymeme.com": {
+    "concept": "Meme generation app where each meme costs $0.01",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "stpetepros.com": {
+    "concept": "Directory of St. Petersburg, Florida local pros",
+    "category": "local",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "thiswasforyou.com": {
+    "concept": "Heartfelt message delivery service to loved ones",
+    "category": "saas",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "naileditspeech.com": {
+    "concept": "AI speech coach that analyzes delivery & tone",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "tampatechhive.com": {
+    "concept": "Tampa tech community hub & networking platform",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "vibecastgame.com": {
+    "concept": "Card game where you cast spells based on vibes",
+    "category": "fun",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "ghostmemeter.com": {
+    "concept": "Are they ghosting you? AI analyzes the signs.",
+    "category": "ai",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "scaredofshipping.com": {
+    "concept": "Shipping anxiety support group & exposure therapy",
+    "category": "health",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "feltforreal.com": {
+    "concept": "Authentic feeling sharing platform without filters",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "localhomeownerplaybook.com": {
+    "concept": "Guide for homeowners managing local contractor projects",
+    "category": "education",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "mascotmurder.com": {
+    "concept": "Mystery game themed around extinct mascots",
+    "category": "fun",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "perplexityvault.com": {
+    "concept": "Encrypted archive for confusing thoughts & ideas",
+    "category": "saas",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "thebestcashflows.com": {
+    "concept": "Finance education about maximizing cash flow",
+    "category": "finance",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "localserviceforhomeowners.com": {
+    "concept": "Marketplace connecting homeowners with local services",
+    "category": "local",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "privacyasentertainment.com": {
+    "concept": "Privacy comedy + memes. D2D content arm.",
+    "category": "fun",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "reproducethisexperiment.com": {
+    "concept": "Open science platform for reproducible research",
+    "category": "education",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "reproducethismeme.com": {
+    "concept": "Challenge platform where users recreate viral memes",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "confessitanyway.com": {
+    "concept": "Anonymous confession board with supportive community",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "drivecoachhq.com": {
+    "concept": "Personalized driving lesson coaching & video analysis",
+    "category": "education",
+    "difficulty": "hard",
+    "aiReady": true
+  },
+  "finishthismeme.com": {
+    "concept": "Collaborative meme completion challenge platform",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "jkyousuck.com": {
+    "concept": "Roast battle tournament simulator with AI comebacks",
+    "category": "fun",
+    "difficulty": "hard",
+    "aiReady": true
+  },
+  "reproducethispart.com": {
+    "concept": "Marketplace for open-source 3D printing parts",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "theworsthook.com": {
+    "concept": "Fishing failure stories & lessons learned archive",
+    "category": "content",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "bloodbornecourse.com": {
+    "concept": "Lore & combat guide course for Bloodborne game",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "contractorconnectfl.com": {
+    "concept": "Florida contractor directory with verified reviews",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "death2data.com": {
+    "concept": "Private search engine. $1/mo membership. LIVE.",
+    "category": "saas",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "fireworkssuck.com": {
+    "concept": "Critique & alternative sound show suggestions",
+    "category": "fun",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "floridatattoolicense.com": {
+    "concept": "Florida tattoo licensing requirements & exam prep",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "floridatattootraining.com": {
+    "concept": "Tattoo artist training & apprenticeship directory",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "localhomeownersplaybook.com": {
+    "concept": "Playbook for hiring & managing home contractors",
+    "category": "education",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "osstemplate.com": {
+    "concept": "Open-source software template starter kit",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "reproducethisspeech.com": {
+    "concept": "Speech recreation challenge with voting & scoring",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "thebestsermon.com": {
+    "concept": "Curated collection of impactful religious sermons",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "howwasthevibe.com": {
+    "concept": "Post-event vibe survey & feedback tool",
+    "category": "tool",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "onedollarnotebook.com": {
+    "concept": "$1 digital notebook. Death2Data membership product.",
+    "category": "saas",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "onedollarsignature.com": {
+    "concept": "$1 digital signature. Privacy-first e-sign.",
+    "category": "tool",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "reproducethisidea.com": {
+    "concept": "Open innovation platform for replicating startups",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "skilltracksuite.com": {
+    "concept": "Skills assessment & tracking platform for teams",
+    "category": "saas",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "vibe-browser.com": {
+    "concept": "Browser extension that filters content by vibe",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "classrecordhq.com": {
+    "concept": "Teacher grade book management software",
+    "category": "saas",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "reproducethisconcept.com": {
+    "concept": "Open business model library for launching clones",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "reproducethismodel.com": {
+    "concept": "SaaS template marketplace for rapid deployment",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "vibecodingvault.com": {
+    "concept": "Code snippet library organized by emotional context",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "deathtobigtech.com": {
+    "concept": "Open-source alternatives to Big Tech. D2D sister.",
+    "category": "education",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "essentialprivacyeducation.com": {
+    "concept": "Free privacy course. D2D educational arm.",
+    "category": "education",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "canyouratemyidea.com": {
+    "concept": "Crowdsourced idea feedback. Post it, get ratings.",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "dynamictoolintelligence.com": {
+    "concept": "AI that adapts tools based on your work style",
+    "category": "ai",
+    "difficulty": "hard",
+    "aiReady": true
+  },
+  "interviewvoicecoach.com": {
+    "concept": "AI interview prep. Practice answers, get feedback.",
+    "category": "ai",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "planmodeagain.com": {
+    "concept": "Project planner helping you get back on track",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "tryoutsareover.com": {
+    "concept": "Motivation app telling you to commit to your choice",
+    "category": "health",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "fastroofpermits.com": {
+    "concept": "Expedited roofing permit application service",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "localservicesformyhome.com": {
+    "concept": "Curated list of trusted home services in your area",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "localservicesformyhouse.com": {
+    "concept": "Searchable directory of home repair & maintenance",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "stillnolaunch.com": {
+    "concept": "Indie game cemetery for projects that never launched",
+    "category": "fun",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "fartjokesonline.com": {
+    "concept": "Archive & generator of fart joke collection",
+    "category": "fun",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "finishthisrepo.io": {
+    "concept": "GitHub marketplace for abandoned code completion",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "localservicesforhomeowners.com": {
+    "concept": "Premium home service marketplace for homeowners",
+    "category": "local",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "thebestrateofreturn.com": {
+    "concept": "Finance calculator comparing investment returns",
+    "category": "finance",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "inksafecourses.com": {
+    "concept": "Tattoo safety & best practices online courses",
+    "category": "education",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "trustedhomeownerlist.com": {
+    "concept": "Verified homeowner community for peer reviews",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "careproof.org": {
+    "concept": "Documentation system proving you cared about details",
+    "category": "saas",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "itwasdelulu.com": {
+    "concept": "Self-aware reality check journal for delusional thoughts",
+    "category": "health",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "soulfra.ai": {
+    "concept": "AI co-op matching builders to domains.",
+    "category": "ai",
+    "difficulty": "hard",
+    "aiReady": true
+  },
+  "thestartupbash.com": {
+    "concept": "Comedy roasting startup stereotypes. Events + content.",
+    "category": "fun",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "isthisspotavibe.com": {
+    "concept": "Vibe-check any location. Rate spots, share reviews.",
+    "category": "tool",
+    "difficulty": "medium",
+    "aiReady": true
+  },
+  "whoswronghere.com": {
+    "concept": "AI argument settler. Paste the debate, get a verdict.",
+    "category": "ai",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "finishthisidea.io": {
+    "concept": "Open-source project completion platform",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "thetrustedhomeownerlist.com": {
+    "concept": "Premium verified contractor & service provider list",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "busyisntforward.com": {
+    "concept": "Blog arguing busyness is not progress",
+    "category": "content",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "getthinstpete.com": {
+    "concept": "St. Petersburg fitness & wellness community",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "howdoigetfireworks.com": {
+    "concept": "Guide to purchasing legal fireworks by location",
+    "category": "education",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "kidsknowwhatscool.com": {
+    "concept": "Trend forecast app using kid insights",
+    "category": "tool",
+    "difficulty": "hard",
+    "aiReady": true
+  },
+  "talkshitwithfriends.com": {
+    "concept": "Gossip-friendly chat app for friend groups",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "howmucharemyideasworth.com": {
+    "concept": "AI idea valuation calculator. Describe it, get scored.",
+    "category": "ai",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "leftonreadbygod.com": {
+    "concept": "Existential philosophy blog about being ignored",
+    "category": "content",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "wheredoifindfireworks.com": {
+    "concept": "Fireworks shop locator by state & legality",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "buydumbshitfeelsad.com": {
+    "concept": "Accountability app preventing impulse purchases",
+    "category": "health",
+    "difficulty": "easy",
+    "aiReady": true
+  },
+  "finishthisrepo.ai": {
+    "concept": "AI code completion bot for abandoned GitHub repos",
+    "category": "ai",
+    "difficulty": "hard",
+    "aiReady": true
+  },
+  "nosnapdidnthappen.com": {
+    "concept": "Denial support group for dating app ghosting",
+    "category": "community",
+    "difficulty": "easy",
+    "aiReady": false
+  },
+  "weightlossdealsfl.com": {
+    "concept": "Florida weight loss service & diet deal aggregator",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "finishthisidea.ai": {
+    "concept": "AI co-founder helping complete your business ideas",
+    "category": "ai",
+    "difficulty": "hard",
+    "aiReady": true
+  },
+  "finishthisidea.net": {
+    "concept": "Collaborative idea completion platform",
+    "category": "marketplace",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "finishthisrepo.net": {
+    "concept": "Code completion network for open projects",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "heartfeltperks.org": {
+    "concept": "Nonprofit rewards program for volunteers",
+    "category": "community",
+    "difficulty": "medium",
+    "aiReady": false
+  },
+  "finishthisidea.xyz": {
+    "concept": "Web3 idea marketplace with DAO governance",
+    "category": "marketplace",
+    "difficulty": "hard",
+    "aiReady": false
+  },
+  "stpeteweightlossdeals.com": {
+    "concept": "St. Pete weight loss program & gym deals",
+    "category": "local",
+    "difficulty": "medium",
+    "aiReady": false
+  }
+}

@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>fortune0 — the domain is the meme</title>
+<meta property="og:title" content="What IS this domain?">
+<meta property="og:description" content="230 domains. You won't believe what's behind them. fortune0.com">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#09090F;--s1:#111118;--s2:#18181F;--card:#1E1E28;--border:#2A2A38;--dim:#555;--text:#9CA3AF;--white:#EAEAEA;--pink:#EC4899;--green:#10B981;--blue:#3B82F6;--amber:#F59E0B;--red:#EF4444;--purple:#8B5CF6;--cyan:#06B6D4}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--white);min-height:100vh;overflow-x:hidden}
+.w{max-width:640px;margin:0 auto;padding:1.5rem}
+
+/* ═══ HEADER ═══ */
+header{text-align:center;padding:2rem 0 1rem}
+header h1{font-size:2.2rem;font-weight:900;letter-spacing:-1.5px}
+header h1 span{color:var(--pink)}
+.tagline{color:var(--dim);font-size:0.8rem;margin-top:0.3rem;letter-spacing:1px;text-transform:uppercase}
+
+/* ═══ ROLLERCOASTER — rapid domain flasher ═══ */
+.coaster{text-align:center;padding:2.5rem 0;position:relative}
+.coaster-frame{background:var(--s1);border:2px solid var(--border);border-radius:16px;padding:3rem 2rem;position:relative;overflow:hidden;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s}
+.coaster-frame:hover{border-color:var(--dim)}
+.coaster-frame.flashing{border-color:var(--pink);box-shadow:0 0 60px rgba(236,72,153,0.15)}
+.coaster-frame.captured{border-color:var(--amber);box-shadow:0 0 60px rgba(245,158,11,0.2)}
+.coaster-frame::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:conic-gradient(from 0deg,transparent 0%,rgba(236,72,153,0.03) 25%,transparent 50%,rgba(139,92,246,0.03) 75%,transparent 100%);animation:slowSpin 20s linear infinite;opacity:0;transition:opacity 0.5s}
+.coaster-frame.flashing::before{opacity:1}
+@keyframes slowSpin{to{transform:rotate(360deg)}}
+
+.coaster-domain{font-size:2.4rem;font-weight:900;letter-spacing:-1.5px;transition:all 0.08s;line-height:1.1;word-break:break-all}
+.coaster-hint{font-size:0.7rem;color:var(--dim);margin-top:1rem;text-transform:uppercase;letter-spacing:2px}
+.coaster-cat{font-size:0.65rem;color:var(--dim);margin-top:0.3rem;opacity:0;transition:opacity 0.3s}
+.coaster-cat.show{opacity:1}
+
+/* Flash effect overlay */
+.flash-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:white;opacity:0;pointer-events:none;z-index:10;border-radius:14px}
+@keyframes cameraFlash{0%{opacity:0.8}100%{opacity:0}}
+.flash-overlay.flash{animation:cameraFlash 0.4s ease-out}
+
+/* Shutter lines */
+.shutter{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:5;opacity:0}
+.shutter.show{opacity:1}
+.shutter-line{position:absolute;left:0;right:0;height:1px;background:rgba(255,255,255,0.1)}
+
+/* Speed lines during flash */
+.speed-lines{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;height:100%;pointer-events:none;z-index:3;opacity:0;transition:opacity 0.2s}
+.speed-lines.show{opacity:1}
+.speed-line{position:absolute;background:linear-gradient(90deg,transparent,rgba(236,72,153,0.15),transparent);height:1px;animation:speedLine 0.3s ease-out infinite}
+@keyframes speedLine{0%{transform:scaleX(0);opacity:1}100%{transform:scaleX(1);opacity:0}}
+
+.btn{padding:0.7rem 1.5rem;border:none;border-radius:8px;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.15s;display:inline-block}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-pink{background:var(--pink);color:#fff}
+.btn-green{background:var(--green);color:#000}
+.btn-amber{background:var(--amber);color:#000}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-ghost:hover{border-color:var(--dim)}
+
+.coaster-controls{margin-top:1.5rem;display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap}
+
+/* ═══ CAPTURED CARD (screenshot bait) ═══ */
+.capture-card{display:none;background:var(--s1);border:2px solid var(--border);border-radius:16px;padding:2rem;margin:1.5rem 0;text-align:center;position:relative;overflow:hidden}
+.capture-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent,rgba(236,72,153,0.04),transparent,rgba(245,158,11,0.04),transparent);animation:slowSpin 15s linear infinite}
+.capture-card>*{position:relative;z-index:1}
+.capture-brand{font-size:0.6rem;color:var(--dim);text-transform:uppercase;letter-spacing:4px;margin-bottom:1rem}
+.capture-domain{font-size:2rem;font-weight:900;letter-spacing:-1px;margin:0.5rem 0}
+.capture-mystery{font-size:0.85rem;color:var(--text);margin:0.75rem 0;font-style:italic}
+.capture-rarity{display:inline-flex;align-items:center;gap:0.35rem;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;padding:0.2rem 0.6rem;border-radius:4px;background:rgba(255,255,255,0.05);margin:0.5rem 0}
+.capture-rarity .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.capture-stamp{font-size:0.5rem;color:var(--dim);margin-top:1.5rem;letter-spacing:3px;text-transform:uppercase}
+.capture-num{font-family:Consolas,monospace;font-size:0.6rem;color:var(--dim);margin-top:0.25rem}
+
+/* ═══ SHOCK FEED — rotating domain meme cards ═══ */
+.shock-section{margin:2rem 0}
+.shock-section h2{font-size:0.7rem;text-transform:uppercase;letter-spacing:3px;color:var(--dim);margin-bottom:1rem;text-align:center}
+.shock-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem}
+.shock-card{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:1.25rem 1rem;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.shock-card:hover{border-color:var(--pink);transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.shock-card .domain{font-size:0.85rem;font-weight:800;letter-spacing:-0.3px;word-break:break-all;line-height:1.2}
+.shock-card .mystery{font-size:0.6rem;color:var(--dim);margin-top:0.4rem;text-transform:uppercase;letter-spacing:1px}
+.shock-card .rarity-dot{position:absolute;top:8px;right:8px;width:6px;height:6px;border-radius:50%}
+
+/* ═══ CATEGORY SHOCK VALUE RANKINGS ═══ */
+.shock-rank{margin:2rem 0}
+.shock-rank h2{font-size:0.7rem;text-transform:uppercase;letter-spacing:3px;color:var(--dim);margin-bottom:1rem;text-align:center}
+.rank-row{display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;background:var(--s1);border:1px solid var(--border);border-radius:8px;margin-bottom:0.3rem;cursor:pointer;transition:all 0.15s}
+.rank-row:hover{border-color:var(--pink)}
+.rank-pos{width:24px;font-weight:800;font-size:0.85rem;color:var(--amber);text-align:center;flex-shrink:0}
+.rank-domain{flex:1;font-weight:700;font-size:0.9rem;letter-spacing:-0.3px;word-break:break-all}
+.rank-score{font-family:Consolas,monospace;font-size:0.7rem;color:var(--pink);flex-shrink:0}
+.rank-bar{height:3px;background:var(--s2);border-radius:2px;margin-top:0.3rem;overflow:hidden}
+.rank-fill{height:100%;border-radius:2px;transition:width 0.5s}
+
+/* ═══ SHARE ACTIONS ═══ */
+.share-actions{display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin:1rem 0}
+
+/* ═══ MEME SLOT MACHINE ═══ */
+.slots{background:var(--s1);border:2px solid var(--border);border-radius:16px;padding:2rem;margin:2rem 0;text-align:center}
+.slots h2{font-size:0.7rem;text-transform:uppercase;letter-spacing:3px;color:var(--amber);margin-bottom:1rem}
+.slot-display{display:flex;gap:0.5rem;justify-content:center;align-items:center;margin:1.5rem 0}
+.slot-reel{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:0.75rem 0.5rem;width:30%;overflow:hidden;height:50px;display:flex;align-items:center;justify-content:center}
+.slot-reel .domain{font-size:0.65rem;font-weight:700;word-break:break-all;line-height:1.1;text-align:center}
+.slot-x{font-size:1.2rem;font-weight:900;color:var(--dim)}
+.slot-result{font-size:0.8rem;color:var(--text);margin:0.5rem 0;min-height:1.5em}
+.slot-jackpot{color:var(--amber);font-weight:800;font-size:1rem}
+
+/* ═══ ANTI-LEAK BANNER ═══ */
+.antileak{background:linear-gradient(135deg,#0a0a15,#150a15);border:1px dashed var(--border);border-radius:12px;padding:1.5rem;margin:2rem 0;text-align:center}
+.antileak h3{font-size:0.7rem;text-transform:uppercase;letter-spacing:3px;color:var(--red);margin-bottom:0.5rem}
+.antileak p{font-size:0.8rem;color:var(--text);line-height:1.6}
+.antileak .redacted{background:var(--white);color:var(--white);border-radius:2px;padding:0 0.3rem;user-select:none;cursor:pointer;transition:all 0.3s}
+.antileak .redacted:hover{background:var(--red);letter-spacing:2px}
+.antileak .redacted::after{content:''}
+
+/* ═══ STATS ═══ */
+.meme-stats{display:flex;justify-content:center;gap:1.5rem;margin:1.5rem 0;flex-wrap:wrap}
+.m-stat{text-align:center}
+.m-stat .num{font-family:Consolas,monospace;font-size:1.4rem;font-weight:800;color:var(--pink)}
+.m-stat .lbl{font-size:0.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1.5rem;font-size:0.85rem;color:var(--white);display:none;z-index:99;box-shadow:0 4px 20px rgba(0,0,0,0.5)}
+.toast.show{display:block;animation:fadeUp 0.3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+footer{text-align:center;padding:1.5rem 0;border-top:1px solid var(--border);margin-top:1.5rem}
+footer p{font-size:0.7rem;color:var(--dim)}
+footer a{color:var(--green);text-decoration:none}
+
+@media(max-width:500px){.w{padding:0.75rem}.shock-grid{grid-template-columns:1fr}.coaster-domain{font-size:1.6rem}.capture-domain{font-size:1.3rem}.slot-display{flex-direction:column}.slot-reel{width:80%}.slot-x{display:none}.coaster-frame{padding:2rem 1rem;min-height:180px}.btn{padding:0.5rem 1rem;font-size:0.75rem}header h1{font-size:1.6rem}.share-actions{gap:0.3rem}.meme-stats{gap:0.75rem}}
+@media(max-height:500px) and (orientation:landscape){.w{padding:0.5rem 1rem}header{padding:0.5rem 0}header h1{font-size:1.3rem}.coaster-frame{padding:1.5rem 1rem;min-height:140px}.coaster-domain{font-size:1.5rem}.shock-section{margin:1rem 0}.slots{padding:1rem;margin:1rem 0}}
+</style>
+</head>
+<body>
+<div class="w">
+
+<header>
+  <h1>fortune0 <span>memes</span></h1>
+  <p class="tagline">the domain is the meme. you are the screenshot.</p>
+</header>
+
+<!-- ═══ ROLLERCOASTER CAPTURE ═══ -->
+<div class="coaster">
+  <div class="coaster-frame" id="coasterFrame" onclick="toggleCoaster()">
+    <div class="flash-overlay" id="flashOverlay"></div>
+    <div class="speed-lines" id="speedLines"></div>
+    <div class="shutter" id="shutter"></div>
+    <div class="coaster-domain" id="coasterDomain">tap to ride</div>
+    <div class="coaster-hint" id="coasterHint">230 domains. one lands on you.</div>
+    <div class="coaster-cat" id="coasterCat"></div>
+  </div>
+  <div class="coaster-controls" id="coasterControls">
+    <button class="btn btn-pink" onclick="toggleCoaster()">Start the ride</button>
+  </div>
+</div>
+
+<!-- ═══ CAPTURED SCREENSHOT CARD ═══ -->
+<div class="capture-card" id="captureCard">
+  <div class="capture-brand">fortune0 memes</div>
+  <div class="capture-rarity" id="captureRarity"><span class="dot"></span> <span id="captureRarityText">—</span></div>
+  <div class="capture-domain" id="captureDomain">—</div>
+  <div class="capture-mystery" id="captureMystery">what is this?</div>
+  <div class="capture-stamp">captured at fortune0.com</div>
+  <div class="capture-num" id="captureNum">#000000</div>
+</div>
+<div class="share-actions" id="shareActions" style="display:none">
+  <button class="btn btn-pink" onclick="copyMemeLink()">Copy meme link</button>
+  <button class="btn btn-purple" onclick="copyMemeText()">Copy for socials</button>
+  <button class="btn btn-green" onclick="plantAsSeed()">Plant as seed</button>
+  <button class="btn btn-cyan" onclick="challengeDomain()" style="background:var(--cyan);color:#000">Challenge it</button>
+  <button class="btn btn-ghost" onclick="rideAgain()">Ride again</button>
+</div>
+
+<!-- ═══ ANTI-LEAK ZONE ═══ -->
+<div class="antileak">
+  <h3>Information classified</h3>
+  <p>Each domain hides a <span class="redacted" onclick="this.style.background='var(--red)'">real product</span> behind a name designed to make you <span class="redacted" onclick="this.style.background='var(--red)'">screenshot it</span>. We don't explain what they do. You <span class="redacted" onclick="this.style.background='var(--red)'">claim a seed</span> to find out. Or you don't. Either way, you already shared it.</p>
+</div>
+
+<!-- ═══ MEME SLOT MACHINE ═══ -->
+<div class="slots">
+  <h2>Domain Slots</h2>
+  <p style="font-size:0.75rem;color:var(--text);margin-bottom:1rem">Three domains. If the categories match — jackpot.</p>
+  <div class="slot-display">
+    <div class="slot-reel"><div class="domain" id="slot1">?</div></div>
+    <div class="slot-x">&times;</div>
+    <div class="slot-reel"><div class="domain" id="slot2">?</div></div>
+    <div class="slot-x">&times;</div>
+    <div class="slot-reel"><div class="domain" id="slot3">?</div></div>
+  </div>
+  <div class="slot-result" id="slotResult"></div>
+  <button class="btn btn-amber" onclick="pullSlots()">Pull</button>
+</div>
+
+<!-- ═══ SHOCK VALUE RANKINGS ═══ -->
+<div class="shock-rank">
+  <h2>Shock Index</h2>
+  <div id="shockRankings"></div>
+</div>
+
+<!-- ═══ ROTATING SHOCK CARDS ═══ -->
+<div class="shock-section">
+  <h2>What are these?</h2>
+  <div class="shock-grid" id="shockGrid"></div>
+  <div style="text-align:center;margin-top:1rem">
+    <button class="btn btn-ghost" onclick="refreshShockCards()">Shuffle</button>
+  </div>
+</div>
+
+<!-- ═══ STATS ═══ -->
+<div class="meme-stats">
+  <div class="m-stat"><div class="num" id="statCaptures">0</div><div class="lbl">Captures</div></div>
+  <div class="m-stat"><div class="num" id="statShares">0</div><div class="lbl">Shares</div></div>
+  <div class="m-stat"><div class="num" id="statJackpots">0</div><div class="lbl">Jackpots</div></div>
+  <div class="m-stat"><div class="num" id="statStreak">0</div><div class="lbl">Best Streak</div></div>
+</div>
+
+<footer>
+  <p><a href="https://fortune0.com">fortune0</a> · <a href="fortune0-seeds.html">seeds</a> · <a href="fortune0-challenge.html">challenge</a> · <a href="fortune0-tiers.html">tiers</a></p>
+  <p style="margin-top:0.25rem">You don't need to understand it. You just need to share it.</p>
+</footer>
+
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  DOMAINS — full portfolio
+// ═══════════════════════════════════════════
+
+const DOMAINS = [
+  {d:"mascotmurder.com",cat:"fun"},{d:"jkyousuck.com",cat:"fun"},{d:"buydumbshitfeelsad.com",cat:"health"},
+  {d:"leftonreadbygod.com",cat:"content"},{d:"nosnapdidnthappen.com",cat:"community"},{d:"fartjokesonline.com",cat:"fun"},
+  {d:"death2data.com",cat:"saas"},{d:"deathtomoney.com",cat:"content"},{d:"deathtobigtech.com",cat:"education"},
+  {d:"deluludrop.com",cat:"health"},{d:"itwasdelulu.com",cat:"health"},{d:"cringeproof.com",cat:"health"},
+  {d:"cringerelay.com",cat:"fun"},{d:"ghostmemeter.com",cat:"ai"},{d:"whoswronghere.com",cat:"ai"},
+  {d:"roastthebrand.com",cat:"fun"},{d:"pumptrash.com",cat:"community"},{d:"oofbox.com",cat:"community"},
+  {d:"oofbuddy.com",cat:"health"},{d:"yikesbuddy.com",cat:"health"},{d:"ruinmesoftly.com",cat:"health"},
+  {d:"talkshitwithfriends.com",cat:"community"},{d:"scaredofshipping.com",cat:"health"},
+  {d:"stillnolaunch.com",cat:"fun"},{d:"fakefocus.com",cat:"tool"},{d:"wrongtab.com",cat:"tool"},
+  {d:"blamechain.com",cat:"saas"},{d:"keptitin.com",cat:"health"},{d:"sentanyway.com",cat:"saas"},
+  {d:"swipeandscar.com",cat:"community"},{d:"whatyouleft.com",cat:"community"},{d:"wasallyou.com",cat:"content"},
+  {d:"confessitanyway.com",cat:"community"},{d:"shareditanyway.com",cat:"saas"},{d:"niceleak.com",cat:"community"},
+  {d:"trilliondollarsite.com",cat:"fun"},{d:"trilliondollarnews.com",cat:"content"},{d:"accentwars.com",cat:"fun"},
+  {d:"onepennymeme.com",cat:"fun"},{d:"finishmeme.com",cat:"fun"},{d:"xchangememe.com",cat:"fun"},
+  {d:"reproducethismeme.com",cat:"fun"},{d:"dealordelete.com",cat:"fun"},{d:"softthrowdown.com",cat:"fun"},
+  {d:"bashjaws.com",cat:"fun"},{d:"clankerclash.com",cat:"fun"},{d:"gachavibe.com",cat:"fun"},
+  {d:"vibecastgame.com",cat:"fun"},{d:"bashthenews.com",cat:"fun"},{d:"perfectshrugs.com",cat:"fun"},
+  {d:"thestartupbash.com",cat:"fun"},{d:"theworstshow.com",cat:"fun"},{d:"privacyasentertainment.com",cat:"fun"},
+  {d:"fireworkssuck.com",cat:"fun"},{d:"hollowtown.com",cat:"fun"},{d:"calmutants.com",cat:"fun"},
+  {d:"toneswitch.com",cat:"ai"},{d:"brandaidkit.com",cat:"ai"},{d:"sellthismvp.com",cat:"ai"},
+  {d:"knowwhatstuck.com",cat:"ai"},{d:"ipomyidea.com",cat:"ai"},{d:"howmucharemyideasworth.com",cat:"ai"},
+  {d:"tweetaudit.com",cat:"ai"},{d:"adrgen.com",cat:"ai"},{d:"calriven.com",cat:"ai"},
+  {d:"onedollaragent.com",cat:"ai"},{d:"interviewvoicecoach.com",cat:"ai"},{d:"dynamictoolintelligence.com",cat:"ai"},
+  {d:"finishthisrepo.ai",cat:"ai"},{d:"finishthisidea.ai",cat:"ai"},{d:"soulfra.ai",cat:"ai"},
+  {d:"fortune0.com",cat:"marketplace"},{d:"soulfra.com",cat:"marketplace"},{d:"installkernel.com",cat:"saas"},
+  {d:"vaultdaemon.com",cat:"saas"},{d:"traitapi.com",cat:"saas"},{d:"tagoftrust.com",cat:"saas"},
+  {d:"proofofvibe.com",cat:"saas"},{d:"proofofemotion.com",cat:"saas"},{d:"proofofworkplace.com",cat:"saas"},
+  {d:"soulprintid.com",cat:"saas"},{d:"souloneth.com",cat:"saas"},{d:"calvaults.com",cat:"saas"},
+  {d:"perplexityvault.com",cat:"saas"},{d:"calcollar.com",cat:"saas"},
+  {d:"saveorsink.com",cat:"finance"},{d:"ipomyagent.com",cat:"finance"},{d:"thebestcashflows.com",cat:"finance"},
+  {d:"thebestrateofreturn.com",cat:"finance"},
+  {d:"dollarsentence.com",cat:"tool"},{d:"calclip.com",cat:"tool"},{d:"monstercal.com",cat:"tool"},
+  {d:"slamcal.com",cat:"tool"},{d:"finishthisidea.com",cat:"tool"},{d:"lowkeydrop.com",cat:"tool"},
+  {d:"pimpmychrome.com",cat:"tool"},{d:"planmodeagain.com",cat:"tool"},{d:"vibesandvalues.com",cat:"tool"},
+  {d:"howwasthevibe.com",cat:"tool"},{d:"onedollarsignature.com",cat:"tool"},{d:"kidsknowwhatscool.com",cat:"tool"},
+  {d:"isthisspotavibe.com",cat:"tool"},{d:"vibewithcal.com",cat:"tool"},{d:"trialbymascot.com",cat:"tool"},
+  {d:"nailedittracker.com",cat:"health"},{d:"halfwaytomax.com",cat:"health"},{d:"vibestamped.com",cat:"health"},
+  {d:"thevibetool.com",cat:"health"},{d:"calmutation.com",cat:"health"},{d:"softheld.com",cat:"health"},
+  {d:"traitkeep.com",cat:"health"},{d:"learntoreflect.com",cat:"health"},{d:"tryoutsareover.com",cat:"health"},
+  {d:"hookclinic.com",cat:"education"},{d:"coldstartkit.com",cat:"education"},{d:"thebestintro.com",cat:"education"},
+  {d:"bootstrapprotocol.com",cat:"education"},{d:"memoryscaffolding.com",cat:"education"},
+  {d:"stpetepros.com",cat:"local"},{d:"tampatechhive.com",cat:"local"},
+  {d:"kindstamp.com",cat:"community"},{d:"dropyourvoice.com",cat:"community"},
+  {d:"gulfcoastglow.com",cat:"content"},{d:"hustlenice.com",cat:"content"},{d:"peoplearetheprotocol.com",cat:"content"},
+  {d:"busyisntforward.com",cat:"content"},{d:"onedollarnotebook.com",cat:"saas"},
+  {d:"getpaidtojoin.com",cat:"marketplace"},{d:"vibetrial.com",cat:"marketplace"},{d:"vibeskins.com",cat:"marketplace"},
+  {d:"roughsparks.com",cat:"marketplace"},{d:"pfpxchange.com",cat:"marketplace"},{d:"remixritual.com",cat:"marketplace"},
+  {d:"finishthisrepo.com",cat:"marketplace"},{d:"finishthisgame.com",cat:"marketplace"},
+  {d:"reproducethisidea.com",cat:"marketplace"},{d:"reproducethismodel.com",cat:"marketplace"},
+  {d:"reproducethispart.com",cat:"marketplace"},{d:"heartfeltperks.com",cat:"marketplace"},
+  {d:"realtorrecommendation.com",cat:"marketplace"},{d:"realtorrecommended.com",cat:"marketplace"},
+];
+
+const RARITY_MAP = {tool:'common',content:'common',education:'uncommon',community:'uncommon',local:'uncommon',health:'rare',fun:'rare',ai:'epic',saas:'epic',finance:'legendary',marketplace:'legendary'};
+const RARITY_COLORS = {common:'#9CA3AF',uncommon:'#10B981',rare:'#3B82F6',epic:'#8B5CF6',legendary:'#F59E0B'};
+
+function getRarity(cat){return RARITY_MAP[cat]||'common'}
+
+// ═══════════════════════════════════════════
+//  SHOCK SCORING — how memetic is a domain name?
+// ═══════════════════════════════════════════
+
+const SHOCK_WORDS = ['death','kill','murder','suck','shit','dumb','trash','cringe','oof','yikes','ruin','ghost','blame','scam','fake','wrong','roast','bash','war','clash','damn','hell','leak','scary','delulu','fart','pimp'];
+const MYSTERY_WORDS = ['vault','daemon','soul','proof','trait','hollow','monster','blood','reaper','crypt','phantom'];
+const VIRAL_WORDS = ['meme','vibe','drop','seed','trillion','billion','million','deal','hack','steal','flip','bet','gamble','risk'];
+
+function shockScore(domain) {
+  const d = domain.toLowerCase();
+  let score = 0;
+
+  // Shock words (4pts each)
+  SHOCK_WORDS.forEach(w => { if(d.includes(w)) score += 4; });
+
+  // Mystery words (3pts each)
+  MYSTERY_WORDS.forEach(w => { if(d.includes(w)) score += 3; });
+
+  // Viral trigger words (2pts each)
+  VIRAL_WORDS.forEach(w => { if(d.includes(w)) score += 2; });
+
+  // Long domain = more WTF (bonus for 20+ chars)
+  if(d.length > 20) score += 2;
+  if(d.length > 30) score += 2;
+
+  // Multiple dots = exotic TLD bonus
+  if(d.split('.').length > 2) score += 1;
+
+  // Rarity multiplier
+  const rarity = getRarity(DOMAINS.find(x=>x.d===domain)?.cat||'tool');
+  if(rarity==='legendary') score *= 1.5;
+  else if(rarity==='epic') score *= 1.3;
+  else if(rarity==='rare') score *= 1.1;
+
+  return Math.round(score);
+}
+
+// ═══════════════════════════════════════════
+//  MYSTERY TAGLINES — never explain, always tease
+// ═══════════════════════════════════════════
+
+const MYSTERY_LINES = [
+  "you already know",
+  "don't ask",
+  "exactly what you think",
+  "no explanation needed",
+  "self-explanatory",
+  "figure it out",
+  "you can't unsee it",
+  "yes, really",
+  "it's real",
+  "try not to share this",
+  "go ahead, screenshot it",
+  "this one hits different",
+  "wait for it...",
+  "you weren't supposed to see this",
+  "classified product",
+  "info redacted",
+  "the name is the pitch",
+  "say it out loud",
+  "read it again, slowly",
+  "this domain costs money",
+  "someone bought this",
+  "real domain, real product",
+  "trademark pending on vibes",
+  "built behind closed doors",
+];
+
+function getRandomMystery() {
+  return MYSTERY_LINES[Math.floor(Math.random()*MYSTERY_LINES.length)];
+}
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+
+let captures = parseInt(localStorage.getItem('f0_meme_captures')||'0');
+let shares = parseInt(localStorage.getItem('f0_meme_shares')||'0');
+let jackpots = parseInt(localStorage.getItem('f0_meme_jackpots')||'0');
+let bestStreak = parseInt(localStorage.getItem('f0_meme_streak')||'0');
+let currentStreak = 0;
+let coasterRunning = false;
+let coasterInterval = null;
+let capturedDomain = null;
+let captureCount = 0;
+
+// ═══════════════════════════════════════════
+//  ROLLERCOASTER
+// ═══════════════════════════════════════════
+
+function toggleCoaster() {
+  if (coasterRunning) {
+    stopCoaster();
+  } else {
+    startCoaster();
+  }
+}
+
+function startCoaster() {
+  coasterRunning = true;
+  const frame = document.getElementById('coasterFrame');
+  const domain = document.getElementById('coasterDomain');
+  const hint = document.getElementById('coasterHint');
+  const cat = document.getElementById('coasterCat');
+  const speedLines = document.getElementById('speedLines');
+
+  frame.className = 'coaster-frame flashing';
+  hint.textContent = 'tap to capture';
+  speedLines.classList.add('show');
+  cat.classList.remove('show');
+
+  // Hide previous capture
+  document.getElementById('captureCard').style.display = 'none';
+  document.getElementById('shareActions').style.display = 'none';
+
+  // Speed ramp: start slow, get faster
+  let speed = 200;
+  let idx = Math.floor(Math.random()*DOMAINS.length);
+
+  function flashNext() {
+    idx = (idx + 1 + Math.floor(Math.random()*3)) % DOMAINS.length;
+    const d = DOMAINS[idx];
+    const rarity = getRarity(d.cat);
+    const color = RARITY_COLORS[rarity];
+    domain.textContent = d.d;
+    domain.style.color = color;
+
+    // Speed up progressively
+    if (speed > 50) speed -= 5;
+
+    coasterInterval = setTimeout(flashNext, speed);
+  }
+
+  flashNext();
+
+  // Update controls
+  document.getElementById('coasterControls').innerHTML = '<button class="btn btn-amber" onclick="toggleCoaster()">CAPTURE</button>';
+}
+
+function stopCoaster() {
+  coasterRunning = false;
+  clearTimeout(coasterInterval);
+
+  const frame = document.getElementById('coasterFrame');
+  const domain = document.getElementById('coasterDomain');
+  const hint = document.getElementById('coasterHint');
+  const cat = document.getElementById('coasterCat');
+  const speedLines = document.getElementById('speedLines');
+  const flashOverlay = document.getElementById('flashOverlay');
+
+  // Camera flash effect
+  flashOverlay.classList.add('flash');
+  setTimeout(() => flashOverlay.classList.remove('flash'), 400);
+
+  speedLines.classList.remove('show');
+  frame.className = 'coaster-frame captured';
+
+  // Get the captured domain
+  const domainName = domain.textContent;
+  const d = DOMAINS.find(x => x.d === domainName) || DOMAINS[0];
+  const rarity = getRarity(d.cat);
+  const color = RARITY_COLORS[rarity];
+
+  capturedDomain = d;
+  captureCount++;
+  captures++;
+  localStorage.setItem('f0_meme_captures', captures);
+
+  // Calculate shock score
+  const shock = shockScore(d.d);
+  if (shock >= 4) {
+    currentStreak++;
+    if (currentStreak > bestStreak) {
+      bestStreak = currentStreak;
+      localStorage.setItem('f0_meme_streak', bestStreak);
+    }
+  } else {
+    currentStreak = 0;
+  }
+
+  hint.textContent = 'captured — shock score: ' + shock;
+  cat.textContent = rarity.toUpperCase();
+  cat.style.color = color;
+  cat.classList.add('show');
+
+  // Build capture card
+  showCaptureCard(d, rarity, color, shock);
+
+  // Update controls
+  document.getElementById('coasterControls').innerHTML =
+    '<button class="btn btn-pink" onclick="toggleCoaster()">Ride again</button>';
+
+  updateStats();
+}
+
+function showCaptureCard(d, rarity, color, shock) {
+  const card = document.getElementById('captureCard');
+  card.style.display = 'block';
+  card.style.borderColor = color;
+
+  document.getElementById('captureRarity').className = 'capture-rarity';
+  document.getElementById('captureRarity').querySelector('.dot').style.background = color;
+  document.getElementById('captureRarityText').textContent = rarity;
+  document.getElementById('captureRarityText').style.color = color;
+  document.getElementById('captureDomain').textContent = d.d;
+  document.getElementById('captureDomain').style.color = color;
+  document.getElementById('captureMystery').textContent = getRandomMystery();
+  document.getElementById('captureNum').textContent = '#' + String(captureCount).padStart(6,'0') + ' · shock: ' + shock;
+
+  document.getElementById('shareActions').style.display = 'flex';
+  card.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function rideAgain() {
+  document.getElementById('captureCard').style.display = 'none';
+  document.getElementById('shareActions').style.display = 'none';
+  capturedDomain = null;
+  const domain = document.getElementById('coasterDomain');
+  domain.textContent = 'tap to ride';
+  domain.style.color = 'var(--white)';
+  document.getElementById('coasterFrame').className = 'coaster-frame';
+  document.getElementById('coasterHint').textContent = '230 domains. one lands on you.';
+  document.getElementById('coasterCat').classList.remove('show');
+  document.getElementById('coasterControls').innerHTML =
+    '<button class="btn btn-pink" onclick="toggleCoaster()">Start the ride</button>';
+}
+
+// ═══════════════════════════════════════════
+//  SHARING — never leak product details
+// ═══════════════════════════════════════════
+
+function copyMemeLink() {
+  if (!capturedDomain) return;
+  const url = location.origin + location.pathname + '?d=' + encodeURIComponent(capturedDomain.d);
+  navigator.clipboard.writeText(url).then(() => {
+    shares++; localStorage.setItem('f0_meme_shares', shares); updateStats();
+    toast('Link copied — they won\'t know what hit them');
+  }).catch(()=>{});
+}
+
+function copyMemeText() {
+  if (!capturedDomain) return;
+  const rarity = getRarity(capturedDomain.cat);
+  const shock = shockScore(capturedDomain.d);
+  const text = `${capturedDomain.d}\n\n${getRandomMystery()}\n\nshock score: ${shock} · ${rarity}\nfortune0.com/memes`;
+  navigator.clipboard.writeText(text).then(() => {
+    shares++; localStorage.setItem('f0_meme_shares', shares); updateStats();
+    toast('Meme text copied — post it everywhere');
+  }).catch(()=>{});
+}
+
+function plantAsSeed() {
+  // Deep link to seeds page with domain context
+  const seedsUrl = 'fortune0-seeds.html';
+  window.open(seedsUrl, '_blank');
+  toast('Opening seeds — plant it for a friend');
+}
+
+// ═══════════════════════════════════════════
+//  SLOT MACHINE
+// ═══════════════════════════════════════════
+
+let slotSpinning = false;
+
+async function pullSlots() {
+  if (slotSpinning) return;
+  slotSpinning = true;
+
+  const s1 = document.getElementById('slot1');
+  const s2 = document.getElementById('slot2');
+  const s3 = document.getElementById('slot3');
+  const result = document.getElementById('slotResult');
+
+  result.textContent = '';
+  result.className = 'slot-result';
+
+  // Spin animation
+  const duration = 1500;
+  const start = Date.now();
+
+  function spinFrame() {
+    const elapsed = Date.now() - start;
+    const progress = elapsed / duration;
+
+    // Each reel stops at different times
+    if (progress < 0.5) {
+      s1.textContent = DOMAINS[Math.floor(Math.random()*DOMAINS.length)].d;
+    }
+    if (progress < 0.7) {
+      s2.textContent = DOMAINS[Math.floor(Math.random()*DOMAINS.length)].d;
+    }
+    if (progress < 0.9) {
+      s3.textContent = DOMAINS[Math.floor(Math.random()*DOMAINS.length)].d;
+    }
+
+    if (progress < 1) {
+      requestAnimationFrame(spinFrame);
+    } else {
+      // Final picks
+      const picks = [
+        DOMAINS[Math.floor(Math.random()*DOMAINS.length)],
+        DOMAINS[Math.floor(Math.random()*DOMAINS.length)],
+        DOMAINS[Math.floor(Math.random()*DOMAINS.length)]
+      ];
+      s1.textContent = picks[0].d;
+      s2.textContent = picks[1].d;
+      s3.textContent = picks[2].d;
+
+      // Color by rarity
+      picks.forEach((p, i) => {
+        const color = RARITY_COLORS[getRarity(p.cat)];
+        [s1,s2,s3][i].style.color = color;
+      });
+
+      // Check for match
+      const cats = picks.map(p => p.cat);
+      if (cats[0] === cats[1] && cats[1] === cats[2]) {
+        // JACKPOT — all same category
+        jackpots++; localStorage.setItem('f0_meme_jackpots', jackpots);
+        result.textContent = 'JACKPOT — triple ' + cats[0].toUpperCase() + '!';
+        result.className = 'slot-result slot-jackpot';
+        toast('TRIPLE MATCH! All ' + cats[0] + '!');
+      } else if (cats[0] === cats[1] || cats[1] === cats[2] || cats[0] === cats[2]) {
+        result.textContent = 'Double match — close one';
+        result.style.color = 'var(--cyan)';
+      } else {
+        const combo = picks.map(p=>p.d).join(' + ');
+        result.textContent = 'Meme combo: share this screenshot';
+      }
+
+      updateStats();
+      slotSpinning = false;
+    }
+  }
+
+  requestAnimationFrame(spinFrame);
+}
+
+// ═══════════════════════════════════════════
+//  SHOCK RANKINGS
+// ═══════════════════════════════════════════
+
+function renderShockRankings() {
+  // Score all domains and show top 10
+  const scored = DOMAINS.map(d => ({...d, shock: shockScore(d.d)}));
+  scored.sort((a,b) => b.shock - a.shock);
+  const maxShock = scored[0]?.shock || 1;
+
+  const top = scored.slice(0, 10);
+  const el = document.getElementById('shockRankings');
+  el.innerHTML = top.map((d, i) => {
+    const rarity = getRarity(d.cat);
+    const color = RARITY_COLORS[rarity];
+    const pct = Math.round((d.shock / maxShock) * 100);
+    return `<div class="rank-row" onclick="flashDomain('${d.d}')">
+      <span class="rank-pos">${i+1}</span>
+      <div style="flex:1">
+        <span class="rank-domain" style="color:${color}">${d.d}</span>
+        <div class="rank-bar"><div class="rank-fill" style="width:${pct}%;background:${color}"></div></div>
+      </div>
+      <span class="rank-score">${d.shock}</span>
+    </div>`;
+  }).join('');
+}
+
+function flashDomain(domainName) {
+  // Quick flash the domain in the coaster
+  const d = DOMAINS.find(x => x.d === domainName);
+  if (!d) return;
+  const frame = document.getElementById('coasterFrame');
+  const display = document.getElementById('coasterDomain');
+  const rarity = getRarity(d.cat);
+  const color = RARITY_COLORS[rarity];
+
+  display.textContent = d.d;
+  display.style.color = color;
+  frame.className = 'coaster-frame captured';
+  frame.style.borderColor = color;
+
+  capturedDomain = d;
+  captureCount++;
+  captures++;
+  localStorage.setItem('f0_meme_captures', captures);
+
+  const shock = shockScore(d.d);
+  document.getElementById('coasterHint').textContent = 'shock score: ' + shock;
+  document.getElementById('coasterCat').textContent = rarity.toUpperCase();
+  document.getElementById('coasterCat').style.color = color;
+  document.getElementById('coasterCat').classList.add('show');
+
+  showCaptureCard(d, rarity, color, shock);
+  updateStats();
+
+  document.getElementById('coasterControls').innerHTML =
+    '<button class="btn btn-pink" onclick="toggleCoaster()">Ride again</button>';
+
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════════
+//  SHOCK GRID CARDS
+// ═══════════════════════════════════════════
+
+function refreshShockCards() {
+  const grid = document.getElementById('shockGrid');
+  // Pick 6 random high-shock domains
+  const shuffled = [...DOMAINS].sort(() => Math.random() - 0.5);
+  // Weight toward higher shock scores
+  const scored = shuffled.map(d => ({...d, shock: shockScore(d.d)}));
+  scored.sort((a,b) => b.shock - a.shock);
+  const picks = scored.slice(0, Math.min(8, scored.length));
+  // Re-shuffle picks so it's not always sorted
+  picks.sort(() => Math.random() - 0.5);
+
+  grid.innerHTML = picks.slice(0,6).map(d => {
+    const rarity = getRarity(d.cat);
+    const color = RARITY_COLORS[rarity];
+    return `<div class="shock-card" onclick="flashDomain('${d.d}')">
+      <div class="rarity-dot" style="background:${color}"></div>
+      <div class="domain" style="color:${color}">${d.d}</div>
+      <div class="mystery">${getRandomMystery()}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════
+
+function updateStats() {
+  document.getElementById('statCaptures').textContent = captures;
+  document.getElementById('statShares').textContent = shares;
+  document.getElementById('statJackpots').textContent = jackpots;
+  document.getElementById('statStreak').textContent = bestStreak;
+}
+
+function challengeDomain(){
+  // Deep link to challenge page — dare someone to explain this domain
+  if(!capturedDomain)return;
+  window.open('fortune0-challenge.html?d='+encodeURIComponent(capturedDomain.d),'_blank');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+// ═══════════════════════════════════════════
+//  URL PARAM — deep link to specific domain meme
+// ═══════════════════════════════════════════
+
+function checkDeepLink() {
+  const params = new URLSearchParams(location.search);
+  const domainParam = params.get('d');
+  if (domainParam) {
+    const d = DOMAINS.find(x => x.d === decodeURIComponent(domainParam));
+    if (d) {
+      setTimeout(() => flashDomain(d.d), 300);
+    }
+    history.replaceState({}, '', location.pathname);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+
+function init() {
+  renderShockRankings();
+  refreshShockCards();
+  updateStats();
+  checkDeepLink();
+
+  // Generate shutter lines
+  const shutter = document.getElementById('shutter');
+  for (let i = 0; i < 20; i++) {
+    const line = document.createElement('div');
+    line.className = 'shutter-line';
+    line.style.top = (i * 5) + '%';
+    shutter.appendChild(line);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
