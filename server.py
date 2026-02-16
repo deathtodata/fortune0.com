@@ -717,7 +717,7 @@ class Handler(BaseHTTPRequestHandler):
             web_results = []
             web_locked = False
 
-            if sess and user_tier == "active":
+            if sess and (user_tier == "active" or sess.get("email") == ADMIN_EMAIL):
                 # Try Brave Search API first (if configured)
                 if BRAVE_SEARCH_KEY and not web_results:
                     try:
@@ -1976,6 +1976,26 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json({"renewed": True, "email": target_email, "new_key": new_key, "days": days})
 
         # ── Create note ──
+
+        elif path == "/api/admin/set-tier":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            if sess["email"] != ADMIN_EMAIL:
+                self.send_json({"error": "Admin only"}, 403); return
+            target = body.get("email", "").strip().lower()
+            new_tier = body.get("tier", "").strip().lower()
+            if not target or new_tier not in ("free", "active", "premium"):
+                self.send_json({"error": "Need email and tier (free/active/premium)"}, 400); return
+            conn = get_db()
+            user = conn.execute("SELECT * FROM users WHERE email=?", [target]).fetchone()
+            if not user:
+                conn.close()
+                self.send_json({"error": "User not found"}, 404); return
+            conn.execute("UPDATE users SET tier=? WHERE email=?", [new_tier, target])
+            conn.commit(); conn.close()
+            self.send_json({"ok": True, "email": target, "tier": new_tier})
+
         elif path == "/api/notes":
             sess = self.get_user()
             if not sess:
