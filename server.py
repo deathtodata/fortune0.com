@@ -580,8 +580,11 @@ class Handler(BaseHTTPRequestHandler):
     def read_body(self):
         length = int(self.headers.get("Content-Length", 0))
         if length == 0:
+            self._raw_body = b""
             return {}
-        return json.loads(self.rfile.read(length))
+        raw = self.rfile.read(length)
+        self._raw_body = raw  # preserve original bytes for webhook signature verification
+        return json.loads(raw)
 
     def get_user(self):
         auth = self.headers.get("Authorization", "")
@@ -618,6 +621,16 @@ class Handler(BaseHTTPRequestHandler):
                 "version": "1.6.0",
                 "db": db_type,
                 "db_connected": db_ok,
+            })
+
+        # ── Stripe webhook ping (GET = verify endpoint is reachable) ──
+        elif path == "/api/webhooks/stripe":
+            self.send_json({
+                "status": "ok",
+                "endpoint": "/api/webhooks/stripe",
+                "method_required": "POST",
+                "webhook_secret_configured": bool(STRIPE_WEBHOOK_SECRET),
+                "stripe_key_configured": bool(STRIPE_SECRET_KEY),
             })
 
         # ── Admin health: full stats (requires admin auth) ──
@@ -1659,15 +1672,15 @@ class Handler(BaseHTTPRequestHandler):
         # ── Stripe webhook (payment confirmation) ──
         elif path == "/api/webhooks/stripe":
             # Stripe sends checkout.session.completed with client_reference_id = referral code
-            # Verify signature if webhook secret is set
-            raw_body = json.dumps(body).encode()
+            # Verify signature using original raw bytes (NOT re-serialized JSON)
+            raw_body = getattr(self, '_raw_body', b'')
             sig_header = self.headers.get("Stripe-Signature", "")
+            event_type = body.get("type", "unknown")
+            sys.stderr.write(f"  [Stripe Webhook] Received event: {event_type}, body size: {len(raw_body)} bytes, sig present: {bool(sig_header)}\n")
 
             if STRIPE_WEBHOOK_SECRET and sig_header:
                 # Verify Stripe webhook signature
-                # Stripe signs: timestamp.payload
-                # For now we do a simple HMAC check on the payload
-                # In production, use stripe library's verify method
+                # Stripe signs: {timestamp}.{raw_body} using HMAC-SHA256
                 try:
                     parts = dict(item.split("=", 1) for item in sig_header.split(","))
                     timestamp = parts.get("t", "")
@@ -1679,20 +1692,25 @@ class Handler(BaseHTTPRequestHandler):
                         hashlib.sha256
                     ).hexdigest()
                     if not hmac.compare_digest(computed, expected_sig):
+                        sys.stderr.write(f"  [Stripe Webhook] Signature mismatch! Check STRIPE_WEBHOOK_SECRET env var.\n")
                         self.send_json({"error": "Invalid signature"}, 401)
                         return
-                except Exception:
-                    pass  # If parsing fails, still process (dev mode)
+                    sys.stderr.write(f"  [Stripe Webhook] Signature verified OK.\n")
+                except Exception as e:
+                    sys.stderr.write(f"  [Stripe Webhook] Signature parse error: {e} — processing anyway (dev mode).\n")
+            elif not STRIPE_WEBHOOK_SECRET:
+                sys.stderr.write(f"  [Stripe Webhook] No STRIPE_WEBHOOK_SECRET set — skipping signature verification.\n")
 
-            # Handle the event
-            event_type = body.get("type", "")
+            # Handle the event (event_type already extracted above for logging)
             if event_type == "checkout.session.completed":
                 session_data = body.get("data", {}).get("object", {})
                 ref_code = session_data.get("client_reference_id", "")
                 customer_email = session_data.get("customer_email", "") or session_data.get("customer_details", {}).get("email", "")
                 amount = session_data.get("amount_total", 0) / 100  # cents to dollars
+                sys.stderr.write(f"  [Stripe Webhook] checkout.session.completed: email={customer_email}, ref={ref_code}, ${amount}\n")
 
                 if not ref_code and not customer_email:
+                    sys.stderr.write(f"  [Stripe Webhook] ERROR: No reference ID or email in event.\n")
                     self.send_json({"error": "No reference ID or email"}, 400)
                     return
 
@@ -1720,6 +1738,7 @@ class Handler(BaseHTTPRequestHandler):
 
                     conn.commit()
                     conn.close()
+                    sys.stderr.write(f"  [Stripe Webhook] Activated existing user: {email} → tier=active\n")
                     self.send_json({"activated": True, "email": email, "code": code, "tier": "active"})
                 else:
                     # Payment came in but no matching account — create one
@@ -1733,12 +1752,14 @@ class Handler(BaseHTTPRequestHandler):
                                          [customer_email.lower(), code])
                             log_activity(conn, customer_email, "payment_signup", f"${amount} via Stripe — new active account")
                             conn.commit()
-                        except Exception:
-                            pass
+                            sys.stderr.write(f"  [Stripe Webhook] Created new active account: {customer_email}\n")
+                        except Exception as e:
+                            sys.stderr.write(f"  [Stripe Webhook] Error creating account for {customer_email}: {e}\n")
                     conn.close()
                     self.send_json({"activated": True, "new_account": True, "email": customer_email})
             else:
                 # Other event types — acknowledge but ignore
+                sys.stderr.write(f"  [Stripe Webhook] Ignoring event type: {event_type}\n")
                 self.send_json({"received": True})
 
         # ── Account recovery (email lookup) ──
