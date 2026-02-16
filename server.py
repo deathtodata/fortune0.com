@@ -1386,7 +1386,18 @@ class Handler(BaseHTTPRequestHandler):
             conn = get_db()
             existing = conn.execute("SELECT * FROM users WHERE email=?", [email]).fetchone()
             if existing:
-                # Account exists — do NOT auto-login, require license key
+                user_data = dict(existing)
+                # Active tier (paid via Stripe) — auto-login, no key needed
+                if user_data.get("tier") == "active":
+                    token = create_session(user_data["email"])
+                    log_activity(conn, user_data["email"], "auto_login", "Active tier auto-login")
+                    conn.commit(); conn.close()
+                    self.send_json({
+                        "token": token, "email": user_data["email"],
+                        "tier": "active", "referral_code": user_data.get("referral_code", ""),
+                    })
+                    return
+                # Free tier — require license key
                 conn.close()
                 self.send_json({
                     "error": "Account already exists. Sign in with your license key.",
