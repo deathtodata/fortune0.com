@@ -306,6 +306,11 @@ CREATE TABLE IF NOT EXISTS notes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS sessions (
+    token TEXT PRIMARY KEY,
+    email TEXT NOT NULL,
+    expires TEXT NOT NULL
+);
 """
 
 SCHEMA_PG = """
@@ -392,6 +397,11 @@ CREATE TABLE IF NOT EXISTS notes (
     tier_required TEXT DEFAULT 'free',
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS sessions (
+    token TEXT PRIMARY KEY,
+    email TEXT NOT NULL,
+    expires TEXT NOT NULL
 );
 """
 
@@ -501,13 +511,19 @@ def create_session(email):
     # Store in database so sessions survive deploys
     try:
         conn = get_db()
-        conn.execute("CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, email TEXT, expires TEXT)")
-        conn.execute("INSERT OR REPLACE INTO sessions (token, email, expires) VALUES (?, ?, ?)",
-                     [token, email.lower(), expires.isoformat()])
+        if USE_PG:
+            conn.execute(
+                "INSERT INTO sessions (token, email, expires) VALUES (?, ?, ?) "
+                "ON CONFLICT (token) DO UPDATE SET email=EXCLUDED.email, expires=EXCLUDED.expires",
+                [token, email.lower(), expires.isoformat()])
+        else:
+            conn.execute("INSERT OR REPLACE INTO sessions (token, email, expires) VALUES (?, ?, ?)",
+                         [token, email.lower(), expires.isoformat()])
         conn.commit()
         conn.close()
-    except Exception:
-        pass  # Fall back to memory-only
+        sys.stderr.write(f"  [Session] Saved to DB: {email.lower()} (expires {expires.isoformat()})\n")
+    except Exception as e:
+        sys.stderr.write(f"  [Session] DB save failed: {e}\n")
     with SESSIONS_LOCK:
         SESSIONS[token] = {"email": email.lower(), "expires": expires}
     return token
@@ -526,20 +542,25 @@ def get_session(token):
     # Not in memory — check database (survives deploys)
     try:
         conn = get_db()
-        conn.execute("CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, email TEXT, expires TEXT)")
         row = conn.execute("SELECT email, expires FROM sessions WHERE token=?", [token]).fetchone()
         conn.close()
         if row:
-            expires = datetime.fromisoformat(row[1] if isinstance(row[1], str) else row["expires"])
+            # dict key access works for both sqlite3.Row and PG RealDictCursor
+            expires_str = row["expires"]
+            expires = datetime.fromisoformat(expires_str)
             if expires < datetime.now(timezone.utc):
+                sys.stderr.write(f"  [Session] DB token expired for {row['email']}\n")
                 return None
-            email = row[0] if isinstance(row[0], str) else row["email"]
+            email = row["email"]
             sess = {"email": email, "expires": expires}
             with SESSIONS_LOCK:
                 SESSIONS[token] = sess  # cache in memory
+            sys.stderr.write(f"  [Session] Restored from DB: {email}\n")
             return sess
-    except Exception:
-        pass
+        else:
+            sys.stderr.write(f"  [Session] Token not found in DB (token prefix: {token[:8]}...)\n")
+    except Exception as e:
+        sys.stderr.write(f"  [Session] DB lookup failed: {e}\n")
     return None
 
 # ═══════════════════════════════════════════
