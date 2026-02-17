@@ -675,16 +675,19 @@ class Handler(BaseHTTPRequestHandler):
         # ── Public stats (no auth, no PII — safe for about page) ──
         elif path == "/api/public/stats":
             conn = get_db()
-            active = conn.execute("SELECT COUNT(*) FROM users WHERE tier='active'").fetchone()[0]
-            total = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-            searches_today = conn.execute(
-                "SELECT COUNT(*) FROM activity WHERE action='search' AND created_at > datetime('now', '-1 day')"
-            ).fetchone()[0] if not USE_PG else conn.execute(
-                "SELECT COUNT(*) FROM activity WHERE action='search' AND created_at > NOW() - INTERVAL '1 day'"
-            ).fetchone()[0]
+            active = conn.execute("SELECT COUNT(*) as c FROM users WHERE tier='active'").fetchone()["c"]
+            total = conn.execute("SELECT COUNT(*) as c FROM users").fetchone()["c"]
+            if USE_PG:
+                searches_today = conn.execute(
+                    "SELECT COUNT(*) as c FROM activity WHERE action='search' AND created_at > NOW() - INTERVAL '1 day'"
+                ).fetchone()["c"]
+            else:
+                searches_today = conn.execute(
+                    "SELECT COUNT(*) as c FROM activity WHERE action='search' AND created_at > datetime('now', '-1 day')"
+                ).fetchone()["c"]
             searches_total = conn.execute(
-                "SELECT COUNT(*) FROM activity WHERE action='search'"
-            ).fetchone()[0]
+                "SELECT COUNT(*) as c FROM activity WHERE action='search'"
+            ).fetchone()["c"]
             conn.close()
             self.send_json({
                 "customers": active,
