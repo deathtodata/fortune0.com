@@ -498,6 +498,16 @@ def calculate_credits(amount_cents, payment_timestamp):
 def create_session(email):
     token = secrets.token_urlsafe(32)
     expires = datetime.now(timezone.utc) + timedelta(days=7)
+    # Store in database so sessions survive deploys
+    try:
+        conn = get_db()
+        conn.execute("CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, email TEXT, expires TEXT)")
+        conn.execute("INSERT OR REPLACE INTO sessions (token, email, expires) VALUES (?, ?, ?)",
+                     [token, email.lower(), expires.isoformat()])
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass  # Fall back to memory-only
     with SESSIONS_LOCK:
         SESSIONS[token] = {"email": email.lower(), "expires": expires}
     return token
@@ -507,12 +517,30 @@ def get_session(token):
         return None
     with SESSIONS_LOCK:
         sess = SESSIONS.get(token)
-        if not sess:
-            return None
+    if sess:
         if sess["expires"] < datetime.now(timezone.utc):
-            del SESSIONS[token]
+            with SESSIONS_LOCK:
+                SESSIONS.pop(token, None)
             return None
         return sess
+    # Not in memory — check database (survives deploys)
+    try:
+        conn = get_db()
+        conn.execute("CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, email TEXT, expires TEXT)")
+        row = conn.execute("SELECT email, expires FROM sessions WHERE token=?", [token]).fetchone()
+        conn.close()
+        if row:
+            expires = datetime.fromisoformat(row[1] if isinstance(row[1], str) else row["expires"])
+            if expires < datetime.now(timezone.utc):
+                return None
+            email = row[0] if isinstance(row[0], str) else row["email"]
+            sess = {"email": email, "expires": expires}
+            with SESSIONS_LOCK:
+                SESSIONS[token] = sess  # cache in memory
+            return sess
+    except Exception:
+        pass
+    return None
 
 # ═══════════════════════════════════════════
 #  COMMISSION LOGIC
