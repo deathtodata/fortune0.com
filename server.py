@@ -623,6 +623,28 @@ class Handler(BaseHTTPRequestHandler):
                 "db_connected": db_ok,
             })
 
+        # ── Public stats (no auth, no PII — safe for about page) ──
+        elif path == "/api/public/stats":
+            conn = get_db()
+            active = conn.execute("SELECT COUNT(*) FROM users WHERE tier='active'").fetchone()[0]
+            total = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+            searches_today = conn.execute(
+                "SELECT COUNT(*) FROM activity WHERE action='search' AND created_at > datetime('now', '-1 day')"
+            ).fetchone()[0] if not USE_PG else conn.execute(
+                "SELECT COUNT(*) FROM activity WHERE action='search' AND created_at > NOW() - INTERVAL '1 day'"
+            ).fetchone()[0]
+            searches_total = conn.execute(
+                "SELECT COUNT(*) FROM activity WHERE action='search'"
+            ).fetchone()[0]
+            conn.close()
+            self.send_json({
+                "customers": active,
+                "mrr": active * 1.0,  # $1/mo per active sub
+                "total_users": total,
+                "searches_today": searches_today,
+                "searches_total": searches_total,
+            })
+
         # ── Stripe webhook ping (GET = verify endpoint is reachable) ──
         elif path == "/api/webhooks/stripe":
             self.send_json({
