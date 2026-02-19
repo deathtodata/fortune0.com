@@ -311,6 +311,26 @@ CREATE TABLE IF NOT EXISTS sessions (
     email TEXT NOT NULL,
     expires TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS documents (
+    id TEXT PRIMARY KEY,
+    user_email TEXT NOT NULL,
+    doc_hash TEXT NOT NULL,
+    signature TEXT NOT NULL,
+    public_key TEXT NOT NULL,
+    tags TEXT,
+    doc_type TEXT,
+    doc_name TEXT,
+    notarized_at TEXT,
+    status TEXT DEFAULT 'signed',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    doc_id TEXT NOT NULL,
+    event TEXT NOT NULL,
+    actor_hash TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 SCHEMA_PG = """
@@ -402,6 +422,26 @@ CREATE TABLE IF NOT EXISTS sessions (
     token TEXT PRIMARY KEY,
     email TEXT NOT NULL,
     expires TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS documents (
+    id TEXT PRIMARY KEY,
+    user_email TEXT NOT NULL,
+    doc_hash TEXT NOT NULL,
+    signature TEXT NOT NULL,
+    public_key TEXT NOT NULL,
+    tags TEXT,
+    doc_type TEXT,
+    doc_name TEXT,
+    notarized_at TEXT,
+    status TEXT DEFAULT 'signed',
+    created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS audit_log (
+    id SERIAL PRIMARY KEY,
+    doc_id TEXT NOT NULL,
+    event TEXT NOT NULL,
+    actor_hash TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 """
 
@@ -671,6 +711,43 @@ class Handler(BaseHTTPRequestHandler):
                 "db": db_type,
                 "db_connected": db_ok,
             })
+
+        # ── Fetch proxy — privacy layer for story mode + browse ──
+        elif path == "/fetch":
+            target_url = qs.get("url", [""])[0].strip()
+            if not target_url:
+                self.send_json({"error": "URL parameter required"}, 400); return
+            # Basic validation
+            if not target_url.startswith(("http://", "https://")):
+                target_url = "https://" + target_url
+            try:
+                req = urllib.request.Request(target_url, headers={
+                    "User-Agent": "Mozilla/5.0 (compatible; Death2Data/1.0; +https://death2data.com)",
+                    "Accept": "text/html,application/xhtml+xml,*/*",
+                    "Accept-Language": "en-US,en;q=0.9",
+                })
+                with urllib.request.urlopen(req, timeout=12) as resp:
+                    raw = resp.read(2 * 1024 * 1024)  # Cap at 2MB
+                    # Try to decode — handle various encodings
+                    content_type = resp.headers.get("Content-Type", "")
+                    charset = "utf-8"
+                    if "charset=" in content_type:
+                        charset = content_type.split("charset=")[-1].split(";")[0].strip()
+                    try:
+                        html_content = raw.decode(charset)
+                    except (UnicodeDecodeError, LookupError):
+                        html_content = raw.decode("utf-8", errors="replace")
+                    self.send_json({
+                        "content": html_content,
+                        "url": target_url,
+                        "status": resp.status
+                    })
+            except urllib.error.HTTPError as e:
+                self.send_json({"error": f"HTTP {e.code}: {e.reason}", "status": e.code}, 502)
+            except urllib.error.URLError as e:
+                self.send_json({"error": f"Could not reach site: {str(e.reason)}"}, 502)
+            except Exception as e:
+                self.send_json({"error": f"Fetch failed: {str(e)}"}, 500)
 
         # ── Public stats (no auth, no PII — safe for about page) ──
         elif path == "/api/public/stats":
@@ -1431,6 +1508,89 @@ class Handler(BaseHTTPRequestHandler):
                 })
 
             self.send_json({"users": user_list, "count": len(user_list)})
+
+        # ── IPOMyAgent: List user's documents ──
+        elif path == "/api/documents":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            conn = get_db()
+            docs = conn.execute(
+                "SELECT id, doc_hash, doc_name, doc_type, tags, status, created_at FROM documents WHERE user_email=? ORDER BY created_at DESC",
+                [sess["email"]]
+            ).fetchall()
+            conn.close()
+            self.send_json({"documents": [dict(d) for d in docs]})
+
+        # ── IPOMyAgent: Get single document record ──
+        elif path.startswith("/api/documents/") and not path.endswith("/revoke"):
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            doc_id = path.split("/api/documents/")[1].split("/")[0]
+            conn = get_db()
+            doc = conn.execute(
+                "SELECT * FROM documents WHERE id=? AND user_email=?",
+                [doc_id, sess["email"]]
+            ).fetchone()
+            conn.close()
+            if not doc:
+                self.send_json({"error": "Not found"}, 404); return
+            self.send_json(dict(doc))
+
+        # ── IPOMyAgent: Public verification JSON endpoint ──
+        elif path.startswith("/api/verify/"):
+            doc_id = path.split("/api/verify/")[1].split("/")[0]
+            if not doc_id:
+                self.send_json({"error": "Not found"}, 404); return
+            conn = get_db()
+            doc = conn.execute(
+                "SELECT id, doc_hash, signature, public_key, tags, doc_type, doc_name, notarized_at, status, created_at FROM documents WHERE id=?",
+                [doc_id]
+            ).fetchone()
+            if not doc:
+                conn.close()
+                self.send_json({"error": "Not found"}, 404); return
+            ua = self.headers.get("User-Agent", "")
+            ip = self.headers.get("X-Forwarded-For", self.client_address[0])
+            actor_hash = hashlib.sha256(f"{ip}|{ua}".encode()).hexdigest()[:16]
+            conn.execute(
+                "INSERT INTO audit_log (doc_id, event, actor_hash) VALUES (?, 'viewed', ?)",
+                [doc_id, actor_hash]
+            )
+            conn.commit()
+            conn.close()
+            self.send_json(dict(doc))
+
+        # ── IPOMyAgent: Public verification page ──
+        elif path.startswith("/verify/"):
+            doc_id = path.split("/verify/")[1].split("/")[0]
+            if not doc_id:
+                self.send_json({"error": "Not found"}, 404); return
+            conn = get_db()
+            doc = conn.execute(
+                "SELECT id, doc_hash, signature, public_key, tags, doc_type, doc_name, notarized_at, status, created_at FROM documents WHERE id=?",
+                [doc_id]
+            ).fetchone()
+            if not doc:
+                conn.close()
+                self.send_json({"error": "Not found"}, 404); return
+            # Log view event with hashed actor (no PII)
+            ua = self.headers.get("User-Agent", "")
+            ip = self.headers.get("X-Forwarded-For", self.client_address[0])
+            actor_hash = hashlib.sha256(f"{ip}|{ua}".encode()).hexdigest()[:16]
+            conn.execute(
+                "INSERT INTO audit_log (doc_id, event, actor_hash) VALUES (?, 'viewed', ?)",
+                [doc_id, actor_hash]
+            )
+            conn.commit()
+            conn.close()
+            # Serve verification page if it exists, else JSON
+            verify_html = os.path.join(SITE_DIR, "ipomyagent-verify.html")
+            if os.path.isfile(verify_html):
+                self.send_file(verify_html)
+            else:
+                self.send_json(dict(doc))
 
         # ── Static files ──
         elif path == "/":
@@ -2287,6 +2447,107 @@ class Handler(BaseHTTPRequestHandler):
             new_balance = conn.execute("SELECT COALESCE(SUM(amount),0) bal FROM credits WHERE user_email=?", [email]).fetchone()["bal"]
             conn.close()
             self.send_json({"spent": True, "amount": amount, "new_balance": round(new_balance, 2)})
+
+        # ── IPOMyAgent: Sign (store proof record) ──
+        elif path == "/api/documents/sign":
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+
+            doc_hash = body.get("doc_hash", "").strip()
+            signature = body.get("signature", "").strip()
+            public_key = body.get("public_key", "").strip()
+            doc_name = body.get("doc_name", "untitled").strip()[:255]
+            doc_type = body.get("doc_type", "").strip()[:100]
+            notarized_at = body.get("notarized_at", "").strip()[:64]  # ISO timestamp from client
+            tags = body.get("tags", [])
+            if isinstance(tags, list):
+                tags = json.dumps(tags)
+
+            if not doc_hash or not signature or not public_key:
+                self.send_json({"error": "doc_hash, signature, and public_key required"}, 400); return
+            if len(doc_hash) != 64:
+                self.send_json({"error": "doc_hash must be a 64-char hex SHA-256"}, 400); return
+
+            # Check free tier limit (3 signs/month)
+            conn = get_db()
+            user = conn.execute("SELECT tier FROM users WHERE email=?", [sess["email"]]).fetchone()
+            if user and user["tier"] != "active":
+                if USE_PG:
+                    month_count = conn.execute(
+                        "SELECT COUNT(*) as c FROM documents WHERE user_email=? AND created_at > NOW() - INTERVAL '30 days'",
+                        [sess["email"]]
+                    ).fetchone()["c"]
+                else:
+                    month_count = conn.execute(
+                        "SELECT COUNT(*) as c FROM documents WHERE user_email=? AND created_at > datetime('now', '-30 days')",
+                        [sess["email"]]
+                    ).fetchone()["c"]
+                if month_count >= 3:
+                    conn.close()
+                    self.send_json({
+                        "error": "Free tier limit reached (3 per month). Upgrade to $1/mo for unlimited signing.",
+                        "upgrade": True,
+                        "limit": 3,
+                        "used": month_count,
+                    }, 402); return
+
+            doc_id = str(uuid.uuid4())
+            conn.execute(
+                "INSERT INTO documents (id, user_email, doc_hash, signature, public_key, tags, doc_type, doc_name, notarized_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [doc_id, sess["email"], doc_hash, signature, public_key, tags, doc_type, doc_name, notarized_at or None]
+            )
+            # Audit: signed event
+            ua = self.headers.get("User-Agent", "")
+            ip = self.headers.get("X-Forwarded-For", self.client_address[0])
+            actor_hash = hashlib.sha256(f"{ip}|{ua}".encode()).hexdigest()[:16]
+            conn.execute(
+                "INSERT INTO audit_log (doc_id, event, actor_hash) VALUES (?, 'signed', ?)",
+                [doc_id, actor_hash]
+            )
+            log_activity(conn, sess["email"], "document_signed", f"doc_id={doc_id} name={doc_name}")
+            conn.commit()
+            conn.close()
+            self.send_json({
+                "doc_id": doc_id,
+                "verification_url": f"/verify/{doc_id}",
+                "doc_hash": doc_hash,
+                "doc_name": doc_name,
+            })
+
+        # ── IPOMyAgent: Revoke document ──
+        elif path.startswith("/api/documents/") and path.endswith("/revoke"):
+            sess = self.get_user()
+            if not sess:
+                self.send_json({"error": "Auth required"}, 401); return
+            parts = path.split("/")
+            # /api/documents/{id}/revoke → parts[-2] is the id
+            doc_id = parts[-2] if len(parts) >= 4 else ""
+            if not doc_id:
+                self.send_json({"error": "Not found"}, 404); return
+            conn = get_db()
+            doc = conn.execute(
+                "SELECT id, status FROM documents WHERE id=? AND user_email=?",
+                [doc_id, sess["email"]]
+            ).fetchone()
+            if not doc:
+                conn.close()
+                self.send_json({"error": "Not found"}, 404); return
+            if doc["status"] == "revoked":
+                conn.close()
+                self.send_json({"error": "Already revoked"}); return
+            conn.execute("UPDATE documents SET status='revoked' WHERE id=?", [doc_id])
+            ua = self.headers.get("User-Agent", "")
+            ip = self.headers.get("X-Forwarded-For", self.client_address[0])
+            actor_hash = hashlib.sha256(f"{ip}|{ua}".encode()).hexdigest()[:16]
+            conn.execute(
+                "INSERT INTO audit_log (doc_id, event, actor_hash) VALUES (?, 'revoked', ?)",
+                [doc_id, actor_hash]
+            )
+            log_activity(conn, sess["email"], "document_revoked", f"doc_id={doc_id}")
+            conn.commit()
+            conn.close()
+            self.send_json({"revoked": True, "doc_id": doc_id})
 
         else:
             self.send_json({"error": "Not found"}, 404)
