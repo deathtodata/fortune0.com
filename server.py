@@ -1644,12 +1644,14 @@ class Handler(BaseHTTPRequestHandler):
                         "tier": "active", "referral_code": user_data.get("referral_code", ""),
                     })
                     return
-                # Free tier — require license key
-                conn.close()
+                # Free tier — auto-login too (no key friction)
+                token = create_session(user_data["email"])
+                log_activity(conn, user_data["email"], "auto_login", "Free tier auto-login via email")
+                conn.commit(); conn.close()
                 self.send_json({
-                    "error": "Account already exists. Sign in with your license key.",
-                    "exists": True,
-                }, 409)
+                    "token": token, "email": user_data["email"],
+                    "tier": "free", "referral_code": user_data.get("referral_code", ""),
+                })
                 return
 
             ref_code = generate_referral_code(email)
