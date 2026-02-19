@@ -1256,6 +1256,71 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Location", f"/u/{code}")
             self.end_headers()
 
+        # ── Word of the Day: derived from most-searched term in the last epoch ──
+        elif path == "/wotd":
+            conn = get_db()
+            try:
+                # Get the most-searched keyword in the last 24 hours
+                if USE_PG:
+                    row = conn.execute("""
+                        SELECT detail as word, COUNT(*) as cnt
+                        FROM activity WHERE action='search' AND created_at > NOW() - INTERVAL '24 hours'
+                        AND detail IS NOT NULL AND LENGTH(detail) > 2
+                        GROUP BY detail ORDER BY cnt DESC LIMIT 1
+                    """).fetchone()
+                else:
+                    row = conn.execute("""
+                        SELECT detail as word, COUNT(*) as cnt
+                        FROM activity WHERE action='search' AND created_at > datetime('now', '-24 hours')
+                        AND detail IS NOT NULL AND LENGTH(detail) > 2
+                        GROUP BY detail ORDER BY cnt DESC LIMIT 1
+                    """).fetchone()
+
+                if row:
+                    word = row["word"].strip().split()[0].lower()  # First word of top query
+                    self.send_json({
+                        "word": word,
+                        "prompt": f'What does "{word}" mean to you?',
+                        "searches": row["cnt"],
+                        "epoch": "24h",
+                    })
+                else:
+                    # Fallback: pick from all-time top searches
+                    row2 = conn.execute("""
+                        SELECT detail as word, COUNT(*) as cnt
+                        FROM activity WHERE action='search' AND detail IS NOT NULL AND LENGTH(detail) > 2
+                        GROUP BY detail ORDER BY cnt DESC LIMIT 1
+                    """).fetchone()
+                    word = row2["word"].strip().split()[0].lower() if row2 else "privacy"
+                    self.send_json({
+                        "word": word,
+                        "prompt": f'What does "{word}" mean to you?',
+                        "searches": row2["cnt"] if row2 else 0,
+                        "epoch": "all-time",
+                    })
+            except Exception as e:
+                self.send_json({"word": "privacy", "prompt": 'What does "privacy" mean to you?', "searches": 0, "epoch": "fallback"})
+            finally:
+                conn.close()
+
+        # ── Perspectives: public anonymous opinions on keywords ──
+        elif path == "/perspectives":
+            keyword = qs.get("keyword", [""])[0].strip().lower()
+            if not keyword:
+                self.send_json({"error": "keyword parameter required"}, 400); return
+            conn = get_db()
+            try:
+                rows = conn.execute(
+                    "SELECT body as perspective, created_at FROM notes "
+                    "WHERE visibility='public' AND LOWER(title)=? ORDER BY created_at DESC LIMIT 20",
+                    [keyword]
+                ).fetchall()
+                self.send_json({"keyword": keyword, "perspectives": [dict(r) for r in rows]})
+            except Exception as e:
+                self.send_json({"keyword": keyword, "perspectives": []})
+            finally:
+                conn.close()
+
         # ── Analytics: time-series platform data (admin only) ──
         elif path == "/api/analytics":
             sess = self.get_user()
@@ -2339,6 +2404,24 @@ class Handler(BaseHTTPRequestHandler):
             log_activity(conn, sess["email"], "note_deleted", f"Note #{nid}")
             conn.commit(); conn.close()
             self.send_json({"deleted": True})
+
+        # ── Post a perspective (anonymous, no auth required) ──
+        elif path == "/perspective":
+            keyword = body.get("keyword", "").strip().lower()
+            perspective = body.get("perspective", "").strip()
+            if not keyword or not perspective:
+                self.send_json({"error": "keyword and perspective required"}, 400); return
+            if len(perspective) > 2000:
+                self.send_json({"error": "Perspective too long (max 2000 chars)"}, 400); return
+            conn = get_db()
+            # Store as a public note with keyword as title, anonymous author
+            conn.execute(
+                "INSERT INTO notes (user_email, title, body, visibility, tier_required) VALUES (?, ?, ?, 'public', 'free')",
+                ["anonymous@death2data.com", keyword, perspective]
+            )
+            log_activity(conn, "anonymous", "perspective", keyword[:100])
+            conn.commit(); conn.close()
+            self.send_json({"saved": True, "keyword": keyword})
 
         # ── Domain interest signup (no auth required) ──
         elif path == "/api/domain-interest":
