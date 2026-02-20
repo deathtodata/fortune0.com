@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPOMyAgent — My Documents</title>
+<style>
+:root {
+  --gold: #D4AF37;
+  --bg: #000;
+  --surface: #0a0a0a;
+  --surface2: #141414;
+  --border: #1a1a1a;
+  --border-l: #2a2a2a;
+  --white: #FFFFFF;
+  --text: rgba(255,255,255,0.6);
+  --dim: rgba(255,255,255,0.3);
+  --red: #EF476F;
+  --green: #06D6A0;
+  --mono: 'SF Mono', 'Menlo', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--white);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px; min-height: 100vh;
+}
+.bar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(0,0,0,0.92); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px; height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.bar-brand { font-weight: 700; font-size: 15px; color: var(--gold); }
+.bar-brand span { color: var(--dim); font-weight: 400; font-size: 12px; margin-left: 8px; }
+.bar-actions { display: flex; gap: 8px; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 8px; font-size: 13px;
+  font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none;
+}
+.btn-gold { background: var(--gold); color: #000; }
+.btn-gold:hover { box-shadow: 0 0 20px rgba(212,175,55,0.4); }
+.btn-ghost { background: none; border: 1px solid var(--border); color: var(--text); }
+.btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-danger { background: none; border: 1px solid rgba(239,71,111,0.3); color: var(--red); }
+.btn-danger:hover { background: rgba(239,71,111,0.1); border-color: var(--red); }
+
+.main { max-width: 900px; margin: 0 auto; padding: 36px 24px 80px; }
+
+/* ── AUTH GATE ── */
+#auth-gate {
+  text-align: center; padding: 80px 24px;
+}
+#auth-gate h2 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+#auth-gate p { color: var(--text); font-size: 13px; margin-bottom: 20px; }
+.auth-form { max-width: 320px; margin: 0 auto; }
+.auth-form input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  color: var(--white); padding: 10px 14px; border-radius: 8px;
+  font-size: 13px; margin-bottom: 10px; outline: none;
+  font-family: inherit;
+}
+.auth-form input:focus { border-color: var(--gold); }
+.auth-error { color: var(--red); font-size: 12px; margin-top: 6px; display: none; }
+
+/* ── APP CONTENT ── */
+#app-content { display: none; }
+
+/* ── HEADER ── */
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; margin-bottom: 28px;
+}
+.page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.page-sub { color: var(--text); font-size: 13px; margin-top: 4px; }
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px;
+}
+.stat-label { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+.stat-value { font-size: 24px; font-weight: 700; color: var(--gold); }
+.stat-sub { font-size: 11px; color: var(--dim); margin-top: 4px; }
+
+/* ── TABLE ── */
+.table-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+}
+.table-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+}
+.table-header-title { font-size: 13px; font-weight: 600; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; font-size: 10px; color: var(--dim);
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+td {
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  font-size: 13px; vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.01); }
+.td-name { font-weight: 500; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.td-hash { font-family: var(--mono); font-size: 10px; color: var(--dim); max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.td-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag-pill {
+  background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.2);
+  color: var(--gold); padding: 2px 7px; border-radius: 12px;
+  font-size: 10px; font-weight: 500; white-space: nowrap;
+}
+.badge {
+  display: inline-block; padding: 3px 8px; border-radius: 4px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.badge-signed { background: rgba(6,214,160,0.1); color: var(--green); }
+.badge-revoked { background: rgba(239,71,111,0.1); color: var(--red); }
+.td-actions { display: flex; gap: 6px; align-items: center; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 60px 24px; color: var(--dim);
+}
+.empty-state h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+.empty-state p { font-size: 13px; margin-bottom: 20px; }
+
+/* ── UPGRADE BANNER ── */
+.upgrade-banner {
+  display: none; background: rgba(212,175,55,0.06);
+  border: 1px solid rgba(212,175,55,0.3);
+  border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  flex-wrap: wrap;
+}
+.upgrade-banner p { font-size: 13px; color: var(--text); }
+.upgrade-banner strong { color: var(--gold); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  z-index: 500; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border-l);
+  border-radius: 14px; padding: 28px; max-width: 480px; width: 90%;
+}
+.modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+.modal p { color: var(--text); font-size: 13px; margin-bottom: 20px; line-height: 1.5; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ── DOC DETAIL SIDE PANEL ── */
+.detail-overlay {
+  display: none; position: fixed; inset: 0;
+  z-index: 400; background: rgba(0,0,0,0.5);
+}
+.detail-overlay.open { display: block; }
+.detail-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 400px;
+  background: var(--surface); border-left: 1px solid var(--border-l);
+  z-index: 401; overflow-y: auto; padding: 24px;
+  transform: translateX(100%); transition: transform 0.3s ease;
+}
+.detail-panel.open { transform: translateX(0); }
+.detail-close {
+  position: absolute; top: 16px; right: 16px;
+  background: none; border: none; color: var(--dim);
+  font-size: 20px; cursor: pointer; padding: 4px;
+}
+.detail-close:hover { color: var(--white); }
+.detail-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; padding-right: 32px; }
+.detail-time { font-size: 12px; color: var(--dim); margin-bottom: 20px; }
+.detail-row { display: grid; grid-template-columns: 90px 1fr; gap: 8px; margin-bottom: 12px; font-size: 12px; }
+.detail-label { color: var(--dim); padding-top: 2px; }
+.detail-value { color: var(--white); word-break: break-all; line-height: 1.5; }
+.detail-value.mono { font-family: var(--mono); font-size: 10px; color: var(--gold); }
+.detail-section { margin-top: 20px; }
+.detail-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="bar-brand">IPOMyAgent <span>My Documents</span></div>
+  <div class="bar-actions">
+    <a class="btn btn-gold" href="/tools/notary">+ Notarize</a>
+    <button class="btn btn-ghost btn-sm" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<!-- AUTH GATE -->
+<div id="auth-gate" class="main">
+  <h2>Sign in to view your documents</h2>
+  <p>Enter your email and license key (or use your fortune0 session)</p>
+  <div class="auth-form">
+    <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email">
+    <input type="text" id="login-key" placeholder="License key (IK-...)" autocomplete="off">
+    <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:4px" onclick="login()">Sign In →</button>
+    <div class="auth-error" id="auth-error"></div>
+    <div style="margin-top:16px;font-size:12px;color:var(--dim)">
+      No account? <a href="/ipomyagent-landing" style="color:var(--gold)">Learn more →</a>
+    </div>
+  </div>
+</div>
+
+<!-- APP CONTENT -->
+<div id="app-content" class="main">
+
+  <div class="upgrade-banner" id="upgrade-banner">
+    <p>You've used <strong id="used-count">3</strong> of 3 free notarizations this month. <strong>Upgrade to $1/mo</strong> for unlimited signing.</p>
+    <a class="btn btn-gold btn-sm" href="https://buy.stripe.com/ipomyagent" id="upgrade-link">Upgrade →</a>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">My Documents</div>
+      <div class="page-sub" id="user-email-display"></div>
+    </div>
+    <a class="btn btn-gold" href="/tools/notary">+ Notarize Document</a>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Signed</div>
+      <div class="stat-value" id="stat-total">—</div>
+      <div class="stat-sub">all time</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">This Month</div>
+      <div class="stat-value" id="stat-month">—</div>
+      <div class="stat-sub" id="stat-month-limit">of 3 free</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active</div>
+      <div class="stat-value" id="stat-active">—</div>
+      <div class="stat-sub">not revoked</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header">
+      <div class="table-header-title">Signed Documents</div>
+      <div id="table-count" style="font-size:12px;color:var(--dim)"></div>
+    </div>
+    <div id="doc-table-wrap">
+      <div class="empty-state" id="empty-state" style="display:none">
+        <h3>No documents yet</h3>
+        <p>Notarize your first document to see it here.</p>
+        <a class="btn btn-gold" href="/tools/notary">+ Notarize Now</a>
+      </div>
+      <table id="doc-table" style="display:none">
+        <thead>
+          <tr>
+            <th>Document</th>
+            <th>Type</th>
+            <th>Tags</th>
+            <th>Status</th>
+            <th>Signed</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="doc-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /app-content -->
+
+<!-- Revoke confirmation modal -->
+<div class="modal-overlay" id="revoke-modal">
+  <div class="modal">
+    <h3>Revoke this document?</h3>
+    <p>This will mark the proof record as <strong>revoked</strong>. The signature remains in the audit trail, but the public verification page will show it as revoked. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmRevoke()">Revoke</button>
+    </div>
+  </div>
+</div>
+
+<!-- Document detail panel -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detail-panel">
+  <button class="detail-close" onclick="closeDetail()">✕</button>
+  <div class="detail-title" id="dp-name"></div>
+  <div class="detail-time" id="dp-time"></div>
+  <div class="detail-row">
+    <div class="detail-label">Status</div>
+    <div class="detail-value" id="dp-status"></div>
+  </div>
+  <div class="detail-row">
+    <div class="detail-label">Type</div>
+    <div class="detail-value" id="dp-type"></div>
+  </div>
+  <div class="detail-row">
+    <div class="detail-label">Tags</div>
+    <div class="detail-value" id="dp-tags"></div>
+  </div>
+  <div class="detail-section">
+    <div class="detail-section-title">Cryptographic Proof</div>
+    <div class="detail-row">
+      <div class="detail-label">SHA-256</div>
+      <div class="detail-value mono" id="dp-hash"></div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-label">Signature</div>
+      <div class="detail-value mono" id="dp-sig"></div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-label">Verify URL</div>
+      <div class="detail-value" id="dp-url"></div>
+    </div>
+  </div>
+  <div class="detail-section">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <a class="btn btn-ghost btn-sm" id="dp-verify-btn" href="#" target="_blank">View Public Record ↗</a>
+      <button class="btn btn-ghost btn-sm" id="dp-copy-url">Copy Verify URL</button>
+      <button class="btn btn-danger btn-sm" id="dp-revoke-btn" onclick="revokeFromDetail()">Revoke</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = location.hostname === 'localhost'
+  ? 'http://localhost:8080'
+  : '';  // same server
+
+let token = null;
+let documents = [];
+let revokeDocId = null;
+let detailDoc = null;
+
+// ── AUTH ──
+
+function getStoredToken() {
+  const member = JSON.parse(localStorage.getItem('d2d_member') || 'null');
+  return member?.token || localStorage.getItem('f0_token') || null;
+}
+
+async function checkSession() {
+  token = getStoredToken();
+  if (!token) return false;
+  try {
+    const r = await fetch(API_BASE + '/api/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!r.ok) return false;
+    const d = await r.json();
+    document.getElementById('user-email-display').textContent = d.email || '';
+    return true;
+  } catch { return false; }
+}
+
+async function login() {
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const key = document.getElementById('login-key').value.trim();
+  const errEl = document.getElementById('auth-error');
+  errEl.style.display = 'none';
+
+  if (!email || !key) { errEl.textContent = 'Email and key required'; errEl.style.display = 'block'; return; }
+
+  try {
+    const r = await fetch(API_BASE + '/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, key }),
+    });
+    const d = await r.json();
+    if (!r.ok) { errEl.textContent = d.error || 'Login failed'; errEl.style.display = 'block'; return; }
+    token = d.token;
+    localStorage.setItem('f0_token', token);
+    document.getElementById('user-email-display').textContent = d.email || email;
+    showApp();
+  } catch (e) {
+    errEl.textContent = 'Network error'; errEl.style.display = 'block';
+  }
+}
+
+function logout() {
+  token = null;
+  localStorage.removeItem('f0_token');
+  const member = JSON.parse(localStorage.getItem('d2d_member') || 'null');
+  if (member) { delete member.token; localStorage.setItem('d2d_member', JSON.stringify(member)); }
+  document.getElementById('auth-gate').style.display = 'block';
+  document.getElementById('app-content').style.display = 'none';
+}
+
+// ── LOAD DOCS ──
+
+async function loadDocuments() {
+  try {
+    const r = await fetch(API_BASE + '/api/documents', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!r.ok) return;
+    const d = await r.json();
+    documents = d.documents || [];
+    renderDocuments();
+  } catch (e) {
+    console.error('Failed to load documents', e);
+  }
+}
+
+function renderDocuments() {
+  const total = documents.length;
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thisMonth = documents.filter(d => new Date(d.created_at) >= monthStart).length;
+  const active = documents.filter(d => d.status === 'signed').length;
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-month').textContent = thisMonth;
+  document.getElementById('stat-active').textContent = active;
+  document.getElementById('table-count').textContent = `${total} document${total !== 1 ? 's' : ''}`;
+
+  if (thisMonth >= 3) {
+    document.getElementById('used-count').textContent = thisMonth;
+    document.getElementById('upgrade-banner').style.display = 'flex';
+  }
+
+  if (total === 0) {
+    document.getElementById('empty-state').style.display = 'block';
+    document.getElementById('doc-table').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('doc-table').style.display = 'table';
+
+  const tbody = document.getElementById('doc-tbody');
+  tbody.innerHTML = '';
+  documents.forEach(doc => {
+    const tags = doc.tags ? (typeof doc.tags === 'string' ? JSON.parse(doc.tags) : doc.tags) : [];
+    const tagHtml = tags.slice(0, 3).map(t => `<span class="tag-pill">${escHtml(t)}</span>`).join('') +
+      (tags.length > 3 ? `<span class="tag-pill">+${tags.length - 3}</span>` : '');
+    const date = new Date(doc.created_at).toLocaleDateString();
+    const statusClass = doc.status === 'signed' ? 'badge-signed' : 'badge-revoked';
+    const verifyUrl = `${API_BASE}/verify/${doc.id}`;
+
+    const tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+    tr.onclick = (e) => {
+      if (!e.target.closest('.td-actions')) openDetail(doc);
+    };
+    tr.innerHTML = `
+      <td>
+        <div class="td-name">${escHtml(doc.doc_name || 'Untitled')}</div>
+        <div class="td-hash">${escHtml(doc.doc_hash || '')}</div>
+      </td>
+      <td style="color:var(--text);font-size:12px">${escHtml(doc.doc_type || '—')}</td>
+      <td><div class="td-tags">${tagHtml}</div></td>
+      <td><span class="badge ${statusClass}">${doc.status}</span></td>
+      <td style="color:var(--dim);font-size:12px">${date}</td>
+      <td>
+        <div class="td-actions">
+          <a class="btn btn-ghost btn-sm" href="${escHtml(verifyUrl)}" target="_blank" onclick="event.stopPropagation()">Verify</a>
+          ${doc.status === 'signed' ? `<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();openRevoke('${doc.id}')">Revoke</button>` : ''}
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ── REVOKE ──
+
+function openRevoke(docId) {
+  revokeDocId = docId;
+  document.getElementById('revoke-modal').classList.add('open');
+}
+
+function closeModal() {
+  revokeDocId = null;
+  document.getElementById('revoke-modal').classList.remove('open');
+}
+
+async function confirmRevoke() {
+  if (!revokeDocId) return;
+  try {
+    const r = await fetch(API_BASE + `/api/documents/${revokeDocId}/revoke`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (r.ok) {
+      closeModal();
+      closeDetail();
+      await loadDocuments();
+    } else {
+      const d = await r.json();
+      alert('Revoke failed: ' + (d.error || 'Unknown error'));
+    }
+  } catch (e) {
+    alert('Network error');
+  }
+}
+
+function revokeFromDetail() {
+  if (detailDoc) openRevoke(detailDoc.id);
+}
+
+// ── DETAIL PANEL ──
+
+function openDetail(doc) {
+  detailDoc = doc;
+  const tags = doc.tags ? (typeof doc.tags === 'string' ? JSON.parse(doc.tags) : doc.tags) : [];
+  const verifyUrl = `${location.origin}/verify/${doc.id}`;
+
+  document.getElementById('dp-name').textContent = doc.doc_name || 'Untitled';
+  document.getElementById('dp-time').textContent = new Date(doc.created_at).toLocaleString();
+  document.getElementById('dp-type').textContent = doc.doc_type || '—';
+  document.getElementById('dp-tags').textContent = tags.join(', ') || '—';
+  document.getElementById('dp-hash').textContent = doc.doc_hash || '—';
+  document.getElementById('dp-sig').textContent = (doc.signature || '—').slice(0, 40) + '…';
+
+  const statusEl = document.getElementById('dp-status');
+  statusEl.innerHTML = doc.status === 'signed'
+    ? '<span class="badge badge-signed">signed</span>'
+    : '<span class="badge badge-revoked">revoked</span>';
+
+  document.getElementById('dp-url').innerHTML = `<a href="${verifyUrl}" target="_blank" style="color:var(--gold)">${verifyUrl}</a>`;
+  document.getElementById('dp-verify-btn').href = verifyUrl;
+  document.getElementById('dp-copy-url').onclick = () => {
+    navigator.clipboard.writeText(verifyUrl).then(() => alert('✓ Copied!'));
+  };
+
+  const revokeBtn = document.getElementById('dp-revoke-btn');
+  revokeBtn.style.display = doc.status === 'signed' ? '' : 'none';
+
+  document.getElementById('detail-overlay').classList.add('open');
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function closeDetail() {
+  detailDoc = null;
+  document.getElementById('detail-overlay').classList.remove('open');
+  document.getElementById('detail-panel').classList.remove('open');
+}
+
+// ── APP INIT ──
+
+async function showApp() {
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('app-content').style.display = 'block';
+  await loadDocuments();
+
+  // Load Stripe link
+  try {
+    const r = await fetch(API_BASE + '/api/public/stats');
+    const d = await r.json();
+    if (d.stripe_payment_link) {
+      document.getElementById('upgrade-link').href = d.stripe_payment_link;
+    }
+  } catch {}
+}
+
+async function init() {
+  const authed = await checkSession();
+  if (authed) {
+    await showApp();
+  } else {
+    document.getElementById('auth-gate').style.display = 'block';
+  }
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+init();
+</script>
+</body>
+</html>

@@ -621,7 +621,27 @@
           const fullDomain = data.domain || domainSlug;
           document.getElementById('domain-name').textContent = fullDomain;
           document.getElementById('page-title').textContent = fullDomain;
-          document.getElementById('page-desc').content = generateTagline(fullDomain) + ' Part of fortune0.';
+
+          // Use concept from enriched data, fall back to generated tagline
+          const concept = data.concept || generateTagline(fullDomain);
+          document.getElementById('tagline').textContent = concept;
+          document.getElementById('page-desc').content = concept + ' Part of fortune0.';
+
+          // Category + difficulty badges
+          if (data.category || data.grade) {
+            const badges = [];
+            if (data.category) badges.push(data.category);
+            if (data.grade) badges.push('Grade ' + data.grade);
+            if (data.difficulty) badges.push(data.difficulty);
+            if (data.ai_ready === 'Y') badges.push('AI-ready');
+            const tagEl = document.getElementById('tagline');
+            if (tagEl && badges.length) {
+              tagEl.insertAdjacentHTML('afterend',
+                '<div style="margin-top:0.75rem;display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;">' +
+                badges.map(b => `<span style="font-size:0.7rem;padding:0.2rem 0.6rem;border:1px solid rgba(212,175,55,0.2);border-radius:2rem;color:rgba(255,255,255,0.4);letter-spacing:0.05em;text-transform:uppercase;">${b}</span>`).join('') +
+                '</div>');
+            }
+          }
 
           // Stats
           document.getElementById('stat-value').textContent = fmt(data.value);

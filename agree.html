@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPOMyAgent — Sign Agreement</title>
+<meta name="description" content="Create and co-sign agreements with cryptographic proof. No accounts needed.">
+<style>
+:root {
+  --gold: #D4AF37;
+  --bg: #000;
+  --surface: #0a0a0a;
+  --surface2: #141414;
+  --border: #1a1a1a;
+  --border-l: #2a2a2a;
+  --white: #FFFFFF;
+  --text: rgba(255,255,255,0.6);
+  --dim: rgba(255,255,255,0.3);
+  --red: #EF476F;
+  --green: #06D6A0;
+  --mono: 'SF Mono', 'Menlo', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--white);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px; min-height: 100vh;
+}
+
+.bar {
+  border-bottom: 1px solid var(--border); padding: 0 24px; height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.bar-brand { font-weight: 700; font-size: 15px; color: var(--gold); text-decoration: none; }
+.bar-link { color: var(--text); text-decoration: none; font-size: 12px; }
+.bar-link:hover { color: var(--gold); }
+
+.main { max-width: 680px; margin: 0 auto; padding: 48px 24px 80px; }
+h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+.subtitle { color: var(--text); font-size: 14px; margin-bottom: 32px; }
+
+/* ── STEPS ── */
+.step { display: none; }
+.step.active { display: block; }
+.step-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--gold); margin-bottom: 16px;
+}
+
+/* ── FORM ── */
+label { display: block; font-size: 12px; color: var(--text); margin-bottom: 6px; margin-top: 16px; }
+input, textarea {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  color: var(--white); padding: 12px 14px; border-radius: 8px; font-size: 14px;
+  font-family: inherit; resize: vertical;
+}
+input:focus, textarea:focus { outline: none; border-color: var(--gold); }
+textarea { min-height: 120px; line-height: 1.6; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 12px 24px; border-radius: 8px; font-size: 14px;
+  font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
+  text-decoration: none; margin-top: 24px;
+}
+.btn-gold { background: var(--gold); color: #000; }
+.btn-gold:hover { box-shadow: 0 0 20px rgba(212,175,55,0.4); }
+.btn-gold:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-ghost { background: none; border: 1px solid var(--border); color: var(--text); }
+.btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── AGREEMENT DISPLAY ── */
+.agreement-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 24px; margin-bottom: 16px;
+}
+.agreement-card-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--dim); margin-bottom: 16px;
+}
+.agreement-terms {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px; margin: 12px 0;
+  font-size: 14px; line-height: 1.8; white-space: pre-wrap;
+  color: var(--white);
+}
+.party-row {
+  display: flex; align-items: center; gap: 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.party-row:last-child { border-bottom: none; }
+.party-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.party-icon.signed { background: rgba(6,214,160,0.15); color: var(--green); }
+.party-icon.pending { background: rgba(255,255,255,0.05); color: var(--dim); }
+.party-name { font-weight: 600; font-size: 14px; }
+.party-status { font-size: 12px; color: var(--text); }
+.party-status.signed { color: var(--green); }
+.party-time { font-size: 11px; color: var(--dim); margin-top: 2px; }
+
+/* ── QR ── */
+.qr-section { text-align: center; margin: 24px 0; }
+.qr-section canvas { border-radius: 12px; border: 2px solid var(--border); }
+.share-url {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px; margin-top: 12px;
+  font-family: var(--mono); font-size: 12px; color: var(--gold);
+  word-break: break-all; cursor: pointer; text-align: left;
+}
+.share-url:hover { border-color: var(--gold); }
+
+/* ── SIGNATURE PAD ── */
+.sig-pad-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden; margin: 12px 0;
+}
+.sig-pad-wrap canvas {
+  display: block; width: 100%; height: 160px;
+  cursor: crosshair; touch-action: none;
+}
+.sig-pad-controls {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px; border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--dim);
+}
+.sig-clear {
+  background: none; border: none; color: var(--text); cursor: pointer;
+  font-size: 11px; padding: 4px 8px;
+}
+.sig-clear:hover { color: var(--gold); }
+
+/* ── STATUS ── */
+.status-banner {
+  border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 14px;
+}
+.status-banner.complete {
+  background: rgba(6,214,160,0.06); border: 1px solid rgba(6,214,160,0.3);
+}
+.status-banner.waiting {
+  background: rgba(212,175,55,0.06); border: 1px solid rgba(212,175,55,0.3);
+}
+.status-icon { font-size: 28px; flex-shrink: 0; }
+.status-title { font-size: 18px; font-weight: 700; }
+.status-sub { font-size: 13px; color: var(--text); margin-top: 2px; }
+.status-banner.complete .status-title { color: var(--green); }
+.status-banner.waiting .status-title { color: var(--gold); }
+
+.proof-row {
+  display: grid; grid-template-columns: 110px 1fr; gap: 8px 16px;
+  font-size: 13px; margin-bottom: 8px; align-items: baseline;
+}
+.proof-label { color: var(--dim); font-size: 11px; }
+.proof-value { color: var(--white); word-break: break-all; }
+.proof-value.mono { font-family: var(--mono); font-size: 10px; color: var(--gold); }
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+.error-msg { color: var(--red); font-size: 13px; margin-top: 12px; display: none; }
+
+.spinner {
+  width: 20px; height: 20px; border: 2px solid var(--border);
+  border-top-color: var(--gold); border-radius: 50%;
+  animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.footer-note {
+  text-align: center; margin-top: 40px;
+  font-size: 12px; color: var(--dim); line-height: 2;
+}
+.footer-note a { color: var(--dim); text-decoration: none; }
+.footer-note a:hover { color: var(--gold); }
+
+/* ── METRICS PANEL ── */
+.metrics-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px; margin-bottom: 16px;
+}
+.metrics-card-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--gold); margin-bottom: 16px;
+}
+.metrics-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.metric-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; text-align: center;
+}
+.metric-value {
+  font-size: 22px; font-weight: 700; font-family: var(--mono);
+  color: var(--gold); margin-bottom: 2px;
+}
+.metric-label { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+.metric-sub { font-size: 10px; color: var(--text); margin-top: 4px; }
+
+/* ── AUDIT TRAIL ── */
+.audit-trail {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px; margin-bottom: 16px;
+}
+.audit-trail-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--dim); margin-bottom: 12px;
+}
+.audit-event {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.audit-event:last-child { border-bottom: none; }
+.audit-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.audit-dot.create { background: var(--gold); }
+.audit-dot.view { background: var(--dim); }
+.audit-dot.cosign { background: var(--green); }
+.audit-event-text { color: var(--text); flex: 1; }
+.audit-event-text strong { color: var(--white); font-weight: 600; }
+.audit-event-time { color: var(--dim); font-family: var(--mono); font-size: 10px; flex-shrink: 0; }
+
+/* ── LIVE TIMER ── */
+.live-timer {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.2);
+  color: var(--gold); padding: 4px 10px; border-radius: 8px;
+  font-family: var(--mono); font-size: 12px; margin-top: 8px;
+}
+.live-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--gold);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+@media (max-width: 500px) {
+  .main { padding: 32px 16px 60px; }
+  h1 { font-size: 22px; }
+  .proof-row { grid-template-columns: 1fr; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="bar-brand" href="/ipomyagent-landing">IPOMyAgent</a>
+  <a class="bar-link" href="/verify">Verify a Document →</a>
+</div>
+
+<div class="main">
+
+  <!-- ═══ STEP 1: CREATE AGREEMENT ═══ -->
+  <div id="step-create" class="step active">
+    <h1>New Agreement</h1>
+    <p class="subtitle">Write the deal. Both parties sign. Cryptographic proof forever.</p>
+
+    <div class="step-label">Agreement Details</div>
+
+    <label for="deal-title">Title</label>
+    <input type="text" id="deal-title" placeholder="e.g. Referral fee for client intro" maxlength="255">
+
+    <label for="party-a-name">Your Name (Party A)</label>
+    <input type="text" id="party-a-name" placeholder="Your full name" maxlength="255">
+
+    <label for="party-b-name">Other Party's Name (Party B)</label>
+    <input type="text" id="party-b-name" placeholder="Their full name" maxlength="255">
+
+    <label for="deal-terms">Deal Terms</label>
+    <textarea id="deal-terms" placeholder="Write the terms of the agreement here. Be specific about what each party agrees to, any amounts, deadlines, or conditions."></textarea>
+
+    <div class="step-label" style="margin-top:24px">Your Signature</div>
+    <p style="font-size:12px;color:var(--text);margin-bottom:8px">Draw your signature below. This will be cryptographically bound to the agreement.</p>
+    <div class="sig-pad-wrap">
+      <canvas id="sig-canvas-a"></canvas>
+      <div class="sig-pad-controls">
+        <span>Draw your signature</span>
+        <button class="sig-clear" onclick="clearSigPad('a')">Clear</button>
+      </div>
+    </div>
+
+    <div id="create-error" class="error-msg"></div>
+
+    <button class="btn btn-gold" id="btn-create" onclick="createAgreement()">
+      Sign & Create Agreement →
+    </button>
+  </div>
+
+  <!-- ═══ STEP 2: SHARE LINK ═══ -->
+  <div id="step-share" class="step">
+    <div class="status-banner waiting">
+      <div class="status-icon">⏳</div>
+      <div>
+        <div class="status-title">Waiting for Co-Signature</div>
+        <div class="status-sub">Share this link with the other party to complete the agreement.</div>
+      </div>
+    </div>
+
+    <div class="agreement-card">
+      <div class="agreement-card-title">Agreement</div>
+      <div id="share-title" style="font-size:18px;font-weight:700;margin-bottom:4px"></div>
+      <div id="share-terms" class="agreement-terms"></div>
+
+      <div class="divider"></div>
+
+      <div class="party-row">
+        <div class="party-icon signed">✓</div>
+        <div>
+          <div class="party-name" id="share-party-a"></div>
+          <div class="party-status signed">Signed</div>
+        </div>
+      </div>
+      <div class="party-row">
+        <div class="party-icon pending">…</div>
+        <div>
+          <div class="party-name" id="share-party-b"></div>
+          <div class="party-status">Awaiting signature</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="qr-section">
+      <canvas id="qr-canvas"></canvas>
+      <div class="share-url" id="share-url" onclick="copyShareUrl()" title="Click to copy"></div>
+      <p style="font-size:11px;color:var(--dim);margin-top:8px">Click the URL to copy · Scan QR to open on phone</p>
+    </div>
+
+    <!-- Live waiting timer for Party A -->
+    <div class="live-timer" id="share-live-timer">
+      <span class="live-dot"></span>
+      <span id="share-live-elapsed">0s</span> waiting for co-signature
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <button class="btn btn-ghost" onclick="copyShareUrl()">Copy Link</button>
+      <button class="btn btn-ghost" onclick="checkStatus()">Check Status ↻</button>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 3: CO-SIGN (PARTY B) ═══ -->
+  <div id="step-cosign" class="step">
+    <h1>Review & Co-Sign</h1>
+    <p class="subtitle">You've been asked to sign an agreement. Review the terms below.</p>
+
+    <div class="agreement-card">
+      <div class="agreement-card-title">Agreement</div>
+      <div id="cosign-title" style="font-size:18px;font-weight:700;margin-bottom:4px"></div>
+      <div id="cosign-terms" class="agreement-terms"></div>
+
+      <div class="divider"></div>
+
+      <div class="party-row">
+        <div class="party-icon signed">✓</div>
+        <div>
+          <div class="party-name" id="cosign-party-a"></div>
+          <div class="party-status signed">Signed <span id="cosign-party-a-time"></span></div>
+        </div>
+      </div>
+      <div class="party-row">
+        <div class="party-icon pending">✎</div>
+        <div>
+          <div class="party-name" id="cosign-party-b"></div>
+          <div class="party-status">Your signature needed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics for co-signer -->
+    <div id="cosign-metrics" class="metrics-card" style="display:none">
+      <div class="metrics-card-title">Agreement Metrics</div>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-value" id="cosign-unix-a">—</div>
+          <div class="metric-label">Party A Unix</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value" id="cosign-views">—</div>
+          <div class="metric-label">Views</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value" id="cosign-waiting">—</div>
+          <div class="metric-label">Waiting</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value" id="cosign-hash-short">—</div>
+          <div class="metric-label">Doc Hash</div>
+          <div class="metric-sub" id="cosign-hash-full" style="word-break:break-all;font-family:var(--mono)"></div>
+        </div>
+      </div>
+      <div class="live-timer" id="cosign-live-timer">
+        <span class="live-dot"></span>
+        <span id="cosign-live-elapsed">0s</span> since created
+      </div>
+    </div>
+
+    <div class="step-label">Your Signature</div>
+    <p style="font-size:12px;color:var(--text);margin-bottom:8px">Draw your signature to accept this agreement.</p>
+    <div class="sig-pad-wrap">
+      <canvas id="sig-canvas-b"></canvas>
+      <div class="sig-pad-controls">
+        <span>Draw your signature</span>
+        <button class="sig-clear" onclick="clearSigPad('b')">Clear</button>
+      </div>
+    </div>
+
+    <div id="cosign-error" class="error-msg"></div>
+
+    <button class="btn btn-gold" id="btn-cosign" onclick="cosignAgreement()">
+      Sign & Complete Agreement →
+    </button>
+  </div>
+
+  <!-- ═══ STEP 4: COMPLETE ═══ -->
+  <div id="step-complete" class="step">
+    <div class="status-banner complete">
+      <div class="status-icon">✦</div>
+      <div>
+        <div class="status-title">Agreement Complete</div>
+        <div class="status-sub">Both parties have signed. This agreement is cryptographically sealed.</div>
+      </div>
+    </div>
+
+    <div class="agreement-card">
+      <div class="agreement-card-title">Signed Agreement</div>
+      <div id="done-title" style="font-size:18px;font-weight:700;margin-bottom:4px"></div>
+      <div id="done-terms" class="agreement-terms"></div>
+
+      <div class="divider"></div>
+
+      <div class="party-row">
+        <div class="party-icon signed">✓</div>
+        <div>
+          <div class="party-name" id="done-party-a"></div>
+          <div class="party-status signed">Signed</div>
+          <div class="party-time" id="done-party-a-time"></div>
+        </div>
+      </div>
+      <div class="party-row">
+        <div class="party-icon signed">✓</div>
+        <div>
+          <div class="party-name" id="done-party-b"></div>
+          <div class="party-status signed">Signed</div>
+          <div class="party-time" id="done-party-b-time"></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="proof-row">
+        <div class="proof-label">Agreement ID</div>
+        <div class="proof-value mono" id="done-id"></div>
+      </div>
+      <div class="proof-row">
+        <div class="proof-label">Document Hash</div>
+        <div class="proof-value mono" id="done-hash"></div>
+      </div>
+      <div class="proof-row">
+        <div class="proof-label">Party A Key</div>
+        <div class="proof-value mono" id="done-key-a"></div>
+      </div>
+      <div class="proof-row">
+        <div class="proof-label">Party B Key</div>
+        <div class="proof-value mono" id="done-key-b"></div>
+      </div>
+    </div>
+
+    <!-- Metrics Panel -->
+    <div class="metrics-card">
+      <div class="metrics-card-title">Internal Metrics</div>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-value" id="m-created-unix">—</div>
+          <div class="metric-label">Created (Unix)</div>
+          <div class="metric-sub" id="m-created-iso"></div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value" id="m-party-a-unix">—</div>
+          <div class="metric-label">Party A (Unix)</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value" id="m-party-b-unix">—</div>
+          <div class="metric-label">Party B (Unix)</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value" id="m-elapsed">—</div>
+          <div class="metric-label">Time to Co-sign</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value" id="m-views">—</div>
+          <div class="metric-label">Total Views</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-value" id="m-actors">—</div>
+          <div class="metric-label">Unique Actors</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit Trail -->
+    <div class="audit-trail" id="audit-trail">
+      <div class="audit-trail-title">Audit Trail</div>
+      <div id="audit-events"></div>
+    </div>
+
+    <div class="qr-section">
+      <canvas id="qr-done"></canvas>
+      <div class="share-url" id="done-url" onclick="copyDoneUrl()" title="Click to copy"></div>
+      <p style="font-size:11px;color:var(--dim);margin-top:8px">Permanent verification link · Share with anyone</p>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="copyDoneUrl()">Copy Link</button>
+      <button class="btn btn-ghost" onclick="window.print()">Print Agreement</button>
+      <a class="btn btn-gold" href="/agree">New Agreement →</a>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Powered by <a href="/ipomyagent-landing">IPOMyAgent</a> · Cryptographic agreements · Zero accounts needed<br>
+    <a href="/verify">Verify a document</a> · <a href="https://death2data.com">Death2Data</a>
+  </div>
+
+</div>
+
+<!-- QR Code Library (minimal, inline) -->
+<script>
+// Minimal QR Code generator — adapted from kazuhikoarase/qrcode-generator (MIT)
+// We only need basic alphanumeric QR for URLs
+var QRCode=function(){function a(a){this.mode=4;this.data=a}function b(a,b){this.typeNumber=a;this.errorCorrectLevel=b;this.modules=null;this.moduleCount=0;this.dataCache=null;this.dataList=[]}a.prototype={getLength:function(){return this.data.length},write:function(a){for(var b=0;b<this.data.length;b++)a.put(this.data.charCodeAt(b),8)}};b.prototype={addData:function(b){this.dataList.push(new a(b));this.dataCache=null},getModule:function(a,b){return this.modules[a][b]},getModuleCount:function(){return this.moduleCount},make:function(){if(this.typeNumber<1){var a=1;for(a=1;a<40;a++){var b=d.getMaxLength(a,this.errorCorrectLevel,4);if(this.dataList[0].getLength()<=b)break}this.typeNumber=a}this.makeImpl(!1,this.getBestMaskPattern())},makeImpl:function(a,b){this.moduleCount=this.typeNumber*4+17;this.modules=new Array(this.moduleCount);for(var c=0;c<this.moduleCount;c++){this.modules[c]=new Array(this.moduleCount);for(var e=0;e<this.moduleCount;e++)this.modules[c][e]=null}this.setupPositionProbePattern(0,0);this.setupPositionProbePattern(this.moduleCount-7,0);this.setupPositionProbePattern(0,this.moduleCount-7);this.setupPositionAdjustPattern();this.setupTimingPattern();this.setupTypeInfo(a,b);this.typeNumber>=7&&this.setupTypeNumber(a);this.dataCache==null&&(this.dataCache=this.createData(this.typeNumber,this.errorCorrectLevel,this.dataList));this.mapData(this.dataCache,b)},setupPositionProbePattern:function(a,b){for(var c=-1;c<=7;c++){if(a+c<=-1||this.moduleCount<=a+c)continue;for(var d=-1;d<=7;d++){if(b+d<=-1||this.moduleCount<=b+d)continue;0<=c&&c<=6&&(d==0||d==6)||0<=d&&d<=6&&(c==0||c==6)||2<=c&&c<=4&&2<=d&&d<=4?this.modules[a+c][b+d]=!0:this.modules[a+c][b+d]=!1}}},getBestMaskPattern:function(){var a=0,b=0;for(var c=0;c<8;c++){this.makeImpl(!0,c);var d=this.getLostPoint();if(c==0||a>d)a=d,b=c}return b},setupTimingPattern:function(){for(var a=8;a<this.moduleCount-8;a++)this.modules[a][6]==null&&(this.modules[a][6]=a%2==0),this.modules[6][a]==null&&(this.modules[6][a]=a%2==0)},setupPositionAdjustPattern:function(){var a=d.getPatternPosition(this.typeNumber);for(var b=0;b<a.length;b++)for(var c=0;c<a.length;c++){if(this.modules[a[b]][a[c]]!=null)continue;for(var e=-2;e<=2;e++)for(var f=-2;f<=2;f++)e==-2||e==2||f==-2||f==2||e==0&&f==0?this.modules[a[b]+e][a[c]+f]=!0:this.modules[a[b]+e][a[c]+f]=!1}},setupTypeNumber:function(a){var b=d.getBCHTypeNumber(this.typeNumber);for(var c=0;c<18;c++){var e=!a&&(b>>c&1)==1;this.modules[Math.floor(c/3)][c%3+this.moduleCount-8-3]=e;this.modules[c%3+this.moduleCount-8-3][Math.floor(c/3)]=e}},setupTypeInfo:function(a,b){var c=this.errorCorrectLevel<<3|b,e=d.getBCHTypeInfo(c);for(var f=0;f<15;f++){var g=!a&&(e>>f&1)==1;f<6?this.modules[f][8]=g:f<8?this.modules[f+1][8]=g:this.modules[this.moduleCount-15+f][8]=g;f<8?this.modules[8][this.moduleCount-f-1]=g:f<9?this.modules[8][15-f-1+1]=g:this.modules[8][15-f-1]=g}this.modules[this.moduleCount-8][8]=!a},mapData:function(a,b){var c=-1,e=this.moduleCount-1,f=7,g=0;for(var h=this.moduleCount-1;h>0;h-=2){h==6&&h--;for(;;){for(var i=0;i<2;i++){if(this.modules[e][h-i]==null){var j=!1;g<a.length&&(j=(a[g]>>>f&1)==1);var k=d.getMask(b,e,h-i);k&&(j=!j);this.modules[e][h-i]=j;f--;f==-1&&(g++,f=7)}}e+=c;if(e<0||this.moduleCount<=e){e-=c;c=-c;break}}}},createData:function(a,b,c){var e=d.getRSBlocks(a,b),f=new h;for(var g=0;g<c.length;g++){var i=c[g];f.put(i.mode,4);f.put(i.getLength(),d.getLengthInBits(i.mode,a));i.write(f)}var j=0;for(g=0;g<e.length;g++)j+=e[g].dataCount;if(f.getLengthInBits()>j*8)throw Error("code length overflow");f.getLengthInBits()+4<=j*8&&f.put(0,4);while(f.getLengthInBits()%8!=0)f.putBit(!1);for(;;){if(f.getLengthInBits()>=j*8)break;f.put(236,8);if(f.getLengthInBits()>=j*8)break;f.put(17,8)}return this.createBytes(f,e)},createBytes:function(a,b){var c=0,e=0,f=0,h=new Array(b.length),i=new Array(b.length);for(var j=0;j<b.length;j++){var k=b[j].dataCount,l=b[j].totalCount-k;e=Math.max(e,k);f=Math.max(f,l);h[j]=new Array(k);for(var m=0;m<h[j].length;m++)h[j][m]=255&a.buffer[m+c];c+=k;var n=d.getErrorCorrectPolynomial(l),o=new g(h[j],n.getLength()-1).mod(n);i[j]=new Array(n.getLength()-1);for(m=0;m<i[j].length;m++){var p=m+o.getLength()-i[j].length;i[j][m]=p>=0?o.get(p):0}}var q=new Array(c=0);for(m=0;m<e;m++)for(j=0;j<b.length;j++)m<h[j].length&&(q[c++]=h[j][m]);for(m=0;m<f;m++)for(j=0;j<b.length;j++)m<i[j].length&&(q[c++]=i[j][m]);return q},getLostPoint:function(){var a=this.moduleCount,b=0;for(var c=0;c<a;c++)for(var d=0;d<a;d++){var e=0,f=this.modules[c][d];for(var g=-1;g<=1;g++)for(var h=-1;h<=1;h++){if(c+g<0||a<=c+g||d+h<0||a<=d+h||(g==0&&h==0))continue;this.modules[c+g][d+h]==f&&e++}e>5&&(b+=3+e-5)}for(c=0;c<a-1;c++)for(d=0;d<a-1;d++){var i=0;this.modules[c][d]&&i++;this.modules[c+1][d]&&i++;this.modules[c][d+1]&&i++;this.modules[c+1][d+1]&&i++;if(i==0||i==4)b+=3}for(c=0;c<a;c++)for(d=0;d<a-6;d++)this.modules[c][d]&&!this.modules[c][d+1]&&this.modules[c][d+2]&&this.modules[c][d+3]&&this.modules[c][d+4]&&!this.modules[c][d+5]&&this.modules[c][d+6]&&(b+=40);for(d=0;d<a;d++)for(c=0;c<a-6;c++)this.modules[c][d]&&!this.modules[c+1][d]&&this.modules[c+2][d]&&this.modules[c+3][d]&&this.modules[c+4][d]&&!this.modules[c+5][d]&&this.modules[c+6][d]&&(b+=40);i=0;for(c=0;c<a;c++)for(d=0;d<a;d++)this.modules[c][d]&&i++;return b+=Math.abs(100*i/a/a-50)/5*10}};b.createSvgTag=function(a,c,d){c=c||2;d=d||c*4;var e=new b(0,2);e.addData(a);e.make();var f=e.getModuleCount(),g=c*f+d*2,h='<svg viewBox="0 0 '+g+" "+g+'" xmlns="http://www.w3.org/2000/svg">';h+='<rect width="'+g+'" height="'+g+'" fill="white"/>';for(var i=0;i<f;i++)for(var j=0;j<f;j++)e.getModule(i,j)&&(h+='<rect x="'+(j*c+d)+'" y="'+(i*c+d)+'" width="'+c+'" height="'+c+'" fill="black"/>');return h+"</svg>"};b.drawCanvas=function(a,c,d,e){d=d||4;e=e||d*4;var f=new b(0,2);f.addData(a);f.make();var g=f.getModuleCount(),h=d*g+e*2;c.width=h;c.height=h;var i=c.getContext("2d");i.fillStyle="#FFFFFF";i.fillRect(0,0,h,h);i.fillStyle="#000000";for(var j=0;j<g;j++)for(var k=0;k<g;k++)f.getModule(j,k)&&i.fillRect(k*d+e,j*d+e,d,d)};var c=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16]],d={getPatternPosition:function(a){return[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]][a]},getMaxLength:function(a,b,d){var e=a*4+17,f=e*e;var g;if(b==1)g=c[(a-1)*4][2];else if(b==0)g=c[(a-1)*4+1][2];else if(b==3)g=c[(a-1)*4+2][2];else g=c[(a-1)*4+3][2];return g},getErrorCorrectPolynomial:function(a){var b=new g([1]);for(var c=0;c<a;c++)b=b.multiply(new g([1,e.gexp(c)]));return b},getMask:function(a,b,c){switch(a){case 0:return(b+c)%2==0;case 1:return b%2==0;case 2:return c%3==0;case 3:return(b+c)%3==0;case 4:return(Math.floor(b/2)+Math.floor(c/3))%2==0;case 5:return b*c%2+b*c%3==0;case 6:return(b*c%2+b*c%3)%2==0;case 7:return(b*c%3+(b+c)%2)%2==0;default:throw Error("bad mask:"+a)}},getLengthInBits:function(a,b){return b>=1&&b<10?8:b<27?16:16},getBCHTypeInfo:function(a){var b=a<<10;while(f(b)-f(1335)>=0)b^=1335<<f(b)-f(1335);return(a<<10|b)^21522},getBCHTypeNumber:function(a){var b=a<<12;while(f(b)-f(7973)>=0)b^=7973<<f(b)-f(7973);return a<<12|b},getRSBlocks:function(a,b){var d;if(b==1)d=c[(a-1)*4];else if(b==0)d=c[(a-1)*4+1];else if(b==3)d=c[(a-1)*4+2];else d=c[(a-1)*4+3];var e=[];for(var f=0;f<d.length;f+=3)for(var g=0;g<d[f];g++)e.push({totalCount:d[f+1],dataCount:d[f+2]});return e}};function e(){this.EXP_TABLE=new Array(256);this.LOG_TABLE=new Array(256);for(var a=0;a<8;a++)this.EXP_TABLE[a]=1<<a;for(a=8;a<256;a++)this.EXP_TABLE[a]=this.EXP_TABLE[a-4]^this.EXP_TABLE[a-5]^this.EXP_TABLE[a-6]^this.EXP_TABLE[a-8];for(a=0;a<255;a++)this.LOG_TABLE[this.EXP_TABLE[a]]=a}e.prototype={glog:function(a){return this.LOG_TABLE[a]},gexp:function(a){while(a<0)a+=255;while(a>=256)a-=255;return this.EXP_TABLE[a]}};var e=new e;function f(a){var b=0;while(a!=0)b++,a>>>=1;return b}function g(a,b){if(a.length==undefined)throw Error(a.length+"/"+b);var c=0;while(c<a.length&&a[c]==0)c++;this.num=new Array(a.length-c+(b||0));for(var d=0;d<a.length-c;d++)this.num[d]=a[d+c]}g.prototype={get:function(a){return this.num[a]},getLength:function(){return this.num.length},multiply:function(a){var b=new Array(this.getLength()+a.getLength()-1);for(var c=0;c<this.getLength();c++)for(var d=0;d<a.getLength();d++)b[c+d]^=e.gexp(e.glog(this.get(c))+e.glog(a.get(d)));return new g(b)},mod:function(a){if(this.getLength()-a.getLength()<0)return this;var b=e.glog(this.get(0))-e.glog(a.get(0)),c=new Array(this.getLength());for(var d=0;d<this.getLength();d++)c[d]=this.get(d);for(d=0;d<a.getLength();d++)c[d]^=e.gexp(e.glog(a.get(d))+b);return new g(c).mod(a)}};function h(){this.buffer=[];this.length=0}h.prototype={get:function(a){return(this.buffer[Math.floor(a/8)]>>>(7-a%8))&1},put:function(a,b){for(var c=0;c<b;c++)this.putBit((a>>>(b-c-1))&1)},getLengthInBits:function(){return this.length},putBit:function(a){Math.floor(this.length/8)>=this.buffer.length&&this.buffer.push(0);a&&(this.buffer[Math.floor(this.length/8)]|=128>>>(this.length%8));this.length++}};return b}();
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// CRYPTO — ECDSA P-256 via WebCrypto
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function generateKeypair() {
+  const keyPair = await crypto.subtle.generateKey(
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    true, ['sign', 'verify']
+  );
+  const pubRaw = await crypto.subtle.exportKey('spki', keyPair.publicKey);
+  const privRaw = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+  return {
+    publicKey: keyPair.publicKey,
+    privateKey: keyPair.privateKey,
+    publicKeyPem: arrayBufferToPem(pubRaw, 'PUBLIC KEY'),
+    privateKeyPem: arrayBufferToPem(privRaw, 'PRIVATE KEY'),
+  };
+}
+
+function arrayBufferToPem(buf, type) {
+  const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+  const lines = b64.match(/.{1,64}/g).join('\n');
+  return `-----BEGIN ${type}-----\n${lines}\n-----END ${type}-----`;
+}
+
+async function signPayload(privateKey, payload) {
+  const encoded = new TextEncoder().encode(JSON.stringify(payload));
+  const sig = await crypto.subtle.sign(
+    { name: 'ECDSA', hash: 'SHA-256' },
+    privateKey,
+    encoded
+  );
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hashText(text) {
+  const encoded = new TextEncoder().encode(text);
+  const hash = await crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SIGNATURE PAD
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const sigPads = {};
+
+function initSigPad(id) {
+  const canvas = document.getElementById('sig-canvas-' + id);
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = 320;
+  ctx.scale(2, 2);
+  ctx.strokeStyle = '#D4AF37';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  let drawing = false;
+  let hasDrawn = false;
+  let lastX, lastY;
+
+  function getPos(e) {
+    const r = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - r.left, y: t.clientY - r.top };
+  }
+
+  function start(e) {
+    e.preventDefault();
+    drawing = true;
+    const p = getPos(e);
+    lastX = p.x; lastY = p.y;
+  }
+  function move(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastX = p.x; lastY = p.y;
+    hasDrawn = true;
+  }
+  function end() { drawing = false; }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove', move, { passive: false });
+  canvas.addEventListener('touchend', end);
+
+  sigPads[id] = {
+    canvas, ctx, hasDrawn: () => hasDrawn,
+    toDataURL: () => canvas.toDataURL('image/png'),
+    clear: () => { ctx.clearRect(0, 0, canvas.width, canvas.height); hasDrawn = false; }
+  };
+}
+
+function clearSigPad(id) {
+  if (sigPads[id]) sigPads[id].clear();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const API = '';  // same origin
+let currentAgreement = null;
+
+function showStep(name) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step-' + name).classList.add('active');
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideError(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STEP 1: CREATE AGREEMENT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function createAgreement() {
+  hideError('create-error');
+  const title = document.getElementById('deal-title').value.trim();
+  const partyA = document.getElementById('party-a-name').value.trim();
+  const partyB = document.getElementById('party-b-name').value.trim();
+  const terms = document.getElementById('deal-terms').value.trim();
+
+  if (!title) return showError('create-error', 'Give the agreement a title.');
+  if (!partyA) return showError('create-error', 'Enter your name (Party A).');
+  if (!partyB) return showError('create-error', 'Enter the other party\'s name (Party B).');
+  if (!terms) return showError('create-error', 'Write the deal terms.');
+  if (!sigPads.a || !sigPads.a.hasDrawn()) return showError('create-error', 'Draw your signature.');
+
+  const btn = document.getElementById('btn-create');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Signing…';
+
+  try {
+    // Generate keypair for Party A
+    const keys = await generateKeypair();
+
+    // Hash the agreement text (title + terms + both names = the "document")
+    const docText = `AGREEMENT: ${title}\n\nPARTY A: ${partyA}\nPARTY B: ${partyB}\n\nTERMS:\n${terms}`;
+    const docHash = await hashText(docText);
+
+    // Create the signed payload
+    const timestamp = new Date().toISOString();
+    const payload = {
+      doc_hash: docHash,
+      title: title,
+      party_a: partyA,
+      party_b: partyB,
+      timestamp: timestamp,
+    };
+    const signature = await signPayload(keys.privateKey, payload);
+
+    // Get signature image as base64
+    const sigImage = sigPads.a.toDataURL();
+
+    // Send to server
+    const resp = await fetch(API + '/api/agreements', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: title,
+        terms: terms,
+        party_a_name: partyA,
+        party_b_name: partyB,
+        doc_hash: docHash,
+        party_a_signature: signature,
+        party_a_public_key: keys.publicKeyPem,
+        party_a_sig_image: sigImage,
+        signed_at: timestamp,
+      }),
+    });
+
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Failed to create agreement');
+
+    currentAgreement = data;
+
+    // Show share step
+    document.getElementById('share-title').textContent = title;
+    document.getElementById('share-terms').textContent = terms;
+    document.getElementById('share-party-a').textContent = partyA;
+    document.getElementById('share-party-b').textContent = partyB;
+
+    const shareUrl = location.origin + '/agree/' + data.id;
+    document.getElementById('share-url').textContent = shareUrl;
+
+    // Generate QR code
+    QRCode.drawCanvas(shareUrl, document.getElementById('qr-canvas'), 4, 16);
+
+    showStep('share');
+
+    // Start live waiting timer
+    const createdAt = data.created_unix || Math.floor(Date.now() / 1000);
+    const updateShareTimer = () => {
+      const now = Math.floor(Date.now() / 1000);
+      document.getElementById('share-live-elapsed').textContent = formatElapsed(now - createdAt);
+    };
+    updateShareTimer();
+    setInterval(updateShareTimer, 1000);
+
+    // Update URL without reload
+    history.pushState(null, '', '/agree/' + data.id);
+
+  } catch (e) {
+    showError('create-error', e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Sign & Create Agreement →';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STEP 3: CO-SIGN (PARTY B)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function cosignAgreement() {
+  hideError('cosign-error');
+  if (!sigPads.b || !sigPads.b.hasDrawn()) return showError('cosign-error', 'Draw your signature.');
+  if (!currentAgreement) return showError('cosign-error', 'No agreement loaded.');
+
+  const btn = document.getElementById('btn-cosign');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Signing…';
+
+  try {
+    const keys = await generateKeypair();
+    const timestamp = new Date().toISOString();
+    const payload = {
+      doc_hash: currentAgreement.doc_hash,
+      title: currentAgreement.title,
+      party_a: currentAgreement.party_a_name,
+      party_b: currentAgreement.party_b_name,
+      timestamp: timestamp,
+    };
+    const signature = await signPayload(keys.privateKey, payload);
+    const sigImage = sigPads.b.toDataURL();
+
+    const resp = await fetch(API + '/api/agreements/' + currentAgreement.id + '/cosign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        party_b_signature: signature,
+        party_b_public_key: keys.publicKeyPem,
+        party_b_sig_image: sigImage,
+        signed_at: timestamp,
+      }),
+    });
+
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Failed to co-sign');
+
+    currentAgreement = { ...currentAgreement, ...data };
+    showComplete(currentAgreement);
+
+  } catch (e) {
+    showError('cosign-error', e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Sign & Complete Agreement →';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STEP 4: COMPLETE VIEW
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function formatElapsed(sec) {
+  if (!sec && sec !== 0) return '—';
+  if (sec < 60) return Math.round(sec) + 's';
+  if (sec < 3600) return Math.round(sec / 60) + 'm ' + Math.round(sec % 60) + 's';
+  if (sec < 86400) return Math.round(sec / 3600) + 'h ' + Math.round((sec % 3600) / 60) + 'm';
+  return Math.round(sec / 86400) + 'd ' + Math.round((sec % 86400) / 3600) + 'h';
+}
+
+function formatUnix(unix) {
+  if (!unix) return '—';
+  return String(unix);
+}
+
+function showComplete(ag) {
+  document.getElementById('done-title').textContent = ag.title;
+  document.getElementById('done-terms').textContent = ag.terms;
+  document.getElementById('done-party-a').textContent = ag.party_a_name;
+  document.getElementById('done-party-b').textContent = ag.party_b_name;
+  document.getElementById('done-party-a-time').textContent = ag.party_a_signed_at ? new Date(ag.party_a_signed_at).toLocaleString() : '';
+  document.getElementById('done-party-b-time').textContent = ag.party_b_signed_at ? new Date(ag.party_b_signed_at).toLocaleString() : '';
+  document.getElementById('done-id').textContent = ag.id;
+  document.getElementById('done-hash').textContent = ag.doc_hash;
+  document.getElementById('done-key-a').textContent = ag.party_a_public_key ?
+    ag.party_a_public_key.replace(/-----[^-]+-----/g, '').replace(/\s/g, '').slice(0, 40) + '…' : '';
+  document.getElementById('done-key-b').textContent = ag.party_b_public_key ?
+    ag.party_b_public_key.replace(/-----[^-]+-----/g, '').replace(/\s/g, '').slice(0, 40) + '…' : '';
+
+  // ── METRICS ──
+  const el = (id) => document.getElementById(id);
+  el('m-created-unix').textContent = formatUnix(ag.created_unix);
+  el('m-created-iso').textContent = ag.created_at ? new Date(ag.created_at).toLocaleString() : '';
+  el('m-party-a-unix').textContent = formatUnix(ag.party_a_unix);
+  el('m-party-b-unix').textContent = formatUnix(ag.party_b_unix);
+  el('m-elapsed').textContent = formatElapsed(ag.cosign_elapsed_sec);
+  el('m-views').textContent = ag.view_count || 0;
+
+  // Count unique actors from audit trail
+  const actors = new Set();
+  if (ag.actor_a_hash) actors.add(ag.actor_a_hash);
+  if (ag.actor_b_hash) actors.add(ag.actor_b_hash);
+  if (ag.audit_trail) {
+    ag.audit_trail.forEach(e => { if (e.actor_hash) actors.add(e.actor_hash); });
+  }
+  el('m-actors').textContent = actors.size;
+
+  // ── AUDIT TRAIL ──
+  const eventsEl = el('audit-events');
+  eventsEl.innerHTML = '';
+  if (ag.audit_trail && ag.audit_trail.length) {
+    ag.audit_trail.forEach(evt => {
+      const div = document.createElement('div');
+      div.className = 'audit-event';
+      const type = evt.event.includes('created') ? 'create' :
+                   evt.event.includes('cosign') ? 'cosign' : 'view';
+      const label = {
+        'agreement_created': 'Agreement created',
+        'agreement_viewed': 'Agreement viewed',
+        'agreement_cosigned': 'Agreement co-signed',
+      }[evt.event] || 'Unknown event';
+      const time = evt.created_at ? new Date(evt.created_at).toLocaleString() : '';
+      const actorHash = (evt.actor_hash || '?').replace(/[^a-f0-9?]/gi, '');
+      div.innerHTML = `
+        <span class="audit-dot ${type}"></span>
+        <span class="audit-event-text"><strong>${label}</strong> · actor ${actorHash}</span>
+        <span class="audit-event-time">${time}</span>
+      `;
+      eventsEl.appendChild(div);
+    });
+  } else {
+    el('audit-trail').style.display = 'none';
+  }
+
+  const doneUrl = location.origin + '/agree/' + ag.id;
+  document.getElementById('done-url').textContent = doneUrl;
+  QRCode.drawCanvas(doneUrl, document.getElementById('qr-done'), 4, 16);
+
+  showStep('complete');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function copyShareUrl() {
+  const url = document.getElementById('share-url').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    document.getElementById('share-url').style.borderColor = 'var(--green)';
+    setTimeout(() => document.getElementById('share-url').style.borderColor = '', 1500);
+  });
+}
+
+function copyDoneUrl() {
+  const url = document.getElementById('done-url').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    document.getElementById('done-url').style.borderColor = 'var(--green)';
+    setTimeout(() => document.getElementById('done-url').style.borderColor = '', 1500);
+  });
+}
+
+async function checkStatus() {
+  if (!currentAgreement) return;
+  try {
+    const resp = await fetch(API + '/api/agreements/' + currentAgreement.id);
+    const data = await resp.json();
+    if (data.status === 'complete') {
+      currentAgreement = data;
+      showComplete(data);
+    } else {
+      alert('Still waiting for co-signature.');
+    }
+  } catch (e) {
+    alert('Could not check status.');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INIT — detect if we're creating or co-signing
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function init() {
+  // Check if URL has an agreement ID: /agree/{uuid}
+  const parts = location.pathname.replace(/\/$/, '').split('/');
+  const agreementId = parts.length >= 3 ? parts[parts.length - 1] : null;
+
+  if (agreementId && agreementId !== 'agree' && agreementId.length > 8) {
+    // Load existing agreement
+    try {
+      const resp = await fetch(API + '/api/agreements/' + agreementId);
+      if (!resp.ok) {
+        showStep('create');
+        initSigPad('a');
+        return;
+      }
+      const data = await resp.json();
+      currentAgreement = data;
+
+      if (data.status === 'complete') {
+        showComplete(data);
+      } else {
+        // Show co-sign view
+        document.getElementById('cosign-title').textContent = data.title;
+        document.getElementById('cosign-terms').textContent = data.terms;
+        document.getElementById('cosign-party-a').textContent = data.party_a_name;
+        document.getElementById('cosign-party-b').textContent = data.party_b_name;
+        document.getElementById('cosign-party-a-time').textContent =
+          data.party_a_signed_at ? new Date(data.party_a_signed_at).toLocaleString() : '';
+
+        // Populate co-sign metrics
+        const metricsEl = document.getElementById('cosign-metrics');
+        metricsEl.style.display = 'block';
+        document.getElementById('cosign-unix-a').textContent = formatUnix(data.party_a_unix || data.created_unix);
+        document.getElementById('cosign-views').textContent = data.view_count || 0;
+        document.getElementById('cosign-hash-short').textContent = data.doc_hash ? data.doc_hash.slice(0, 8) : '—';
+        document.getElementById('cosign-hash-full').textContent = data.doc_hash || '';
+
+        // Live waiting timer
+        if (data.created_unix) {
+          const updateTimer = () => {
+            const now = Math.floor(Date.now() / 1000);
+            const elapsed = now - data.created_unix;
+            document.getElementById('cosign-waiting').textContent = formatElapsed(elapsed);
+            document.getElementById('cosign-live-elapsed').textContent = formatElapsed(elapsed);
+          };
+          updateTimer();
+          setInterval(updateTimer, 1000);
+        }
+
+        showStep('cosign');
+        setTimeout(() => initSigPad('b'), 50);
+      }
+    } catch (e) {
+      showStep('create');
+      initSigPad('a');
+    }
+  } else {
+    showStep('create');
+    initSigPad('a');
+  }
+}
+
+init();
+</script>
+</body>
+</html>

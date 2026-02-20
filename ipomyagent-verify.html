@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPOMyAgent — Verify Document</title>
+<meta name="description" content="Verify the authenticity of a notarized document on IPOMyAgent.">
+<style>
+:root {
+  --gold: #D4AF37;
+  --bg: #000;
+  --surface: #0a0a0a;
+  --surface2: #141414;
+  --border: #1a1a1a;
+  --border-l: #2a2a2a;
+  --white: #FFFFFF;
+  --text: rgba(255,255,255,0.6);
+  --dim: rgba(255,255,255,0.3);
+  --red: #EF476F;
+  --green: #06D6A0;
+  --mono: 'SF Mono', 'Menlo', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--white);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px; min-height: 100vh;
+}
+
+.bar {
+  border-bottom: 1px solid var(--border); padding: 0 24px; height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.bar-brand { font-weight: 700; font-size: 15px; color: var(--gold); text-decoration: none; }
+.bar-link { color: var(--text); text-decoration: none; font-size: 12px; }
+.bar-link:hover { color: var(--gold); }
+
+.main { max-width: 680px; margin: 0 auto; padding: 48px 24px 80px; }
+
+/* ── LOADING ── */
+#loading { text-align: center; padding: 60px; color: var(--dim); }
+.spinner {
+  width: 32px; height: 32px; border: 2px solid var(--border);
+  border-top-color: var(--gold); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── NOT FOUND ── */
+#not-found { display: none; text-align: center; padding: 60px; }
+#not-found h2 { font-size: 24px; font-weight: 700; color: var(--dim); margin-bottom: 12px; }
+#not-found p { color: var(--dim); font-size: 14px; }
+
+/* ── RESULT ── */
+#result { display: none; }
+
+/* ── STATUS BADGE ── */
+.status-banner {
+  border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 14px;
+}
+.status-banner.valid {
+  background: rgba(6,214,160,0.06); border: 1px solid rgba(6,214,160,0.3);
+}
+.status-banner.revoked {
+  background: rgba(239,71,111,0.06); border: 1px solid rgba(239,71,111,0.3);
+}
+.status-banner.invalid {
+  background: rgba(239,71,111,0.06); border: 1px solid rgba(239,71,111,0.3);
+}
+.status-icon { font-size: 28px; flex-shrink: 0; }
+.status-title { font-size: 18px; font-weight: 700; }
+.status-sub { font-size: 13px; color: var(--text); margin-top: 2px; }
+.status-banner.valid .status-title { color: var(--green); }
+.status-banner.revoked .status-title { color: var(--red); }
+.status-banner.invalid .status-title { color: var(--red); }
+
+/* ── CERT CARD ── */
+.cert-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 24px; margin-bottom: 16px;
+}
+.cert-card-title {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--dim); margin-bottom: 16px;
+}
+.cert-doc-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.3px; }
+.cert-doc-meta { font-size: 13px; color: var(--text); margin-bottom: 16px; }
+
+.proof-row {
+  display: grid; grid-template-columns: 110px 1fr; gap: 8px 16px;
+  font-size: 13px; margin-bottom: 8px; align-items: baseline;
+}
+.proof-label { color: var(--dim); font-size: 11px; padding-top: 2px; }
+.proof-value { color: var(--white); word-break: break-all; line-height: 1.6; }
+.proof-value.mono { font-family: var(--mono); font-size: 10px; color: var(--gold); }
+.proof-value.dim { color: var(--dim); font-style: italic; }
+
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* ── TAGS ── */
+.tags-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-pill {
+  background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.2);
+  color: var(--gold); padding: 3px 9px; border-radius: 12px;
+  font-size: 11px; font-weight: 500;
+}
+
+/* ── SIG VERIFY ── */
+.verify-section {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 24px; margin-bottom: 16px;
+}
+.verify-section h3 {
+  font-size: 13px; font-weight: 700; margin-bottom: 16px;
+}
+.verify-step {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin-bottom: 12px; font-size: 12px;
+}
+.verify-step-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 1px solid var(--border-l); color: var(--dim);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; flex-shrink: 0;
+}
+.verify-step-num.done { border-color: var(--green); background: rgba(6,214,160,0.1); color: var(--green); }
+.verify-step-num.fail { border-color: var(--red); background: rgba(239,71,111,0.1); color: var(--red); }
+.verify-step-text { padding-top: 2px; line-height: 1.5; }
+.verify-step-text .key { color: var(--gold); font-family: var(--mono); font-size: 11px; }
+
+/* ── ACTIONS ── */
+.action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 8px; font-size: 13px;
+  font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none;
+}
+.btn-ghost { background: none; border: 1px solid var(--border); color: var(--text); }
+.btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+.btn-gold { background: var(--gold); color: #000; }
+.btn-gold:hover { box-shadow: 0 0 20px rgba(212,175,55,0.4); }
+
+/* ── HOW TO VERIFY MANUALLY ── */
+.manual-verify {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; margin-top: 16px;
+}
+.manual-verify summary {
+  cursor: pointer; font-size: 12px; color: var(--dim);
+  user-select: none; list-style: none;
+}
+.manual-verify summary::before { content: '▶  '; }
+details[open] summary::before { content: '▼  '; }
+.manual-verify-content {
+  margin-top: 14px; font-size: 12px; color: var(--text); line-height: 1.8;
+}
+.code-block {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 16px;
+  font-family: var(--mono); font-size: 11px; color: var(--gold);
+  white-space: pre; overflow-x: auto; margin: 8px 0;
+}
+
+/* ── FOOTER ── */
+.footer-note {
+  text-align: center; margin-top: 40px;
+  font-size: 12px; color: var(--dim); line-height: 2;
+}
+.footer-note a { color: var(--dim); text-decoration: none; }
+.footer-note a:hover { color: var(--gold); }
+
+@media print {
+  .bar, .action-row, .manual-verify, .footer-note { display: none !important; }
+  body { background: white; color: black; }
+  .status-banner.valid { background: #f0fff8; border-color: #0a7a5a; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="bar-brand" href="/ipomyagent-landing">IPOMyAgent</a>
+  <a class="bar-link" href="/tools/notary">Notarize a Document →</a>
+</div>
+
+<div class="main">
+
+  <div id="loading">
+    <div class="spinner"></div>
+    Loading verification record…
+  </div>
+
+  <div id="not-found">
+    <h2>Record Not Found</h2>
+    <p>This verification URL doesn't exist or may have been removed.</p>
+  </div>
+
+  <div id="result">
+
+    <div id="status-banner" class="status-banner">
+      <div class="status-icon" id="status-icon"></div>
+      <div>
+        <div class="status-title" id="status-title"></div>
+        <div class="status-sub" id="status-sub"></div>
+      </div>
+    </div>
+
+    <div class="cert-card">
+      <div class="cert-card-title">Notarization Record</div>
+      <div class="cert-doc-name" id="doc-name"></div>
+      <div class="cert-doc-meta" id="doc-meta"></div>
+      <div class="divider"></div>
+      <div class="proof-row">
+        <div class="proof-label">Document ID</div>
+        <div class="proof-value mono" id="doc-id"></div>
+      </div>
+      <div class="proof-row">
+        <div class="proof-label">SHA-256 Hash</div>
+        <div class="proof-value mono" id="doc-hash"></div>
+      </div>
+      <div class="proof-row">
+        <div class="proof-label">Signed at</div>
+        <div class="proof-value" id="doc-time"></div>
+      </div>
+      <div class="proof-row" id="tags-row" style="display:none">
+        <div class="proof-label">Tags</div>
+        <div class="proof-value" id="doc-tags"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="proof-row">
+        <div class="proof-label">Public Key</div>
+        <div class="proof-value mono" id="doc-pubkey"></div>
+      </div>
+      <div class="proof-row">
+        <div class="proof-label">Signature</div>
+        <div class="proof-value mono" id="doc-sig"></div>
+      </div>
+    </div>
+
+    <div class="verify-section">
+      <h3>Signature Verification</h3>
+      <div id="verify-steps"></div>
+      <div id="sig-verify-result" style="margin-top:8px;font-size:13px;font-weight:600"></div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-ghost" onclick="copyPageUrl()">Copy Verification URL</button>
+      <button class="btn btn-ghost" onclick="window.print()">Print Record</button>
+      <a class="btn btn-gold" href="/tools/notary">Notarize a Document →</a>
+    </div>
+
+    <details class="manual-verify">
+      <summary>How to verify this signature manually (without trusting this site)</summary>
+      <div class="manual-verify-content">
+        <p>You don't need to trust IPOMyAgent to verify this signature. All you need is the document you were given, its SHA-256 hash, and the public key.</p>
+        <p style="margin-top:10px"><strong>Using OpenSSL:</strong></p>
+        <div class="code-block" id="openssl-cmd"></div>
+        <p>Or use <a href="https://www.openssl.org/" style="color:var(--gold)">openssl</a> directly in your terminal. The signature is a standard DER-encoded ECDSA-SHA256 signature.</p>
+        <p style="margin-top:10px"><strong>Using the browser (WebCrypto API):</strong></p>
+        <div class="code-block" id="webcrypto-cmd"></div>
+      </div>
+    </details>
+
+    <div class="footer-note">
+      Powered by <a href="/ipomyagent-landing">IPOMyAgent</a> · Privacy-first document notarization ·
+      <a href="/tools/notary">Notarize for free</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API_BASE = '';  // same server
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CRYPTO UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function base64ToArrayBuffer(base64) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
+function pemToArrayBuffer(pem, type) {
+  const b64 = pem
+    .replace(`-----BEGIN ${type}-----`, '')
+    .replace(`-----END ${type}-----`, '')
+    .replace(/\s/g, '');
+  return base64ToArrayBuffer(b64);
+}
+
+function hexToArrayBuffer(hex) {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2)
+    bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+  return bytes.buffer;
+}
+
+async function importPublicKey(pem) {
+  const keyData = pemToArrayBuffer(pem, 'PUBLIC KEY');
+  return await crypto.subtle.importKey(
+    'spki', keyData, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']
+  );
+}
+
+async function verifyDocSignature(record) {
+  // The signed payload = JSON.stringify({ doc_hash, doc_name, doc_type, tags, timestamp })
+  // Use notarized_at (client timestamp) — this is what was signed
+  const timestamp = record.notarized_at || record.created_at;
+  const payload = JSON.stringify({
+    doc_hash: record.doc_hash,
+    doc_name: record.doc_name,
+    doc_type: record.doc_type || '',
+    tags: typeof record.tags === 'string' ? JSON.parse(record.tags || '[]') : (record.tags || []),
+    timestamp,
+  });
+  try {
+    const pubKey = await importPublicKey(record.public_key);
+    const sigBuffer = hexToArrayBuffer(record.signature);
+    const msgBuffer = new TextEncoder().encode(payload);
+    return await crypto.subtle.verify(
+      { name: 'ECDSA', hash: 'SHA-256' },
+      pubKey,
+      sigBuffer,
+      msgBuffer
+    );
+  } catch (e) {
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOAD & RENDER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function getDocId() {
+  // Expect URL like /verify/{uuid}
+  const parts = location.pathname.replace(/\/$/, '').split('/');
+  return parts[parts.length - 1];
+}
+
+async function loadRecord() {
+  const docId = getDocId();
+  if (!docId || docId === 'verify') {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('not-found').style.display = 'block';
+    return;
+  }
+
+  try {
+    const r = await fetch(API_BASE + `/api/verify/${docId}`);
+    if (!r.ok) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('not-found').style.display = 'block';
+      return;
+    }
+    const record = await r.json();
+    renderRecord(record);
+    // Verify signature in browser
+    await runVerification(record);
+  } catch (e) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('not-found').style.display = 'block';
+  }
+}
+
+function renderRecord(rec) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+
+  const tags = typeof rec.tags === 'string' ? JSON.parse(rec.tags || '[]') : (rec.tags || []);
+  const isRevoked = rec.status === 'revoked';
+
+  // Status banner
+  const banner = document.getElementById('status-banner');
+  if (isRevoked) {
+    banner.className = 'status-banner revoked';
+    document.getElementById('status-icon').textContent = '⚠';
+    document.getElementById('status-title').textContent = 'Revoked';
+    document.getElementById('status-sub').textContent = 'The signer has revoked this proof record. The signature is still valid but the document is no longer considered active.';
+  } else {
+    banner.className = 'status-banner valid';
+    document.getElementById('status-icon').textContent = '✦';
+    document.getElementById('status-title').textContent = 'Notarized';
+    document.getElementById('status-sub').textContent = 'This document was cryptographically signed and its proof record is on file.';
+  }
+
+  // Record fields
+  document.getElementById('doc-name').textContent = rec.doc_name || 'Untitled Document';
+  document.getElementById('doc-meta').textContent = [rec.doc_type, rec.status].filter(Boolean).join(' · ');
+  document.getElementById('doc-id').textContent = rec.id;
+  document.getElementById('doc-hash').textContent = rec.doc_hash;
+  const displayTime = rec.notarized_at || rec.created_at;
+  document.getElementById('doc-time').textContent = new Date(displayTime).toLocaleString(undefined, {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+  });
+  document.getElementById('doc-pubkey').textContent = rec.public_key
+    .replace('-----BEGIN PUBLIC KEY-----', '').replace('-----END PUBLIC KEY-----', '').replace(/\s/g, '').slice(0, 48) + '…';
+  document.getElementById('doc-sig').textContent = rec.signature.slice(0, 48) + '…';
+
+  if (tags.length) {
+    document.getElementById('tags-row').style.display = 'grid';
+    document.getElementById('doc-tags').innerHTML = tags.map(t =>
+      `<span class="tag-pill">${escHtml(t)}</span> `
+    ).join('');
+  }
+
+  // Manual verification instructions
+  const ts = rec.notarized_at || rec.created_at;
+  const signedPayload = JSON.stringify({
+    doc_hash: rec.doc_hash,
+    doc_name: rec.doc_name,
+    doc_type: rec.doc_type || '',
+    tags: typeof rec.tags === 'string' ? JSON.parse(rec.tags || '[]') : (rec.tags || []),
+    timestamp: ts,
+  });
+  const cmd = `# 1. Save the public key
+echo "-----BEGIN PUBLIC KEY-----
+${rec.public_key.replace('-----BEGIN PUBLIC KEY-----','').replace('-----END PUBLIC KEY-----','').trim()}
+-----END PUBLIC KEY-----" > pubkey.pem
+
+# 2. Create the signed payload
+echo -n '${signedPayload.replace(/'/g, "'\\''")}' > payload.json
+
+# 3. Convert hex signature to DER
+echo "${rec.signature}" | xxd -r -p > signature.der
+
+# 4. Verify
+openssl dgst -sha256 -verify pubkey.pem -signature signature.der payload.json`;
+
+  document.getElementById('openssl-cmd').textContent = cmd;
+
+  const jsCmd = `// In any browser console or Node.js with WebCrypto:
+const resp = await fetch('/api/verify/${rec.id}');
+const r = await resp.json();
+const pubKeyData = atob(r.public_key.replace(/-----[^-]+-----/g,'').replace(/\\s/g,''));
+const pubKey = await crypto.subtle.importKey('spki',
+  Uint8Array.from(pubKeyData,c=>c.charCodeAt(0)),
+  {name:'ECDSA',namedCurve:'P-256'}, false, ['verify']);
+const payload = JSON.stringify({
+  doc_hash:r.doc_hash, doc_name:r.doc_name,
+  doc_type:r.doc_type||'', tags:JSON.parse(r.tags||'[]'),
+  timestamp:r.notarized_at||r.created_at
+});
+const sig = Uint8Array.from(r.signature.match(/../g).map(h=>parseInt(h,16)));
+const valid = await crypto.subtle.verify(
+  {name:'ECDSA',hash:'SHA-256'}, pubKey, sig, new TextEncoder().encode(payload));
+console.log('Valid:', valid);`;
+  document.getElementById('webcrypto-cmd').textContent = jsCmd;
+}
+
+async function runVerification(rec) {
+  const steps = document.getElementById('verify-steps');
+  steps.innerHTML = '';
+
+  function addStep(text, status = 'pending') {
+    const div = document.createElement('div');
+    div.className = 'verify-step';
+    const numClass = status === 'done' ? 'done' : status === 'fail' ? 'fail' : '';
+    div.innerHTML = `
+      <div class="verify-step-num ${numClass}">${status === 'done' ? '✓' : status === 'fail' ? '✕' : '…'}</div>
+      <div class="verify-step-text">${text}</div>
+    `;
+    steps.appendChild(div);
+    return div;
+  }
+
+  addStep('Record loaded from server', 'done');
+
+  const hashStep = addStep('Checking hash format (64-char hex SHA-256)…');
+  const hashValid = /^[a-f0-9]{64}$/.test(rec.doc_hash);
+  hashStep.querySelector('.verify-step-num').className = 'verify-step-num ' + (hashValid ? 'done' : 'fail');
+  hashStep.querySelector('.verify-step-num').textContent = hashValid ? '✓' : '✕';
+  hashStep.querySelector('.verify-step-text').textContent = hashValid
+    ? `Hash format valid — SHA-256 (${rec.doc_hash.slice(0,16)}…)`
+    : 'Hash format invalid';
+
+  const sigStep = addStep('Verifying ECDSA P-256 signature…');
+  const sigValid = await verifyDocSignature(rec);
+  sigStep.querySelector('.verify-step-num').className = 'verify-step-num ' + (sigValid ? 'done' : 'fail');
+  sigStep.querySelector('.verify-step-num').textContent = sigValid ? '✓' : '✕';
+  sigStep.querySelector('.verify-step-text').textContent = sigValid
+    ? 'Signature is cryptographically valid — public key matches signature'
+    : 'Signature verification failed — data may have been tampered with';
+
+  const result = document.getElementById('sig-verify-result');
+  if (sigValid && hashValid) {
+    result.style.color = 'var(--green)';
+    result.textContent = '✓ All checks passed. This record is authentic.';
+  } else {
+    result.style.color = 'var(--red)';
+    result.textContent = '✕ Verification failed. Treat this record with caution.';
+  }
+}
+
+function copyPageUrl() {
+  navigator.clipboard.writeText(location.href).then(() => alert('✓ Copied!'));
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// The /verify/{id} route serves this HTML, but we need to fetch JSON for the data.
+// To avoid infinite loop, we detect if we got served an HTML page vs JSON.
+// Since the server route checks Accept header, we fetch with Accept: application/json.
+loadRecord();
+</script>
+</body>
+</html>

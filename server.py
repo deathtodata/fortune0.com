@@ -75,6 +75,37 @@ RESERVED_DOMAINS = {'example.com', 'example.net', 'example.org'}
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
+def sanitize_text(s, max_len=10000):
+    """Strip HTML tags, limit length, normalize whitespace. Prevents XSS and data bloat."""
+    if not s:
+        return ""
+    s = str(s)[:max_len]
+    # Strip HTML tags
+    s = _re.sub(r'<[^>]+>', '', s)
+    # Strip null bytes
+    s = s.replace('\x00', '')
+    # Normalize whitespace (keep newlines for terms)
+    s = _re.sub(r'[ \t]+', ' ', s)
+    return s.strip()
+
+def sanitize_name(s):
+    """Strict name sanitization — alphanumeric, spaces, hyphens, apostrophes, periods only."""
+    if not s:
+        return ""
+    s = sanitize_text(s, max_len=255)
+    # Only allow safe name characters
+    s = _re.sub(r"[^a-zA-Z0-9 '\-\.]", '', s)
+    return s.strip()
+
+def redact_agreement_for_public(result):
+    """Remove sensitive fields from agreement data before returning to API callers."""
+    # Never expose raw signature images (handwritten signatures are PII)
+    result.pop("party_a_sig_image", None)
+    result.pop("party_b_sig_image", None)
+    # Never expose raw actor hashes to non-admin callers
+    # (keep actor_a_hash and actor_b_hash for now — they're already hashed, not raw IPs)
+    return result
+
 def validate_email_environment(email):
     """Block reserved test emails in production, warn about real emails in dev."""
     if not email or '@' not in email:
@@ -331,6 +362,31 @@ CREATE TABLE IF NOT EXISTS audit_log (
     actor_hash TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS agreements (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    terms TEXT NOT NULL,
+    doc_hash TEXT NOT NULL,
+    party_a_name TEXT NOT NULL,
+    party_b_name TEXT NOT NULL,
+    party_a_signature TEXT,
+    party_a_public_key TEXT,
+    party_a_sig_image TEXT,
+    party_a_signed_at TEXT,
+    party_a_unix INTEGER,
+    party_b_signature TEXT,
+    party_b_public_key TEXT,
+    party_b_sig_image TEXT,
+    party_b_signed_at TEXT,
+    party_b_unix INTEGER,
+    status TEXT DEFAULT 'pending',
+    view_count INTEGER DEFAULT 0,
+    cosign_elapsed_sec REAL,
+    actor_a_hash TEXT,
+    actor_b_hash TEXT,
+    created_unix INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 SCHEMA_PG = """
@@ -441,6 +497,31 @@ CREATE TABLE IF NOT EXISTS audit_log (
     doc_id TEXT NOT NULL,
     event TEXT NOT NULL,
     actor_hash TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS agreements (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    terms TEXT NOT NULL,
+    doc_hash TEXT NOT NULL,
+    party_a_name TEXT NOT NULL,
+    party_b_name TEXT NOT NULL,
+    party_a_signature TEXT,
+    party_a_public_key TEXT,
+    party_a_sig_image TEXT,
+    party_a_signed_at TEXT,
+    party_a_unix INTEGER,
+    party_b_signature TEXT,
+    party_b_public_key TEXT,
+    party_b_sig_image TEXT,
+    party_b_signed_at TEXT,
+    party_b_unix INTEGER,
+    status TEXT DEFAULT 'pending',
+    view_count INTEGER DEFAULT 0,
+    cosign_elapsed_sec REAL,
+    actor_a_hash TEXT,
+    actor_b_hash TEXT,
+    created_unix INTEGER,
     created_at TIMESTAMP DEFAULT NOW()
 );
 """
@@ -861,13 +942,25 @@ class Handler(BaseHTTPRequestHandler):
                                 score += 10
                             elif len(w) >= 3 and w in name.lower():
                                 score += 5
+                        # Also match against concept text
+                        concept = d.get("concept", "")
+                        if concept:
+                            for w in q_words:
+                                if len(w) >= 3 and w in concept.lower():
+                                    score += 8
                         if score > 0:
+                            snippet = concept if concept else f"Status: {d.get('status', 'open')}"
+                            tags = []
+                            if d.get("category"): tags.append(d["category"])
+                            if d.get("grade"): tags.append(f"Grade {d['grade']}")
+                            if d.get("difficulty"): tags.append(d["difficulty"])
+                            if tags: snippet += f" [{' · '.join(tags)}]"
                             results.append({
                                 "title": d["domain"],
-                                "url": f"https://{d['domain']}",
-                                "snippet": f"Value: {d.get('value', 0)} | Status: {d.get('status', 'open')} | Expires: {d.get('expires', '?')}",
+                                "url": f"https://fortune0-com.onrender.com/d/{d['domain'].split('.')[0]}",
+                                "snippet": snippet,
                                 "engine": "registry",
-                                "score": score + d.get("value", 0),
+                                "score": score + d.get("score", d.get("value", 0)),
                             })
                     results.sort(key=lambda r: r.get("score", 0), reverse=True)
                     results = results[:10]
@@ -1626,6 +1719,56 @@ class Handler(BaseHTTPRequestHandler):
             conn.commit()
             conn.close()
             self.send_json(dict(doc))
+
+        # ── Agreements: GET /api/agreements/{id} ──
+        elif path.startswith("/api/agreements/"):
+            import time as _time
+            ag_id = path.split("/api/agreements/")[1].split("/")[0]
+            if not ag_id:
+                self.send_json({"error": "Not found"}, 404); return
+            conn = get_db()
+            ag = conn.execute("SELECT * FROM agreements WHERE id=?", [ag_id]).fetchone()
+            if not ag:
+                conn.close()
+                self.send_json({"error": "Agreement not found"}, 404); return
+
+            # Increment view count
+            conn.execute("UPDATE agreements SET view_count = view_count + 1 WHERE id=?", [ag_id])
+            # Audit: view event
+            ua = self.headers.get("User-Agent", "")
+            ip = self.headers.get("X-Forwarded-For", self.client_address[0])
+            actor_hash = hashlib.sha256(f"{ip}|{ua}".encode()).hexdigest()[:16]
+            conn.execute(
+                "INSERT INTO audit_log (doc_id, event, actor_hash) VALUES (?, 'agreement_viewed', ?)",
+                [ag_id, actor_hash]
+            )
+            conn.commit()
+
+            # Fetch audit events for this agreement
+            events = conn.execute(
+                "SELECT event, actor_hash, created_at FROM audit_log WHERE doc_id=? ORDER BY created_at ASC",
+                [ag_id]
+            ).fetchall()
+            conn.close()
+
+            result = dict(ag)
+            result["view_count"] = (result.get("view_count") or 0) + 1
+            result["now_unix"] = int(_time.time())
+            result["audit_trail"] = [dict(e) for e in events]
+            # If pending, show how long it's been waiting
+            if result.get("created_unix") and result["status"] == "pending":
+                result["waiting_sec"] = result["now_unix"] - result["created_unix"]
+            # Strip sensitive data before returning
+            redact_agreement_for_public(result)
+            self.send_json(result)
+
+        # ── Agreements: Serve /agree/{id} page ──
+        elif path.startswith("/agree/"):
+            agree_html = os.path.join(SITE_DIR, "agree.html")
+            if os.path.isfile(agree_html):
+                self.send_file(agree_html)
+            else:
+                self.send_json({"error": "Not found"}, 404)
 
         # ── IPOMyAgent: Public verification page ──
         elif path.startswith("/verify/"):
@@ -2532,6 +2675,128 @@ class Handler(BaseHTTPRequestHandler):
             new_balance = conn.execute("SELECT COALESCE(SUM(amount),0) bal FROM credits WHERE user_email=?", [email]).fetchone()["bal"]
             conn.close()
             self.send_json({"spent": True, "amount": amount, "new_balance": round(new_balance, 2)})
+
+        # ── Agreements: Create new agreement (Party A signs) ──
+        elif path == "/api/agreements":
+            import time as _time
+            title = sanitize_text(body.get("title", ""), max_len=255)
+            terms = sanitize_text(body.get("terms", ""), max_len=10000)
+            party_a_name = sanitize_name(body.get("party_a_name", ""))
+            party_b_name = sanitize_name(body.get("party_b_name", ""))
+            doc_hash = _re.sub(r'[^a-f0-9]', '', body.get("doc_hash", "").strip().lower())
+            party_a_signature = _re.sub(r'[^a-f0-9]', '', body.get("party_a_signature", "").strip().lower())
+            party_a_public_key = body.get("party_a_public_key", "").strip()
+            party_a_sig_image = body.get("party_a_sig_image", "")[:100000]  # cap image size
+            signed_at = _re.sub(r'[^0-9TZ:\-\.]', '', body.get("signed_at", "").strip()[:64])
+
+            if not title or not terms or not party_a_name or not party_b_name:
+                self.send_json({"error": "title, terms, party_a_name, party_b_name required"}, 400); return
+            if not doc_hash or len(doc_hash) != 64:
+                self.send_json({"error": "Valid doc_hash required (64-char hex SHA-256)"}, 400); return
+            if not party_a_signature or not party_a_public_key:
+                self.send_json({"error": "Party A signature and public key required"}, 400); return
+            # Validate public key format
+            if "BEGIN PUBLIC KEY" not in party_a_public_key:
+                self.send_json({"error": "Invalid public key format"}, 400); return
+
+            ag_id = str(uuid.uuid4())
+            now_unix = int(_time.time())
+            # Actor fingerprint (no PII — just hashed IP+UA)
+            ua = self.headers.get("User-Agent", "")
+            ip = self.headers.get("X-Forwarded-For", self.client_address[0])
+            actor_a = hashlib.sha256(f"{ip}|{ua}".encode()).hexdigest()[:16]
+
+            conn = get_db()
+            conn.execute(
+                """INSERT INTO agreements
+                   (id, title, terms, doc_hash, party_a_name, party_b_name,
+                    party_a_signature, party_a_public_key, party_a_sig_image,
+                    party_a_signed_at, party_a_unix, actor_a_hash, created_unix, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')""",
+                [ag_id, title, terms, doc_hash, party_a_name, party_b_name,
+                 party_a_signature, party_a_public_key, party_a_sig_image,
+                 signed_at or None, now_unix, actor_a, now_unix]
+            )
+            # Audit trail
+            conn.execute(
+                "INSERT INTO audit_log (doc_id, event, actor_hash) VALUES (?, 'agreement_created', ?)",
+                [ag_id, actor_a]
+            )
+            conn.commit()
+            conn.close()
+            self.send_json({
+                "id": ag_id,
+                "title": title,
+                "terms": terms,
+                "doc_hash": doc_hash,
+                "party_a_name": party_a_name,
+                "party_b_name": party_b_name,
+                "party_a_signed_at": signed_at,
+                "party_a_unix": now_unix,
+                "created_unix": now_unix,
+                "status": "pending",
+                "agree_url": f"/agree/{ag_id}",
+            })
+
+        # ── Agreements: Co-sign (Party B signs) ──
+        elif path.startswith("/api/agreements/") and path.endswith("/cosign"):
+            import time as _time
+            parts = path.split("/")
+            ag_id = parts[-2] if len(parts) >= 4 else ""
+            if not ag_id:
+                self.send_json({"error": "Not found"}, 404); return
+
+            party_b_signature = _re.sub(r'[^a-f0-9]', '', body.get("party_b_signature", "").strip().lower())
+            party_b_public_key = body.get("party_b_public_key", "").strip()
+            party_b_sig_image = body.get("party_b_sig_image", "")[:100000]
+            signed_at = _re.sub(r'[^0-9TZ:\-\.]', '', body.get("signed_at", "").strip()[:64])
+
+            if not party_b_signature or not party_b_public_key:
+                self.send_json({"error": "Party B signature and public key required"}, 400); return
+            if "BEGIN PUBLIC KEY" not in party_b_public_key:
+                self.send_json({"error": "Invalid public key format"}, 400); return
+
+            conn = get_db()
+            ag = conn.execute("SELECT * FROM agreements WHERE id=?", [ag_id]).fetchone()
+            if not ag:
+                conn.close()
+                self.send_json({"error": "Agreement not found"}, 404); return
+            if ag["status"] == "complete":
+                conn.close()
+                self.send_json({"error": "Agreement already signed by both parties"}, 400); return
+
+            now_unix = int(_time.time())
+            # Compute time-to-cosign (seconds between Party A and Party B)
+            ag_dict = dict(ag)
+            created_unix = ag_dict.get("created_unix") or ag_dict.get("party_a_unix") or 0
+            elapsed = round(now_unix - created_unix, 2) if created_unix else None
+
+            # Actor fingerprint
+            ua = self.headers.get("User-Agent", "")
+            ip = self.headers.get("X-Forwarded-For", self.client_address[0])
+            actor_b = hashlib.sha256(f"{ip}|{ua}".encode()).hexdigest()[:16]
+
+            conn.execute(
+                """UPDATE agreements SET
+                   party_b_signature=?, party_b_public_key=?, party_b_sig_image=?,
+                   party_b_signed_at=?, party_b_unix=?, cosign_elapsed_sec=?,
+                   actor_b_hash=?, status='complete'
+                   WHERE id=?""",
+                [party_b_signature, party_b_public_key, party_b_sig_image,
+                 signed_at or None, now_unix, elapsed, actor_b, ag_id]
+            )
+            # Audit trail
+            conn.execute(
+                "INSERT INTO audit_log (doc_id, event, actor_hash) VALUES (?, 'agreement_cosigned', ?)",
+                [ag_id, actor_b]
+            )
+            conn.commit()
+            # Re-fetch
+            ag = conn.execute("SELECT * FROM agreements WHERE id=?", [ag_id]).fetchone()
+            conn.close()
+            result = dict(ag)
+            redact_agreement_for_public(result)
+            self.send_json(result)
 
         # ── IPOMyAgent: Sign (store proof record) ──
         elif path == "/api/documents/sign":

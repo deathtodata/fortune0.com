@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPOMyAgent — The $1 Privacy Notary</title>
+<meta name="description" content="Make it official. We never read it. Cryptographically provable document notarization for $1/month.">
+<style>
+:root {
+  --gold: #D4AF37;
+  --bg: #000;
+  --surface: #0a0a0a;
+  --surface2: #141414;
+  --border: #1a1a1a;
+  --border-l: #2a2a2a;
+  --white: #FFFFFF;
+  --text: rgba(255,255,255,0.6);
+  --dim: rgba(255,255,255,0.3);
+  --red: #EF476F;
+  --green: #06D6A0;
+  --mono: 'SF Mono', 'Menlo', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--white);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 15px; line-height: 1.6;
+}
+
+/* ── BAR ── */
+.bar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(0,0,0,0.92); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: 100%;
+}
+.bar-brand { font-weight: 800; font-size: 17px; color: var(--gold); letter-spacing: -0.5px; }
+.bar-nav { display: flex; gap: 4px; align-items: center; }
+.bar-nav a {
+  color: var(--text); text-decoration: none; font-size: 13px;
+  padding: 6px 12px; border-radius: 6px; transition: color 0.2s;
+}
+.bar-nav a:hover { color: var(--white); }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 20px; border-radius: 8px; font-size: 13px;
+  font-weight: 600; cursor: pointer; border: none;
+  transition: all 0.2s; text-decoration: none;
+}
+.btn-gold { background: var(--gold); color: #000; }
+.btn-gold:hover { box-shadow: 0 0 24px rgba(212,175,55,0.5); transform: scale(1.02); }
+.btn-ghost { background: none; border: 1px solid var(--border); color: var(--text); }
+.btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── HERO ── */
+.hero {
+  max-width: 820px; margin: 0 auto;
+  padding: 100px 40px 80px; text-align: center;
+}
+.hero-badge {
+  display: inline-block;
+  background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3);
+  color: var(--gold); padding: 5px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+  margin-bottom: 24px; text-transform: uppercase;
+}
+.hero h1 {
+  font-size: clamp(36px, 6vw, 64px); font-weight: 800;
+  letter-spacing: -1.5px; line-height: 1.05;
+  margin-bottom: 20px;
+}
+.hero h1 .gold { color: var(--gold); }
+.hero h1 .muted { color: var(--dim); }
+.hero-sub {
+  font-size: clamp(16px, 2vw, 20px); color: var(--text);
+  max-width: 560px; margin: 0 auto 36px;
+  line-height: 1.5;
+}
+.hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.hero-price {
+  margin-top: 24px; font-size: 13px; color: var(--dim);
+}
+.hero-price strong { color: var(--gold); }
+
+/* ── PROOF BAR ── */
+.proof-bar {
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  padding: 16px 40px; background: var(--surface);
+  display: flex; gap: 40px; justify-content: center; flex-wrap: wrap;
+}
+.proof-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--dim); white-space: nowrap;
+}
+.proof-item .check { color: var(--green); font-weight: 700; }
+
+/* ── SECTIONS ── */
+.section { max-width: 900px; margin: 0 auto; padding: 80px 40px; }
+.section-title {
+  font-size: clamp(26px, 4vw, 40px); font-weight: 800;
+  letter-spacing: -1px; margin-bottom: 12px;
+}
+.section-sub { color: var(--text); font-size: 15px; margin-bottom: 48px; max-width: 560px; }
+
+/* ── HOW IT WORKS ── */
+.steps-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+}
+@media (max-width: 600px) { .steps-grid { grid-template-columns: 1fr; } }
+.step-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 24px;
+}
+.step-num-big {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid rgba(212,175,55,0.4);
+  color: var(--gold); font-weight: 700; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 14px;
+}
+.step-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.step-card p { font-size: 13px; color: var(--text); line-height: 1.5; }
+
+/* ── FEATURES ── */
+.features-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+}
+@media (max-width: 600px) { .features-grid { grid-template-columns: 1fr; } }
+.feature-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 24px;
+  transition: border-color 0.2s;
+}
+.feature-card:hover { border-color: rgba(212,175,55,0.3); }
+.feature-icon { font-size: 28px; margin-bottom: 12px; }
+.feature-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.feature-card p { font-size: 13px; color: var(--text); line-height: 1.5; }
+
+/* ── PROOF SECTION ── */
+.proof-code {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 24px;
+  font-family: var(--mono); font-size: 12px;
+  color: var(--text); line-height: 2;
+  overflow-x: auto;
+}
+.proof-code .key { color: var(--gold); }
+.proof-code .val { color: var(--green); }
+.proof-code .dim { color: var(--dim); }
+.proof-code .comment { color: rgba(255,255,255,0.2); font-style: italic; }
+
+/* ── PRICING ── */
+.pricing-wrap { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+.price-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 32px; width: 280px;
+  transition: border-color 0.2s;
+}
+.price-card.featured {
+  border-color: rgba(212,175,55,0.4);
+  background: linear-gradient(180deg, rgba(212,175,55,0.04) 0%, var(--surface) 100%);
+}
+.price-card .tier { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); margin-bottom: 12px; }
+.price-card .amount {
+  font-size: 40px; font-weight: 800; letter-spacing: -2px;
+  color: var(--white); line-height: 1;
+}
+.price-card .amount span { font-size: 16px; color: var(--dim); font-weight: 400; }
+.price-card .description { color: var(--text); font-size: 13px; margin: 12px 0 20px; line-height: 1.5; }
+.price-card ul { list-style: none; padding: 0; margin-bottom: 24px; }
+.price-card ul li {
+  font-size: 13px; color: var(--text); padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 8px; align-items: center;
+}
+.price-card ul li .check { color: var(--green); flex-shrink: 0; }
+.price-card ul li .x { color: var(--dim); flex-shrink: 0; }
+.price-tag { color: var(--gold); font-weight: 700; }
+
+/* ── TESTIMONIAL / PITCH ── */
+.pitch-box {
+  background: var(--surface); border: 1px solid var(--border-l);
+  border-left: 3px solid var(--gold); border-radius: 0 12px 12px 0;
+  padding: 24px 28px; margin: 0 auto; max-width: 680px;
+}
+.pitch-box p { font-size: 16px; color: var(--text); line-height: 1.7; font-style: italic; }
+.pitch-box .attribution { font-size: 12px; color: var(--dim); margin-top: 12px; }
+
+/* ── CTA ── */
+.cta-section {
+  text-align: center; padding: 80px 40px;
+  background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
+}
+.cta-section h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
+.cta-section p { color: var(--text); font-size: 15px; margin-bottom: 28px; }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border); padding: 24px 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; color: var(--dim); flex-wrap: wrap; gap: 12px;
+}
+footer a { color: var(--dim); text-decoration: none; }
+footer a:hover { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="bar-brand">IPOMyAgent</div>
+  <div class="bar-nav">
+    <a href="#how-it-works">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="/ipomyagent-app">My Docs</a>
+    <a class="btn btn-gold" href="/tools/notary" style="padding:7px 16px;font-size:12px">Start Signing →</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">✦ Privacy-First Notarization</div>
+  <h1>
+    Make it official.<br>
+    <span class="gold">We never read it.</span>
+  </h1>
+  <div class="hero-sub">
+    The cheapest notary on the internet — and unlike every other notary, <strong>cryptographically provable</strong> that the server never saw your document.
+  </div>
+  <div class="hero-actions">
+    <a class="btn btn-gold" href="/tools/notary">Notarize a Document →</a>
+    <a class="btn btn-ghost" href="#how-it-works">See how it works</a>
+  </div>
+  <div class="hero-price">
+    Free tier: <strong>3 notarizations/month</strong> &nbsp;·&nbsp;
+    Unlimited: <strong>$1/month</strong>
+  </div>
+</div>
+
+<!-- PROOF BAR -->
+<div class="proof-bar">
+  <div class="proof-item"><span class="check">✓</span> ECDSA P-256 signatures</div>
+  <div class="proof-item"><span class="check">✓</span> SHA-256 document fingerprint</div>
+  <div class="proof-item"><span class="check">✓</span> Immutable audit trail</div>
+  <div class="proof-item"><span class="check">✓</span> Zero plaintext on server</div>
+  <div class="proof-item"><span class="check">✓</span> Public verification URL</div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="section" id="how-it-works">
+  <div class="section-title">Three steps. Your document never leaves your device.</div>
+  <div class="section-sub">All crypto happens in your browser. We store only a fingerprint and signature — not your document.</div>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num-big">1</div>
+      <h3>Upload</h3>
+      <p>Select any file — PDF, DOCX, image, text. Your browser computes a SHA-256 hash. Nothing is sent to the server yet. AI tagging runs locally via Ollama if you have it.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num-big">2</div>
+      <h3>Tag</h3>
+      <p>Add document type, parties, date, and custom tags. This metadata becomes part of what you sign — it travels with the proof record.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num-big">3</div>
+      <h3>Sign</h3>
+      <p>Your browser signs the hash + metadata with your private ECDSA key. The encrypted document downloads to your device. The server gets only the proof record.</p>
+    </div>
+  </div>
+</div>
+
+<!-- WHAT THE SERVER STORES -->
+<div class="section" style="padding-top:0">
+  <div class="section-title">What the server stores</div>
+  <div class="section-sub">Full transparency. You can verify every field.</div>
+  <div class="proof-code">
+<span class="comment">// What IPOMyAgent stores on our server</span>
+{
+  <span class="key">"doc_id"</span>:      <span class="val">"d8f2a3bc-..."</span>,           <span class="comment">// public UUID</span>
+  <span class="key">"doc_hash"</span>:    <span class="val">"e3b0c44298..."</span>,       <span class="comment">// SHA-256 of your doc (64 hex chars)</span>
+  <span class="key">"signature"</span>:  <span class="val">"3045022100..."</span>,       <span class="comment">// ECDSA signature (your private key)</span>
+  <span class="key">"public_key"</span>: <span class="val">"-----BEGIN PUBLIC KEY-----..."</span>, <span class="comment">// your public key (verifiable)</span>
+  <span class="key">"tags"</span>:       <span class="val">["Lease", "Real Estate", "2026"]</span>,
+  <span class="key">"doc_name"</span>:   <span class="val">"Lease Agreement — 123 Main"</span>,
+  <span class="key">"status"</span>:     <span class="val">"signed"</span>,
+  <span class="key">"created_at"</span>: <span class="val">"2026-02-18T10:30:00Z"</span>
+}
+
+<span class="comment">// What IPOMyAgent does NOT store</span>
+<span class="dim">× Your document (not even encrypted)</span>
+<span class="dim">× Your real name</span>
+<span class="dim">× Your IP address (only a one-way hash)</span>
+<span class="dim">× Document contents, ever</span>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="section" style="padding-top:0">
+  <div class="section-title">Why use IPOMyAgent</div>
+  <div class="section-sub">Not a traditional notary. Something better.</div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🔑</div>
+      <h3>Your key, your proof</h3>
+      <p>Signatures use ECDSA P-256 — the same algorithm as Bitcoin wallets and SSL certificates. Only you can sign with your private key, and anyone can verify.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🕐</div>
+      <h3>Immutable timestamp</h3>
+      <p>Once signed, the proof record is permanent. The timestamp is server-verified and included in the public audit trail — not just whatever your browser says.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔗</div>
+      <h3>Shareable verification URL</h3>
+      <p>Every signed document gets a public <code>/verify/{id}</code> URL. Anyone can check that your document hash matches your signature — without seeing your document.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✨</div>
+      <h3>Local AI tagging (optional)</h3>
+      <p>If you run Ollama locally, the app automatically extracts parties, dates, key clauses, and risk levels — all on your machine, never uploaded.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🪪</div>
+      <h3>Anonymous by design</h3>
+      <p>Your identity is a pseudonymous key pair, not your name. The server never learns who you are — just that this key signed this document at this time.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💳</div>
+      <h3>Referral cards that double as proof</h3>
+      <p>After signing, generate a printable referral card that includes your verification URL. Physical "I got this notarized at IPOMyAgent" cards that also earn you commissions.</p>
+    </div>
+  </div>
+</div>
+
+<!-- PITCH -->
+<div class="section" style="padding-top:0">
+  <div class="pitch-box">
+    <p>"IPO My Agent" — as in, make your agreement a public record without exposing what's in it. Real estate agents, freelancers, anyone signing contracts: for $1/month you get cryptographic proof that something existed at a specific time, signed by a specific key, with a specific fingerprint. That's exactly what a notary does. Except we can't read it and neither can anyone else."</p>
+    <div class="attribution">— The case for privacy-first notarization</div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div class="section" id="pricing">
+  <div class="section-title">Pricing</div>
+  <div class="section-sub">Simple. No hidden fees.</div>
+  <div class="pricing-wrap">
+    <div class="price-card">
+      <div class="tier">Free</div>
+      <div class="amount">$0 <span>/mo</span></div>
+      <div class="description">Try it out. No credit card required.</div>
+      <ul>
+        <li><span class="check">✓</span> 3 notarizations per month</li>
+        <li><span class="check">✓</span> Public verification URLs</li>
+        <li><span class="check">✓</span> ECDSA signatures</li>
+        <li><span class="check">✓</span> AI tagging (local Ollama)</li>
+        <li><span class="x">—</span> <span style="color:var(--dim)">Unlimited signing</span></li>
+        <li><span class="x">—</span> <span style="color:var(--dim)">Priority audit log</span></li>
+      </ul>
+      <a class="btn btn-ghost" href="/tools/notary" style="width:100%;justify-content:center">Start Free →</a>
+    </div>
+    <div class="price-card featured">
+      <div class="tier">Member</div>
+      <div class="amount"><span class="price-tag">$1</span> <span>/mo</span></div>
+      <div class="description">Unlimited notarizations. Full audit trail. Referral earnings.</div>
+      <ul>
+        <li><span class="check">✓</span> <strong>Unlimited</strong> notarizations</li>
+        <li><span class="check">✓</span> Public verification URLs</li>
+        <li><span class="check">✓</span> ECDSA signatures</li>
+        <li><span class="check">✓</span> AI tagging (local Ollama)</li>
+        <li><span class="check">✓</span> Full audit log access</li>
+        <li><span class="check">✓</span> Referral commissions</li>
+      </ul>
+      <a class="btn btn-gold" href="https://buy.stripe.com/ipomyagent" id="stripe-link" style="width:100%;justify-content:center">Upgrade for $1/mo →</a>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2>Make it official.</h2>
+  <p>Start with 3 free notarizations. No credit card needed.</p>
+  <a class="btn btn-gold" href="/tools/notary" style="font-size:15px;padding:12px 28px">Notarize a Document →</a>
+</div>
+
+<footer>
+  <div>© 2026 IPOMyAgent · Part of the fortune0 network</div>
+  <div style="display:flex;gap:20px">
+    <a href="/verify/">Verify a Document</a>
+    <a href="/ipomyagent-app">My Documents</a>
+    <a href="/tools/notary">Sign a Document</a>
+  </div>
+</footer>
+
+<script>
+// Load Stripe payment link from server config if available
+fetch('/api/public/stats').then(r => r.json()).then(d => {
+  if (d.stripe_payment_link) {
+    document.getElementById('stripe-link').href = d.stripe_payment_link;
+  }
+}).catch(() => {});
+</script>
+</body>
+</html>

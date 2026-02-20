@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Death2Data Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; padding: 24px; }
+  h1 { font-size: 24px; margin-bottom: 4px; color: #fff; }
+  .subtitle { color: #888; margin-bottom: 32px; font-size: 14px; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 40px; }
+  .stat { background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; }
+  .stat-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .stat-value { font-size: 32px; font-weight: 700; color: #fff; }
+  .stat-value.green { color: #4ade80; }
+
+  .section { margin-bottom: 40px; }
+  .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #fff; border-bottom: 1px solid #2a2a2a; padding-bottom: 8px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; border-bottom: 1px solid #2a2a2a; }
+  td { padding: 12px; border-bottom: 1px solid #1a1a1a; font-size: 14px; }
+  tr:hover { background: #1a1a1a; }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .badge.active { background: #064e3b; color: #4ade80; }
+  .badge.warning { background: #78350f; color: #fbbf24; }
+  .badge.inactive { background: #1f1f1f; color: #888; }
+  .badge.enabled { background: #064e3b; color: #4ade80; }
+  .badge.old { background: #7f1d1d; color: #f87171; }
+
+  .webhook-url { font-family: monospace; font-size: 13px; }
+  .events-list { font-size: 12px; color: #888; max-width: 400px; }
+
+  .action-note { background: #1c1917; border: 1px solid #78350f; border-radius: 8px; padding: 16px; margin-top: 8px; font-size: 13px; color: #fbbf24; }
+  .action-note strong { color: #fff; }
+
+  .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #2a2a2a; font-size: 12px; color: #555; }
+</style>
+</head>
+<body>
+
+<h1>Death2Data Dashboard</h1>
+<p class="subtitle">Live Stripe data &middot; Generated Feb 17, 2026 at 08:55 AM</p>
+
+<div class="stats">
+  <div class="stat">
+    <div class="stat-label">Customers</div>
+    <div class="stat-value">13</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Active Subs</div>
+    <div class="stat-value green">12</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">MRR</div>
+    <div class="stat-value green">$12.00</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Webhooks</div>
+    <div class="stat-value">2</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Customers</div>
+  <table>
+    <thead>
+      <tr><th>Email</th><th>Status</th><th>Amount</th><th>Cycle</th><th>Signed Up</th><th>Next Bill</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>victor@victorlund.com</td>
+        <td><span class="badge active">active</span></td>
+        <td>$1.00</td>
+        <td>every 28 day</td>
+        <td>Feb 01, 2026</td>
+        <td>Mar 01, 2026</td>
+      </tr>
+      <tr>
+        <td>natelundymusic@gmail.com</td>
+        <td><span class="badge active">active</span></td>
+        <td>$1.00</td>
+        <td>every 28 day</td>
+        <td>Feb 08, 2026</td>
+        <td>Mar 08, 2026</td>
+      </tr>
+      <tr>
+        <td>mcallaway@randm-enterprises.com</td>
+        <td><span class="badge active">active</span></td>
+        <td>$1.00</td>
+        <td>every 28 day</td>
+        <td>Feb 15, 2026</td>
+        <td>Mar 15, 2026</td>
+      </tr>
+      <tr>
+        <td>salinasdanny990@yahoo.com</td>
+        <td><span class="badge active">active</span></td>
+        <td>$1.00</td>
+        <td>every 28 day</td>
+        <td>Feb 15, 2026</td>
+        <td>Mar 15, 2026</td>
+      </tr>
+      <tr>
+        <td>defendersaki@gmail.com</td>
+        <td><span class="badge active">active</span></td>
+        <td>$1.00</td>
+        <td>every 28 day</td>
+        <td>Feb 16, 2026</td>
+        <td>Mar 16, 2026</td>
+      </tr>
+      <tr>
+        <td>jlave.joey@gmail.com</td>
+        <td><span class="badge active">active</span></td>
+        <td>$1.00</td>
+        <td>every 28 day</td>
+        <td>Jan 28, 2026</td>
+        <td>Feb 25, 2026</td>
+      </tr>
+      <tr>
+        <td>rhaleluk@gmail.com</td>
+        <td><span class="badge active">active</span></td>
+        <td>$1.00</td>
+        <td>every 28 day</td>
+        <td>Jan 28, 2026</td>
+        <td>Feb 25, 2026</td>
+      </tr>
+      <tr>
+        <td>rpjohn10@gmail.com</td>
+        <td><span class="badge active">active</span></td>
+        <td>$1.00</td>
+        <td>every 28 day</td>
+        <td>Jan 28, 2026</td>
+        <td>Feb 25, 2026</td>
+      </tr>
+      <tr>
+        <td>arty521@yahoo.com</td>
+        <td><span class="badge active">active</span></td>
+        <td>$1.00</td>
+        <td>every 28 day</td>
+        <td>Jan 28, 2026</td>
+        <td>Feb 25, 2026</td>
+      </tr>
+      <tr>
+        <td>lolztex@Gmail.com</td>
+        <td><span class="badge active">active</span></td>
+        <td>$1.00</td>
+        <td>every 28 day</td>
+        <td>Jan 28, 2026</td>
+        <td>Feb 25, 2026</td>
+      </tr>
+      <tr>
+        <td>lolztex@gmail.com</td>
+        <td><span class="badge active">active</span></td>
+        <td>$1.00</td>
+        <td>every 28 day</td>
+        <td>Jan 28, 2026</td>
+        <td>Feb 25, 2026</td>
+      </tr>
+      <tr>
+        <td>christian.deater@gmail.com</td>
+        <td><span class="badge active">active</span></td>
+        <td>$1.00</td>
+        <td>every 28 day</td>
+        <td>Jan 31, 2026</td>
+        <td>Feb 28, 2026</td>
+      </tr>
+      <tr>
+        <td>team@calriven.com</td>
+        <td><span class="badge inactive">no subscription</span></td>
+        <td>-</td>
+        <td>-</td>
+        <td>May 08, 2025</td>
+        <td>-</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-title">Webhook Endpoints</div>
+  <table>
+    <thead>
+      <tr><th>URL</th><th>Status</th><th>Events</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="webhook-url">https://fortune0-com.onrender.com/api/webhooks/stripe</td>
+        <td><span class="badge enabled">enabled</span></td>
+        <td class="events-list">checkout.session.completed</td>
+      </tr>
+      <tr>
+        <td class="webhook-url">https://api.death2data.com/webhook</td>
+        <td><span class="badge old">DELETE THIS</span></td>
+        <td class="events-list">customer.subscription.created, customer.subscription.deleted, invoice.paid, invoice.payment_failed</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="action-note">
+    <strong>Action needed:</strong> The api.death2data.com webhook is broken and should be deleted from your Stripe dashboard.
+    Go to Developers → Webhooks → click it → Delete.
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Recent Events (last 20)</div>
+  <table>
+    <thead>
+      <tr><th>Event</th><th>When</th><th>ID</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>checkout.session.expired</td>
+        <td>Feb 17 07:39 AM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1nZIG7fHl88NQ8ipS1...</td>
+      </tr>
+      <tr>
+        <td>checkout.session.expired</td>
+        <td>Feb 17 07:38 AM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1nXWG7fHl88NQ854V5...</td>
+      </tr>
+      <tr>
+        <td>checkout.session.expired</td>
+        <td>Feb 17 07:18 AM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1nEoG7fHl88NQ84Ptp...</td>
+      </tr>
+      <tr>
+        <td>checkout.session.expired</td>
+        <td>Feb 16 09:17 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1dr1G7fHl88NQ8cBmM...</td>
+      </tr>
+      <tr>
+        <td>invoice_payment.paid</td>
+        <td>Feb 16 12:25 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1VXgG7fHl88NQ8BhsD...</td>
+      </tr>
+      <tr>
+        <td>checkout.session.completed</td>
+        <td>Feb 16 12:24 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1VWkG7fHl88NQ89ymS...</td>
+      </tr>
+      <tr>
+        <td>customer.subscription.created</td>
+        <td>Feb 16 12:24 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1VWkG7fHl88NQ8CfdN...</td>
+      </tr>
+      <tr>
+        <td>invoice.payment_succeeded</td>
+        <td>Feb 16 12:24 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1VWkG7fHl88NQ8aLIz...</td>
+      </tr>
+      <tr>
+        <td>invoice.paid</td>
+        <td>Feb 16 12:24 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1VWkG7fHl88NQ8kG8h...</td>
+      </tr>
+      <tr>
+        <td>invoice.finalized</td>
+        <td>Feb 16 12:24 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1VWkG7fHl88NQ8sqYC...</td>
+      </tr>
+      <tr>
+        <td>invoice.created</td>
+        <td>Feb 16 12:24 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1VWkG7fHl88NQ88Cmu...</td>
+      </tr>
+      <tr>
+        <td>payment_intent.succeeded</td>
+        <td>Feb 16 12:24 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_3T1VWfG7fHl88NQ801Zn...</td>
+      </tr>
+      <tr>
+        <td>payment_method.attached</td>
+        <td>Feb 16 12:24 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1VWjG7fHl88NQ8W1wm...</td>
+      </tr>
+      <tr>
+        <td>charge.succeeded</td>
+        <td>Feb 16 12:24 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_3T1VWfG7fHl88NQ80X8q...</td>
+      </tr>
+      <tr>
+        <td>payment_intent.created</td>
+        <td>Feb 16 12:24 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_3T1VWfG7fHl88NQ807f7...</td>
+      </tr>
+      <tr>
+        <td>customer.updated</td>
+        <td>Feb 16 12:24 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1VWjG7fHl88NQ8BZd6...</td>
+      </tr>
+      <tr>
+        <td>customer.created</td>
+        <td>Feb 16 12:24 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1VWjG7fHl88NQ8S50z...</td>
+      </tr>
+      <tr>
+        <td>invoice_payment.paid</td>
+        <td>Feb 15 09:20 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1HQYG7fHl88NQ8zR8A...</td>
+      </tr>
+      <tr>
+        <td>checkout.session.completed</td>
+        <td>Feb 15 09:19 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1HPkG7fHl88NQ8jAke...</td>
+      </tr>
+      <tr>
+        <td>customer.subscription.created</td>
+        <td>Feb 15 09:19 PM</td>
+        <td style="font-family:monospace;font-size:12px;color:#666">evt_1T1HPkG7fHl88NQ8P4ON...</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="footer">
+  Run <code>python3 dashboard.py</code> anytime to refresh. Data pulled from Stripe live mode via CLI.
+</div>
+
+</body>
+</html>
