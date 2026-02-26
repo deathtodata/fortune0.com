@@ -68,6 +68,7 @@ SEARXNG_URL = os.environ.get("SEARXNG_URL", "")  # Your own SearXNG instance (e.
 BRAVE_SEARCH_KEY = os.environ.get("BRAVE_SEARCH_KEY", "")  # Free: https://brave.com/search/api/ (2000 queries/mo)
 ADMIN_EMAIL = os.environ.get("F0_ADMIN_EMAIL", "admin@example.com")  # Set F0_ADMIN_EMAIL env var in production
 ADMIN_SECRET = os.environ.get("F0_ADMIN_SECRET", "")  # Admin login passphrase — set on Render
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")  # For Claude Haiku story analysis
 IS_PRODUCTION = bool(DATABASE_URL)  # True on Render (has PostgreSQL), False on localhost
 
 # RFC 2606 reserved domains — safe for testing, blocked in production
@@ -524,6 +525,15 @@ CREATE TABLE IF NOT EXISTS agreements (
     created_unix INTEGER,
     created_at TIMESTAMP DEFAULT NOW()
 );
+CREATE TABLE IF NOT EXISTS story_cache (
+    url_hash TEXT PRIMARY KEY,
+    url TEXT NOT NULL,
+    domain TEXT NOT NULL,
+    title TEXT,
+    cards_json TEXT NOT NULL,
+    has_analysis BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
 """
 
 USE_PG = bool(DATABASE_URL and HAS_PG)
@@ -829,6 +839,258 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"error": f"Could not reach site: {str(e.reason)}"}, 502)
             except Exception as e:
                 self.send_json({"error": f"Fetch failed: {str(e)}"}, 500)
+
+        # ── Story Mode API — fetch + analyze + cache ──
+        elif path == "/api/story":
+            target_url = qs.get("url", [""])[0].strip()
+            if not target_url:
+                self.send_json({"error": "URL parameter required"}, 400); return
+            if not target_url.startswith(("http://", "https://")):
+                target_url = "https://" + target_url
+
+            url_hash = hashlib.sha256(target_url.encode()).hexdigest()[:16]
+            domain = target_url.replace("https://", "").replace("http://", "").split("/")[0]
+
+            # Check cache first
+            conn = get_db()
+            cached = conn.execute("SELECT cards_json, title, has_analysis FROM story_cache WHERE url_hash=?", [url_hash]).fetchone()
+            if cached:
+                conn.close()
+                cards_data = json.loads(dict(cached)["cards_json"])
+                self.send_json({
+                    "cards": cards_data,
+                    "title": dict(cached)["title"],
+                    "url": target_url,
+                    "domain": domain,
+                    "cached": True,
+                    "analyzed": dict(cached).get("has_analysis", False),
+                })
+                return
+
+            # Fetch the page
+            try:
+                req = urllib.request.Request(target_url, headers={
+                    "User-Agent": "Mozilla/5.0 (compatible; Death2Data/1.0; +https://death2data.com)",
+                    "Accept": "text/html,application/xhtml+xml,*/*",
+                    "Accept-Language": "en-US,en;q=0.9",
+                })
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    raw = resp.read(2 * 1024 * 1024)
+                    content_type = resp.headers.get("Content-Type", "")
+                    charset = "utf-8"
+                    if "charset=" in content_type:
+                        charset = content_type.split("charset=")[-1].split(";")[0].strip()
+                    try:
+                        html_content = raw.decode(charset)
+                    except (UnicodeDecodeError, LookupError):
+                        html_content = raw.decode("utf-8", errors="replace")
+            except Exception as e:
+                conn.close()
+                self.send_json({"error": f"Could not fetch: {str(e)}"}, 502); return
+
+            # Parse HTML server-side
+            from html.parser import HTMLParser as _HP
+            import re
+
+            class _TextExtractor(_HP):
+                def __init__(self):
+                    super().__init__()
+                    self._tag_stack = []
+                    self._skip = {'script','style','nav','footer','header','iframe','noscript'}
+                    self.title = ""
+                    self.headings = []
+                    self.paragraphs = []
+                    self._current_heading = None
+                    self._current_text = []
+                    self._in_skip = 0
+                    self.images = []
+
+                def handle_starttag(self, tag, attrs):
+                    self._tag_stack.append(tag)
+                    if tag in self._skip:
+                        self._in_skip += 1
+                    if self._in_skip: return
+                    ad = dict(attrs)
+                    if tag in ('h1','h2','h3'):
+                        self._current_heading = {'tag': tag, 'text': '', 'snippet': ''}
+                        self._current_text = []
+                    elif tag == 'img':
+                        src = ad.get('src','') or ad.get('data-src','')
+                        alt = ad.get('alt','')
+                        w = int(ad.get('width','999') or '999')
+                        h = int(ad.get('height','999') or '999')
+                        if src and not src.startswith('data:') and w >= 80 and h >= 80:
+                            if not re.search(r'pixel|track|beacon|logo|icon|avatar|badge|spinner|ad\b', src, re.I):
+                                if src.startswith('//'): src = 'https:' + src
+                                elif src.startswith('/'): src = f"https://{domain}{src}"
+                                elif not src.startswith('http'): src = f"https://{domain}/{src}"
+                                self.images.append({'src': src, 'alt': alt})
+
+                def handle_endtag(self, tag):
+                    if self._tag_stack and self._tag_stack[-1] == tag:
+                        self._tag_stack.pop()
+                    if tag in self._skip:
+                        self._in_skip = max(0, self._in_skip - 1)
+                    if self._in_skip: return
+                    if tag in ('h1','h2','h3') and self._current_heading:
+                        text = ' '.join(self._current_text).strip()
+                        if 4 < len(text) < 100:
+                            self._current_heading['text'] = text
+                            self.headings.append(self._current_heading)
+                        self._current_heading = None
+                        self._current_text = []
+                    elif tag == 'p':
+                        text = ' '.join(self._current_text).strip()
+                        if len(text) > 30:
+                            self.paragraphs.append(text)
+                            # Attach as snippet to last heading if it doesn't have one
+                            if self.headings and not self.headings[-1]['snippet']:
+                                self.headings[-1]['snippet'] = text[:200]
+                        self._current_text = []
+
+                def handle_data(self, data):
+                    if self._in_skip: return
+                    text = data.strip()
+                    if text:
+                        self._current_text.append(text)
+                    if not self.title and self._tag_stack and self._tag_stack[-1] == 'title':
+                        self.title = text
+
+            extractor = _TextExtractor()
+            try:
+                extractor.feed(html_content)
+            except Exception:
+                pass
+
+            page_title = extractor.title or domain
+            page_text = '\n'.join(extractor.paragraphs[:30])  # Cap at 30 paragraphs
+
+            # Build cards
+            cards_data = []
+            has_analysis = False
+
+            # Try Claude Haiku analysis if key is set
+            if ANTHROPIC_API_KEY and page_text:
+                try:
+                    analysis_prompt = f"""Analyze this webpage from a privacy perspective. The page is from {domain}.
+
+Page title: {page_title}
+Page content (first ~2000 chars):
+{page_text[:2000]}
+
+Respond in EXACTLY this JSON format, nothing else:
+{{
+  "privacy_score": <1-10, where 10 is most private>,
+  "summary": "<2-3 sentence summary of what this site/page does>",
+  "data_collection": "<what data does this site likely collect? 1-2 sentences>",
+  "trackers": "<what tracking technologies are visible? 1 sentence>",
+  "verdict": "<one-line verdict like 'Heavy tracking' or 'Privacy-respecting' or 'Mixed - some tracking'>",
+  "key_finding": "<the single most important privacy fact about this site>"
+}}"""
+
+                    api_body = json.dumps({
+                        "model": "claude-haiku-4-5-20251001",
+                        "max_tokens": 500,
+                        "messages": [{"role": "user", "content": analysis_prompt}]
+                    }).encode()
+
+                    api_req = urllib.request.Request(
+                        "https://api.anthropic.com/v1/messages",
+                        data=api_body,
+                        headers={
+                            "x-api-key": ANTHROPIC_API_KEY,
+                            "anthropic-version": "2023-06-01",
+                            "content-type": "application/json",
+                        }
+                    )
+                    with urllib.request.urlopen(api_req, timeout=15) as api_resp:
+                        api_data = json.loads(api_resp.read().decode())
+                        analysis_text = api_data.get("content", [{}])[0].get("text", "")
+                        # Parse the JSON response
+                        analysis = json.loads(analysis_text)
+                        has_analysis = True
+
+                        # Build analysis card
+                        score = analysis.get("privacy_score", 5)
+                        score_color = "#00cc44" if score >= 7 else "#ffaa00" if score >= 4 else "#cc0000"
+                        score_label = "Private" if score >= 7 else "Mixed" if score >= 4 else "Exposed"
+
+                        cards_data.append({
+                            "type": "analysis",
+                            "privacy_score": score,
+                            "score_color": score_color,
+                            "score_label": score_label,
+                            "verdict": analysis.get("verdict", ""),
+                            "summary": analysis.get("summary", ""),
+                            "data_collection": analysis.get("data_collection", ""),
+                            "trackers": analysis.get("trackers", ""),
+                            "key_finding": analysis.get("key_finding", ""),
+                        })
+                except Exception as e:
+                    sys.stderr.write(f"  [Story] Claude analysis failed: {e}\n")
+                    # Continue without analysis — still cache the scraped version
+
+            # Add heading-based cards
+            for i, h in enumerate(extractor.headings[:5]):
+                cards_data.append({
+                    "type": "keypoint",
+                    "index": i,
+                    "heading": h["text"],
+                    "snippet": h["snippet"][:200] if h["snippet"] else "",
+                })
+
+            # Add stat card if found
+            for p in extractor.paragraphs:
+                match = re.search(r'(\$[\d,.]+\s*[BMKbmk]?(illion)?|\d{1,3}%)', p)
+                if match and len(p.split()) >= 8:
+                    cards_data.append({
+                        "type": "stat",
+                        "value": match.group(1).strip(),
+                        "context": re.sub(r'\s{2,}', ' ', p.replace(match.group(0), '').strip())[:120],
+                    })
+                    break
+
+            # Add quote card if found
+            for p in extractor.paragraphs:
+                quoted = p.strip().startswith(('"', '\u201c'))
+                said = bool(re.search(r'\bsaid\b|\bsays\b|\baccording to\b', p, re.I))
+                if (quoted or said) and 40 < len(p) < 300:
+                    cards_data.append({"type": "quote", "text": p[:250]})
+                    break
+
+            # Add body paragraphs (up to 2)
+            used_texts = set(h["text"].lower()[:50] for h in extractor.headings)
+            body_count = 0
+            for p in extractor.paragraphs:
+                if p.lower()[:50] in used_texts: continue
+                if len(p) > 60 and len(p.split()) >= 8 and body_count < 2:
+                    cards_data.append({"type": "body", "text": p[:250]})
+                    used_texts.add(p.lower()[:50])
+                    body_count += 1
+
+            # Add images (up to 3)
+            for img in extractor.images[:3]:
+                cards_data.append({"type": "image", "src": img["src"], "alt": img.get("alt", "")})
+
+            # Cache it
+            try:
+                conn.execute(
+                    "INSERT INTO story_cache (url_hash, url, domain, title, cards_json, has_analysis) VALUES (?, ?, ?, ?, ?, ?)",
+                    [url_hash, target_url, domain, page_title, json.dumps(cards_data), has_analysis]
+                )
+                conn.commit()
+            except Exception as e:
+                sys.stderr.write(f"  [Story] Cache write failed: {e}\n")
+            conn.close()
+
+            self.send_json({
+                "cards": cards_data,
+                "title": page_title,
+                "url": target_url,
+                "domain": domain,
+                "cached": False,
+                "analyzed": has_analysis,
+            })
 
         # ── Public stats (no auth, no PII — safe for about page) ──
         elif path == "/api/public/stats":
