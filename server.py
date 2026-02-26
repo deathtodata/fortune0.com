@@ -798,9 +798,11 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json({
                 "status": "ok" if db_ok else "degraded",
                 "service": "fortune0",
-                "version": "1.6.0",
+                "version": "1.7.0",
                 "db": db_type,
                 "db_connected": db_ok,
+                "anthropic_key_set": bool(ANTHROPIC_API_KEY),
+                "anthropic_key_prefix": ANTHROPIC_API_KEY[:8] + "..." if ANTHROPIC_API_KEY else "none",
             })
 
         # ── Fetch proxy — privacy layer for story mode + browse ──
