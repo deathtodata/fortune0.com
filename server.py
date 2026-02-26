@@ -1008,6 +1008,11 @@ Respond in EXACTLY this JSON format, nothing else:
                     with urllib.request.urlopen(api_req, timeout=15) as api_resp:
                         api_data = json.loads(api_resp.read().decode())
                         analysis_text = api_data.get("content", [{}])[0].get("text", "")
+                        # Strip markdown code fences if present (Claude sometimes wraps JSON in ```json ... ```)
+                        analysis_text = analysis_text.strip()
+                        if analysis_text.startswith("```"):
+                            analysis_text = re.sub(r'^```(?:json)?\s*', '', analysis_text)
+                            analysis_text = re.sub(r'\s*```$', '', analysis_text)
                         # Parse the JSON response
                         analysis = json.loads(analysis_text)
                         has_analysis = True
