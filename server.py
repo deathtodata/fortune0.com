@@ -2201,6 +2201,45 @@ class Handler(BaseHTTPRequestHandler):
                             sys.stderr.write(f"  [Stripe Webhook] Error creating account for {customer_email}: {e}\n")
                     conn.close()
                     self.send_json({"activated": True, "new_account": True, "email": customer_email})
+            elif event_type in ("customer.subscription.deleted", "customer.subscription.paused"):
+                # Churn: subscription cancelled or paused → deactivate user
+                sub_data = body.get("data", {}).get("object", {})
+                customer_email = sub_data.get("customer_email", "") or sub_data.get("metadata", {}).get("email", "")
+                # Try to get email from customer object if not directly available
+                if not customer_email:
+                    customer_id = sub_data.get("customer", "")
+                    sys.stderr.write(f"  [Stripe Webhook] {event_type}: no email found directly, customer_id={customer_id}\n")
+
+                if customer_email:
+                    conn = get_db()
+                    user = conn.execute("SELECT * FROM users WHERE email=?", [customer_email.lower()]).fetchone()
+                    if user:
+                        conn.execute("UPDATE users SET tier='free' WHERE email=?", [customer_email.lower()])
+                        log_activity(conn, customer_email, "churn", f"Subscription {event_type.split('.')[-1]} — tier set to free")
+                        conn.commit()
+                        sys.stderr.write(f"  [Stripe Webhook] Deactivated: {customer_email} → tier=free\n")
+                    conn.close()
+                self.send_json({"received": True, "action": "deactivated"})
+
+            elif event_type == "invoice.payment_failed":
+                # Failed payment — log but don't deactivate yet (Stripe retries)
+                inv_data = body.get("data", {}).get("object", {})
+                customer_email = inv_data.get("customer_email", "")
+                attempt = inv_data.get("attempt_count", 0)
+                sys.stderr.write(f"  [Stripe Webhook] Payment failed: {customer_email}, attempt #{attempt}\n")
+
+                if customer_email:
+                    conn = get_db()
+                    log_activity(conn, customer_email, "payment_failed", f"Invoice payment failed, attempt #{attempt}")
+                    # Deactivate after 3 failed attempts
+                    if attempt >= 3:
+                        conn.execute("UPDATE users SET tier='free' WHERE email=?", [customer_email.lower()])
+                        log_activity(conn, customer_email, "churn", "Deactivated after 3 failed payment attempts")
+                        sys.stderr.write(f"  [Stripe Webhook] Deactivated after {attempt} failures: {customer_email}\n")
+                    conn.commit()
+                    conn.close()
+                self.send_json({"received": True, "action": "payment_failure_logged"})
+
             else:
                 # Other event types — acknowledge but ignore
                 sys.stderr.write(f"  [Stripe Webhook] Ignoring event type: {event_type}\n")
