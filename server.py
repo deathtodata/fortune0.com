@@ -1078,41 +1078,6 @@ Respond in EXACTLY this JSON format, nothing else:
                     })
             else:
                 # ── Fallback: scraped cards when no AI analysis ──
-                if has_analysis:
-                # ── Educational cards from Claude analysis ──
-                # What You Should Know card
-                what_to_know = analysis.get("what_to_know", "")
-                if what_to_know:
-                    cards_data.append({
-                        "type": "what_to_know",
-                        "text": what_to_know,
-                    })
-
-                # Privacy Alternatives card
-                alternatives = analysis.get("alternatives", "")
-                if alternatives and alternatives.lower() != "none needed":
-                    cards_data.append({
-                        "type": "alternatives",
-                        "text": alternatives,
-                    })
-
-                # Notebook Questions card (think about this)
-                questions = analysis.get("questions", [])
-                if questions:
-                    cards_data.append({
-                        "type": "questions",
-                        "items": questions[:3],
-                    })
-
-                # Keep 1 image for visual context
-                if extractor.images:
-                    cards_data.append({
-                        "type": "image",
-                        "src": extractor.images[0]["src"],
-                        "alt": extractor.images[0].get("alt", ""),
-                    })
-            else:
-                # ── Fallback: scraped cards when no AI analysis ──
                 # Add heading-based cards
                 for i, h in enumerate(extractor.headings[:5]):
                     cards_data.append({
@@ -1154,6 +1119,7 @@ Respond in EXACTLY this JSON format, nothing else:
                 # Add images (up to 3)
                 for img in extractor.images[:3]:
                     cards_data.append({"type": "image", "src": img["src"], "alt": img.get("alt", "")})
+
             # Cache it
             try:
                 conn.execute(
