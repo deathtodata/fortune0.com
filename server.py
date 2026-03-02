@@ -1140,6 +1140,66 @@ Respond in EXACTLY this JSON format, nothing else:
                 "analyzed": has_analysis,
             })
 
+        # ── Public Wall (anonymous analysis feed from story_cache) ──
+        elif path == "/api/wall":
+            conn = get_db()
+            try:
+                # Get analyzed stories, most recent first
+                rows = conn.execute("""
+                    SELECT url, domain, title, cards_json, has_analysis, created_at
+                    FROM story_cache
+                    WHERE has_analysis = TRUE
+                    ORDER BY created_at DESC
+                    LIMIT 50
+                """).fetchall()
+
+                analyses = []
+                total_score = 0
+                scored_count = 0
+
+                for row in rows:
+                    cards = json.loads(row["cards_json"]) if row["cards_json"] else []
+                    # Extract score and verdict from analysis card
+                    score = None
+                    verdict = ""
+                    summary = ""
+                    for card in cards:
+                        if card.get("type") == "analysis":
+                            score = card.get("privacy_score")
+                            verdict = card.get("verdict", "")
+                            summary = card.get("summary", "")
+                            break
+
+                    if score is not None:
+                        total_score += score
+                        scored_count += 1
+
+                    analyses.append({
+                        "url": row["url"],
+                        "domain": row["domain"],
+                        "title": row["title"] or row["domain"],
+                        "score": score,
+                        "verdict": verdict,
+                        "summary": summary,
+                        "has_analysis": bool(row["has_analysis"]),
+                        "created_at": str(row["created_at"]),
+                    })
+
+                avg_score = round(total_score / scored_count, 1) if scored_count > 0 else None
+                total = conn.execute("SELECT COUNT(*) as c FROM story_cache").fetchone()["c"]
+            except Exception as e:
+                sys.stderr.write(f"  [Wall] Error: {e}\n")
+                analyses = []
+                avg_score = None
+                total = 0
+            conn.close()
+
+            self.send_json({
+                "analyses": analyses,
+                "total": total,
+                "avg_score": avg_score,
+            })
+
         # ── Public stats (no auth, no PII — safe for about page) ──
         elif path == "/api/public/stats":
             conn = get_db()
