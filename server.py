@@ -798,7 +798,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json({
                 "status": "ok" if db_ok else "degraded",
                 "service": "fortune0",
-                "version": "1.7.0",
+                "version": "1.8.0",
                 "db": db_type,
                 "db_connected": db_ok,
                 "anthropic_key_set": bool(ANTHROPIC_API_KEY),
@@ -974,7 +974,7 @@ class Handler(BaseHTTPRequestHandler):
             # Try Claude Haiku analysis if key is set
             if ANTHROPIC_API_KEY and page_text:
                 try:
-                    analysis_prompt = f"""Analyze this webpage from a privacy perspective. The page is from {domain}.
+                    analysis_prompt = f"""You are a privacy educator. Analyze this webpage and teach the reader what they need to know. The page is from {domain}.
 
 Page title: {page_title}
 Page content (first ~2000 chars):
@@ -983,16 +983,19 @@ Page content (first ~2000 chars):
 Respond in EXACTLY this JSON format, nothing else:
 {{
   "privacy_score": <1-10, where 10 is most private>,
-  "summary": "<2-3 sentence summary of what this site/page does>",
-  "data_collection": "<what data does this site likely collect? 1-2 sentences>",
-  "trackers": "<what tracking technologies are visible? 1 sentence>",
-  "verdict": "<one-line verdict like 'Heavy tracking' or 'Privacy-respecting' or 'Mixed - some tracking'>",
-  "key_finding": "<the single most important privacy fact about this site>"
+  "verdict": "<one-line verdict like 'Heavy tracking' or 'Privacy-respecting' or 'Mixed'>",
+  "summary": "<2-3 sentence summary of what this site/page actually does>",
+  "data_collection": "<what data does this site collect from visitors? Be specific.>",
+  "trackers": "<what tracking technologies are likely present? 1-2 sentences>",
+  "key_finding": "<the single most important thing a privacy-conscious person should know>",
+  "what_to_know": "<2-3 sentences: what should someone understand before using this site?>",
+  "alternatives": "<1-2 privacy-friendly alternatives to this service, if any exist. Say 'None needed' if the site is already private.>",
+  "questions": ["<question the reader should ask themselves about their privacy on this site>", "<another question>", "<a third question>"]
 }}"""
 
                     api_body = json.dumps({
                         "model": "claude-haiku-4-5-20251001",
-                        "max_tokens": 500,
+                        "max_tokens": 800,
                         "messages": [{"role": "user", "content": analysis_prompt}]
                     }).encode()
 
@@ -1030,6 +1033,9 @@ Respond in EXACTLY this JSON format, nothing else:
                             "verdict": analysis.get("verdict", ""),
                             "summary": analysis.get("summary", ""),
                             "data_collection": analysis.get("data_collection", ""),
+                            "what_to_know": analysis.get("what_to_know", ""),
+                            "alternatives": analysis.get("alternatives", ""),
+                            "questions": analysis.get("questions", []),
                             "trackers": analysis.get("trackers", ""),
                             "key_finding": analysis.get("key_finding", ""),
                         })
@@ -1037,48 +1043,117 @@ Respond in EXACTLY this JSON format, nothing else:
                     sys.stderr.write(f"  [Story] Claude analysis failed: {e}\n")
                     # Continue without analysis — still cache the scraped version
 
-            # Add heading-based cards
-            for i, h in enumerate(extractor.headings[:5]):
-                cards_data.append({
-                    "type": "keypoint",
-                    "index": i,
-                    "heading": h["text"],
-                    "snippet": h["snippet"][:200] if h["snippet"] else "",
-                })
-
-            # Add stat card if found
-            for p in extractor.paragraphs:
-                match = re.search(r'(\$[\d,.]+\s*[BMKbmk]?(illion)?|\d{1,3}%)', p)
-                if match and len(p.split()) >= 8:
+            if has_analysis:
+                # ── Educational cards from Claude analysis ──
+                # What You Should Know card
+                what_to_know = analysis.get("what_to_know", "")
+                if what_to_know:
                     cards_data.append({
-                        "type": "stat",
-                        "value": match.group(1).strip(),
-                        "context": re.sub(r'\s{2,}', ' ', p.replace(match.group(0), '').strip())[:120],
+                        "type": "what_to_know",
+                        "text": what_to_know,
                     })
-                    break
 
-            # Add quote card if found
-            for p in extractor.paragraphs:
-                quoted = p.strip().startswith(('"', '\u201c'))
-                said = bool(re.search(r'\bsaid\b|\bsays\b|\baccording to\b', p, re.I))
-                if (quoted or said) and 40 < len(p) < 300:
-                    cards_data.append({"type": "quote", "text": p[:250]})
-                    break
+                # Privacy Alternatives card
+                alternatives = analysis.get("alternatives", "")
+                if alternatives and alternatives.lower() != "none needed":
+                    cards_data.append({
+                        "type": "alternatives",
+                        "text": alternatives,
+                    })
 
-            # Add body paragraphs (up to 2)
-            used_texts = set(h["text"].lower()[:50] for h in extractor.headings)
-            body_count = 0
-            for p in extractor.paragraphs:
-                if p.lower()[:50] in used_texts: continue
-                if len(p) > 60 and len(p.split()) >= 8 and body_count < 2:
-                    cards_data.append({"type": "body", "text": p[:250]})
-                    used_texts.add(p.lower()[:50])
-                    body_count += 1
+                # Notebook Questions card (think about this)
+                questions = analysis.get("questions", [])
+                if questions:
+                    cards_data.append({
+                        "type": "questions",
+                        "items": questions[:3],
+                    })
 
-            # Add images (up to 3)
-            for img in extractor.images[:3]:
-                cards_data.append({"type": "image", "src": img["src"], "alt": img.get("alt", "")})
+                # Keep 1 image for visual context
+                if extractor.images:
+                    cards_data.append({
+                        "type": "image",
+                        "src": extractor.images[0]["src"],
+                        "alt": extractor.images[0].get("alt", ""),
+                    })
+            else:
+                # ── Fallback: scraped cards when no AI analysis ──
+                if has_analysis:
+                # ── Educational cards from Claude analysis ──
+                # What You Should Know card
+                what_to_know = analysis.get("what_to_know", "")
+                if what_to_know:
+                    cards_data.append({
+                        "type": "what_to_know",
+                        "text": what_to_know,
+                    })
 
+                # Privacy Alternatives card
+                alternatives = analysis.get("alternatives", "")
+                if alternatives and alternatives.lower() != "none needed":
+                    cards_data.append({
+                        "type": "alternatives",
+                        "text": alternatives,
+                    })
+
+                # Notebook Questions card (think about this)
+                questions = analysis.get("questions", [])
+                if questions:
+                    cards_data.append({
+                        "type": "questions",
+                        "items": questions[:3],
+                    })
+
+                # Keep 1 image for visual context
+                if extractor.images:
+                    cards_data.append({
+                        "type": "image",
+                        "src": extractor.images[0]["src"],
+                        "alt": extractor.images[0].get("alt", ""),
+                    })
+            else:
+                # ── Fallback: scraped cards when no AI analysis ──
+                # Add heading-based cards
+                for i, h in enumerate(extractor.headings[:5]):
+                    cards_data.append({
+                        "type": "keypoint",
+                        "index": i,
+                        "heading": h["text"],
+                        "snippet": h["snippet"][:200] if h["snippet"] else "",
+                    })
+
+                # Add stat card if found
+                for p in extractor.paragraphs:
+                    match = re.search(r'(\$[\d,.]+\s*[BMKbmk]?(illion)?|\d{1,3}%)', p)
+                    if match and len(p.split()) >= 8:
+                        cards_data.append({
+                            "type": "stat",
+                            "value": match.group(1).strip(),
+                            "context": re.sub(r'\s{2,}', ' ', p.replace(match.group(0), '').strip())[:120],
+                        })
+                        break
+
+                # Add quote card if found
+                for p in extractor.paragraphs:
+                    quoted = p.strip().startswith(('"', '\u201c'))
+                    said = bool(re.search(r'\bsaid\b|\bsays\b|\baccording to\b', p, re.I))
+                    if (quoted or said) and 40 < len(p) < 300:
+                        cards_data.append({"type": "quote", "text": p[:250]})
+                        break
+
+                # Add body paragraphs (up to 2)
+                used_texts = set(h["text"].lower()[:50] for h in extractor.headings)
+                body_count = 0
+                for p in extractor.paragraphs:
+                    if p.lower()[:50] in used_texts: continue
+                    if len(p) > 60 and len(p.split()) >= 8 and body_count < 2:
+                        cards_data.append({"type": "body", "text": p[:250]})
+                        used_texts.add(p.lower()[:50])
+                        body_count += 1
+
+                # Add images (up to 3)
+                for img in extractor.images[:3]:
+                    cards_data.append({"type": "image", "src": img["src"], "alt": img.get("alt", "")})
             # Cache it
             try:
                 conn.execute(
