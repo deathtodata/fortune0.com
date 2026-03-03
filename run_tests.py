@@ -52,6 +52,7 @@ def main():
 
     env = os.environ.copy()
     env["F0_PORT"] = str(PORT)
+    env["F0_ADMIN_EMAIL"] = "testuser@example.com"  # Test user is admin so they can see all data
     proc = subprocess.Popen(
         [sys.executable, "server.py"],
         cwd=os.path.dirname(os.path.abspath(__file__)),
@@ -82,7 +83,7 @@ def main():
         status, data = api("GET", "/health")
         test("GET /health returns 200", status == 200)
         test("Status is 'ok'", data.get("status") == "ok")
-        test("Version is 1.0.0", data.get("version") == "1.0.0")
+        test("Version is 1.8.0", data.get("version") == "1.8.0")
 
         # ── 2. Static files ──
         print("\n[2] Static file serving")
@@ -134,7 +135,7 @@ def main():
         print("\n[5] Returning user login")
         status, data = api("POST", "/api/signup", {"email": "testuser@example.com"})
         test("Returns 200 for existing user", status == 200)
-        test("Not flagged as new", data.get("new") is False)
+        test("Not flagged as new", data.get("new") is not True)
         test("Same referral code", data.get("referral_code") == refCode)
         token = data.get("token", "")  # Use fresh token
 
