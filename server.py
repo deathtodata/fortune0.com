@@ -388,6 +388,15 @@ CREATE TABLE IF NOT EXISTS agreements (
     created_unix INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS email_checks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    score INTEGER,
+    source TEXT DEFAULT 'check',
+    is_member INTEGER DEFAULT 0,
+    user_tier TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 SCHEMA_PG = """
@@ -532,6 +541,15 @@ CREATE TABLE IF NOT EXISTS story_cache (
     title TEXT,
     cards_json TEXT NOT NULL,
     has_analysis BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS email_checks (
+    id SERIAL PRIMARY KEY,
+    email TEXT NOT NULL,
+    score INTEGER,
+    source TEXT DEFAULT 'check',
+    is_member INTEGER DEFAULT 0,
+    user_tier TEXT,
     created_at TIMESTAMP DEFAULT NOW()
 );
 """
@@ -1256,9 +1274,17 @@ Respond in EXACTLY this JSON format, nothing else:
                 total_credits = conn.execute("SELECT COALESCE(SUM(amount),0) s FROM credits WHERE amount > 0").fetchone()["s"]
                 credits_spent = conn.execute("SELECT COALESCE(SUM(ABS(amount)),0) s FROM credits WHERE amount < 0").fetchone()["s"]
                 credits_imported = conn.execute("SELECT COUNT(*) c FROM credits WHERE source='stripe_import'").fetchone()["c"]
+                # Email check stats
+                try:
+                    total_checks = conn.execute("SELECT COUNT(*) c FROM email_checks").fetchone()["c"]
+                    unique_checkers = conn.execute("SELECT COUNT(DISTINCT email) c FROM email_checks").fetchone()["c"]
+                    member_checks = conn.execute("SELECT COUNT(*) c FROM email_checks WHERE is_member=1").fetchone()["c"]
+                except Exception:
+                    total_checks = unique_checkers = member_checks = 0
             except Exception:
                 user_count = affiliate_count = active_users = 0
                 total_revenue = total_credits = credits_spent = credits_imported = 0
+                total_checks = unique_checkers = member_checks = 0
             conn.close()
             self.send_json({
                 "status": "ok", "service": "fortune0", "version": "1.6.0",
@@ -1275,6 +1301,9 @@ Respond in EXACTLY this JSON format, nothing else:
                 "total_credits_issued": round(total_credits, 2),
                 "total_credits_spent": round(credits_spent, 2),
                 "credits_from_stripe": credits_imported,
+                "email_checks": total_checks,
+                "unique_checkers": unique_checkers,
+                "member_checks": member_checks,
             })
 
         # ── Search (domain registry public, web results paid-only) ──
@@ -3307,6 +3336,48 @@ Respond in EXACTLY this JSON format, nothing else:
             conn.commit()
             conn.close()
             self.send_json({"revoked": True, "doc_id": doc_id})
+
+        # ── Email check capture (no auth — public endpoint) ──
+        elif path == "/api/check":
+            email = body.get("email", "").strip().lower()
+            score = body.get("score")
+            source = body.get("source", "check")  # 'check' or 'leak-score'
+            if not email or "@" not in email:
+                self.send_json({"error": "Valid email required"}, 400); return
+
+            conn = get_db()
+            # Cross-reference: is this email already a user? What tier?
+            user = conn.execute("SELECT email, tier FROM users WHERE email=?", [email]).fetchone()
+            is_member = 0
+            user_tier = None
+            if user:
+                user_tier = user["tier"]
+                is_member = 1 if user_tier == "active" else 0
+
+            conn.execute(
+                "INSERT INTO email_checks (email, score, source, is_member, user_tier) VALUES (?, ?, ?, ?, ?)",
+                [email, score, source, is_member, user_tier]
+            )
+            log_activity(conn, email, "email_check", f"score={score} source={source} member={is_member}")
+            conn.commit()
+
+            # Count unique checks and total checks for this email
+            stats = conn.execute(
+                "SELECT COUNT(*) as total, COUNT(DISTINCT email) as unique_emails FROM email_checks"
+            ).fetchone()
+            email_count = conn.execute(
+                "SELECT COUNT(*) as checks FROM email_checks WHERE email=?", [email]
+            ).fetchone()
+            conn.close()
+
+            self.send_json({
+                "captured": True,
+                "is_member": bool(is_member),
+                "tier": user_tier,
+                "your_checks": email_count["checks"] if email_count else 1,
+                "total_checks": stats["total"] if stats else 1,
+                "unique_emails": stats["unique_emails"] if stats else 1,
+            })
 
         else:
             self.send_json({"error": "Not found"}, 404)
