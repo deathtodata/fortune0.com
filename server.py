@@ -69,6 +69,8 @@ BRAVE_SEARCH_KEY = os.environ.get("BRAVE_SEARCH_KEY", "")  # Free: https://brave
 ADMIN_EMAIL = os.environ.get("F0_ADMIN_EMAIL", "admin@example.com")  # Set F0_ADMIN_EMAIL env var in production
 ADMIN_SECRET = os.environ.get("F0_ADMIN_SECRET", "")  # Admin login passphrase — set on Render
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")  # For Claude Haiku story analysis
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")  # Local Ollama instance
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")  # Default local model
 IS_PRODUCTION = bool(DATABASE_URL)  # True on Render (has PostgreSQL), False on localhost
 
 # RFC 2606 reserved domains — safe for testing, blocked in production
@@ -821,6 +823,9 @@ class Handler(BaseHTTPRequestHandler):
                 "db_connected": db_ok,
                 "anthropic_key_set": bool(ANTHROPIC_API_KEY),
                 "anthropic_key_prefix": ANTHROPIC_API_KEY[:8] + "..." if ANTHROPIC_API_KEY else "none",
+                "ollama_url": OLLAMA_URL,
+                "ollama_model": OLLAMA_MODEL,
+                "analysis_engine": "anthropic" if ANTHROPIC_API_KEY else "ollama (fallback)",
             })
 
         # ── Fetch proxy — privacy layer for story mode + browse ──
@@ -1060,6 +1065,68 @@ Respond in EXACTLY this JSON format, nothing else:
                 except Exception as e:
                     sys.stderr.write(f"  [Story] Claude analysis failed: {e}\n")
                     # Continue without analysis — still cache the scraped version
+
+            # Fallback: try Ollama if no Anthropic key or if Claude failed
+            if not has_analysis and page_text:
+                try:
+                    ollama_check = urllib.request.urlopen(f"{OLLAMA_URL}/api/tags", timeout=2)
+                    if ollama_check.status == 200:
+                        sys.stderr.write(f"  [Story] Trying Ollama ({OLLAMA_MODEL})...\n")
+                        ollama_body = json.dumps({
+                            "model": OLLAMA_MODEL,
+                            "prompt": analysis_prompt if ANTHROPIC_API_KEY else f"""You are a privacy educator. Analyze this webpage and teach the reader what they need to know. The page is from {domain}.
+
+Page title: {page_title}
+Page content (first ~2000 chars):
+{page_text[:2000]}
+
+Respond in EXACTLY this JSON format, nothing else:
+{{
+  "privacy_score": <1-10, where 10 is most private>,
+  "verdict": "<one-line verdict>",
+  "summary": "<2-3 sentence summary>",
+  "data_collection": "<what data does this site collect?>",
+  "trackers": "<what tracking technologies are present?>",
+  "key_finding": "<single most important privacy finding>",
+  "what_to_know": "<2-3 sentences for users>",
+  "alternatives": "<1-2 privacy-friendly alternatives or 'None needed'>",
+  "questions": ["<privacy question 1>", "<privacy question 2>", "<privacy question 3>"]
+}}""",
+                            "stream": False,
+                        }).encode()
+                        ollama_req = urllib.request.Request(
+                            f"{OLLAMA_URL}/api/generate",
+                            data=ollama_body,
+                            headers={"Content-Type": "application/json"},
+                        )
+                        with urllib.request.urlopen(ollama_req, timeout=30) as ollama_resp:
+                            ollama_data = json.loads(ollama_resp.read().decode())
+                            ollama_text = ollama_data.get("response", "").strip()
+                            if ollama_text.startswith("```"):
+                                ollama_text = re.sub(r'^```(?:json)?\s*', '', ollama_text)
+                                ollama_text = re.sub(r'\s*```$', '', ollama_text)
+                            analysis = json.loads(ollama_text)
+                            has_analysis = True
+                            score = analysis.get("privacy_score", 5)
+                            score_color = "#00cc44" if score >= 7 else "#ffaa00" if score >= 4 else "#cc0000"
+                            score_label = "Private" if score >= 7 else "Mixed" if score >= 4 else "Exposed"
+                            cards_data.append({
+                                "type": "analysis",
+                                "privacy_score": score,
+                                "score_color": score_color,
+                                "score_label": score_label,
+                                "verdict": analysis.get("verdict", ""),
+                                "summary": analysis.get("summary", ""),
+                                "data_collection": analysis.get("data_collection", ""),
+                                "what_to_know": analysis.get("what_to_know", ""),
+                                "alternatives": analysis.get("alternatives", ""),
+                                "questions": analysis.get("questions", []),
+                                "trackers": analysis.get("trackers", ""),
+                                "key_finding": analysis.get("key_finding", ""),
+                            })
+                            sys.stderr.write(f"  [Story] Ollama analysis OK (score={score})\n")
+                except Exception as e:
+                    sys.stderr.write(f"  [Story] Ollama not available: {e}\n")
 
             if has_analysis:
                 # ── Educational cards from Claude analysis ──
