@@ -397,6 +397,7 @@ CREATE TABLE IF NOT EXISTS email_checks (
     source TEXT DEFAULT 'check',
     is_member INTEGER DEFAULT 0,
     user_tier TEXT,
+    ref TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 """
@@ -552,6 +553,7 @@ CREATE TABLE IF NOT EXISTS email_checks (
     source TEXT DEFAULT 'check',
     is_member INTEGER DEFAULT 0,
     user_tier TEXT,
+    ref TEXT,
     created_at TIMESTAMP DEFAULT NOW()
 );
 """
@@ -1348,6 +1350,23 @@ Respond in EXACTLY this JSON format, nothing else:
                     member_checks = conn.execute("SELECT COUNT(*) c FROM email_checks WHERE is_member=1").fetchone()["c"]
                 except Exception:
                     total_checks = unique_checkers = member_checks = 0
+                # Referral attribution breakdown
+                try:
+                    ref_stats = conn.execute("""
+                        SELECT ref, COUNT(*) as checks, COUNT(DISTINCT email) as unique_emails,
+                               SUM(CASE WHEN is_member=1 THEN 1 ELSE 0 END) as converted
+                        FROM email_checks WHERE ref IS NOT NULL AND ref != ''
+                        GROUP BY ref ORDER BY checks DESC LIMIT 20
+                    """).fetchall()
+                    ref_attribution = [{"ref": r["ref"], "checks": r["checks"],
+                                        "unique_emails": r["unique_emails"],
+                                        "converted": r["converted"]} for r in ref_stats]
+                    referred_checks = conn.execute("SELECT COUNT(*) c FROM email_checks WHERE ref IS NOT NULL AND ref != ''").fetchone()["c"]
+                    organic_checks = total_checks - referred_checks
+                except Exception:
+                    ref_attribution = []
+                    referred_checks = 0
+                    organic_checks = total_checks
             except Exception:
                 user_count = affiliate_count = active_users = 0
                 total_revenue = total_credits = credits_spent = credits_imported = 0
@@ -1371,6 +1390,9 @@ Respond in EXACTLY this JSON format, nothing else:
                 "email_checks": total_checks,
                 "unique_checkers": unique_checkers,
                 "member_checks": member_checks,
+                "referred_checks": referred_checks,
+                "organic_checks": organic_checks,
+                "ref_attribution": ref_attribution,
             })
 
         # ── Search (domain registry public, web results paid-only) ──
@@ -3409,6 +3431,7 @@ Respond in EXACTLY this JSON format, nothing else:
             email = body.get("email", "").strip().lower()
             score = body.get("score")
             source = body.get("source", "check")  # 'check' or 'leak-score'
+            ref = body.get("ref", "").strip() or None  # referral code
             if not email or "@" not in email:
                 self.send_json({"error": "Valid email required"}, 400); return
 
@@ -3422,10 +3445,10 @@ Respond in EXACTLY this JSON format, nothing else:
                 is_member = 1 if user_tier == "active" else 0
 
             conn.execute(
-                "INSERT INTO email_checks (email, score, source, is_member, user_tier) VALUES (?, ?, ?, ?, ?)",
-                [email, score, source, is_member, user_tier]
+                "INSERT INTO email_checks (email, score, source, is_member, user_tier, ref) VALUES (?, ?, ?, ?, ?, ?)",
+                [email, score, source, is_member, user_tier, ref]
             )
-            log_activity(conn, email, "email_check", f"score={score} source={source} member={is_member}")
+            log_activity(conn, email, "email_check", f"score={score} source={source} ref={ref} member={is_member}")
             conn.commit()
 
             # Count unique checks and total checks for this email
